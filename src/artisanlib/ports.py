@@ -1745,6 +1745,11 @@ class comportDlg(ArtisanResizeablDialog):
         C6Widget.setLayout(tab6Layout)
         self.TabWidget.addTab(C6Widget,'MQTT')
 
+        self.TabWidget.setTabVisible(2, False)  # MODBUS
+        self.TabWidget.setTabVisible(3, False)  # S7
+        self.TabWidget.setTabVisible(4, False)  # WebSocket
+        self.TabWidget.setTabVisible(5, False)  # MQTT
+
         self.TabWidget.currentChanged.connect(self.tabSwitched)
 
         if devid == 29 or (devid == 0 and self.aw.ser.useModbusPort) : # switch to MODBUS tab if MODBUS device was selected as main device

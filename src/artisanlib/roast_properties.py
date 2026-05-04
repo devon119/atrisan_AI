@@ -1579,10 +1579,9 @@ class editGraphDlg(ArtisanResizeablDialog):
             okLayout.addWidget(self.roastproperties)
             okLayout.addStretch()
             okLayout.addSpacing(3)
-            okLayout.addWidget(self.roastpropertiesAutoOpen)
-            okLayout.addStretch()
-            okLayout.addSpacing(3)
-            okLayout.addWidget(self.roastpropertiesAutoOpenDROP)
+            # auto-open checkboxes hidden — popup disabled permanently
+            self.roastpropertiesAutoOpen.setVisible(False)
+            self.roastpropertiesAutoOpenDROP.setVisible(False)
         okLayout.addStretch()
         okLayout.addWidget(self.dialogbuttons)
         okLayout.setSpacing(10)

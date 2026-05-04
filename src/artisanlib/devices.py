@@ -1487,12 +1487,12 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         grid = QGridLayout()
         grid.addWidget(self.nonpidButton,2,0)
         grid.addLayout(deviceSelector,2,1)
-        grid.addWidget(self.pidButton,3,0)
-        grid.addWidget(PIDGroupBox,3,1)
+        self.pidButton.setVisible(False)
+        PIDGroupBox.setVisible(False)
         grid.addWidget(self.arduinoButton,4,0)
         grid.addWidget(arduinoGroupBox,4,1)
-        grid.addWidget(self.programButton,5,0)
-        grid.addWidget(programGroupBox,5,1)
+        self.programButton.setVisible(False)
+        programGroupBox.setVisible(False)
         grid.setSpacing(3)
         buttonLayout = QHBoxLayout()
         buttonLayout.addWidget(self.deviceLoggingFlag)
@@ -1977,6 +1977,10 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         C7Widget = QWidget()
         C7Widget.setLayout(tab7Layout)
         self.TabWidget.addTab(C7Widget,QApplication.translate('Tab','Networks'))
+        self.TabWidget.setTabVisible(3, False)  # Phidgets
+        self.TabWidget.setTabVisible(4, False)  # Yoctopuce
+        self.TabWidget.setTabVisible(5, False)  # Ambient
+        self.TabWidget.setTabVisible(6, False)  # Networks
         C8Widget = QWidget()
         if not self.aw.app.artisanviewerMode:
             C8Widget.setLayout(tab8Layout)

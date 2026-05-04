@@ -198,6 +198,69 @@ class MplCanvas(FigureCanvas):
                 self.lazyredraw_on_resize_timer.start(10)
 
 
+def _build_roast_summary(timeindex: list, timex: list, temp2: list, mode: str,
+                          has_background: bool,
+                          timeindexB: 'list|None', timeB: 'list|None',
+                          temp2B: 'list|None') -> str:
+    """Build a post-roast summary string for the AI summary prompt."""
+    unit = '°C' if mode == 'C' else '°F'
+    ti = timeindex
+
+    def _elapsed(idx: int) -> str:
+        if idx <= 0 or ti[0] < 0 or idx >= len(timex):
+            return '—'
+        s = timex[idx] - timex[ti[0]]
+        return f'{int(s // 60)}:{int(s % 60):02d}'
+
+    def _bt(idx: int) -> str:
+        if idx <= 0 or idx >= len(temp2):
+            return '—'
+        return f'{temp2[idx]:.1f}{unit}'
+
+    lines = ['這爐烘焙剛完成出豆，請給出整爐評估：\n']
+
+    if ti[0] >= 0 and ti[6] > 0 and ti[0] < len(timex) and ti[6] < len(timex):
+        total_s = timex[ti[6]] - timex[ti[0]]
+        lines.append(f'總烘焙時間：{int(total_s // 60)}:{int(total_s % 60):02d}')
+    lines.append(f'出豆溫度（BT）：{_bt(ti[6])}')
+
+    lines.append('\n各階段時間與溫度：')
+    if ti[0] >= 0:
+        lines.append(f'- 投豆 CHARGE：0:00，BT {_bt(ti[0])}')
+    if ti[1] > 0:
+        lines.append(f'- 乾燥結束 DE：{_elapsed(ti[1])}，BT {_bt(ti[1])}')
+    if ti[2] > 0:
+        lines.append(f'- 一爆開始 FC：{_elapsed(ti[2])}，BT {_bt(ti[2])}')
+    if ti[4] > 0:
+        lines.append(f'- 二爆開始 SC：{_elapsed(ti[4])}，BT {_bt(ti[4])}')
+    if ti[6] > 0:
+        lines.append(f'- 出豆 DROP：{_elapsed(ti[6])}，BT {_bt(ti[6])}')
+
+    if ti[2] > 0 and ti[6] > 0 and ti[0] >= 0:
+        try:
+            dev_s = timex[ti[6]] - timex[ti[2]]
+            total_s = timex[ti[6]] - timex[ti[0]]
+            dtr = dev_s / total_s * 100 if total_s > 0 else 0
+            lines.append(f'\n發展時間比（DTR）：{dtr:.1f}%（建議 15～25%）')
+        except (IndexError, ZeroDivisionError):
+            pass
+
+    if has_background and timeindexB and timeB and temp2B:
+        try:
+            from artisanlib.ai_advisor import _interp_background
+            if ti[0] >= 0 and ti[6] > 0 and ti[0] < len(timex) and ti[6] < len(timex):
+                charge_elapsed = timex[ti[6]] - timex[ti[0]]
+                bg_bt_drop, _ = _interp_background(charge_elapsed, timeB, timeindexB, temp2B, [])
+                if bg_bt_drop is not None and ti[6] < len(temp2):
+                    diff = temp2[ti[6]] - bg_bt_drop
+                    lines.append(f'出豆 BT 與參考曲線偏差：{diff:+.1f}{unit}')
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+    lines.append('\n請評估這爐表現，指出問題點，並給出下一爐的調整建議。')
+    return '\n'.join(lines)
+
+
 # NOTE: to have pylint to verify proper __slot__ definitions using pylint one has to remove the super class FigureCanvas here temporarily
 #   as this does not has __slot__ definitions and thus __dict__ is contained which suppresses the warnings
 class tgraphcanvas(QObject):
@@ -5075,6 +5138,110 @@ class tgraphcanvas(QObject):
                     # append new data to the rateofchange arrays
                     sample_delta1.append(rateofchange1plot)
                     sample_delta2.append(rateofchange2plot)
+
+                    # AI Advisor: per-sample RoR buffer + event detection + periodic advice
+                    if local_flagstart and hasattr(self.aw, 'ai_advisor'):
+                        try:
+                            from collections import deque as _dq
+                            # initialise per-roast tracking state once
+                            if not hasattr(self, '_ai_ror_buffer'):
+                                self._ai_ror_buffer: _dq = _dq(maxlen=60)  # ~2 min @ 2s
+                                self._ai_event_flags: dict = {
+                                    'charge': False, 'near_t1': False,
+                                    'dry_end': False, 'fc': False,
+                                    'fc_end': False, 'sc': False, 'drop': False,
+                                }
+                                self._ai_prev_charge: int = -1
+
+                            # record RoR every sample for accurate trend
+                            self._ai_ror_buffer.append(self.rateofchange2)
+
+                            # --- event detection ---
+                            _force_trigger = ''
+                            _cur_charge  = self.timeindex[0]
+                            _cur_dry_end = self.timeindex[1]
+                            _cur_fc      = self.timeindex[2]
+                            _cur_fc_end  = self.timeindex[3]
+                            _cur_sc      = self.timeindex[4]
+                            _cur_drop    = self.timeindex[6]
+
+                            # CHARGE: new roast started
+                            if _cur_charge > 0 and not self._ai_event_flags['charge']:
+                                self._ai_event_flags['charge'] = True
+                                self._ai_ror_buffer.clear()
+                                self.aw.ai_advisor.reset_for_new_roast()
+                                _force_trigger = 'CHARGE（投豆）'
+
+                            # approaching T1 (~162°C, before FC — BT-based auto trigger)
+                            # skip if user already pressed DRY END (redundant advice)
+                            elif (not self._ai_event_flags['near_t1']
+                                  and not self._ai_event_flags['dry_end']
+                                  and _cur_charge > 0 and _cur_fc == 0
+                                  and t2_final >= 162.0):
+                                self._ai_event_flags['near_t1'] = True
+                                _force_trigger = '接近梅納窗口結束（BT≈162°C）'
+
+                            # DRY END button pressed
+                            elif _cur_dry_end > 0 and not self._ai_event_flags['dry_end']:
+                                self._ai_event_flags['dry_end'] = True
+                                _force_trigger = '脫水結束（DRY END）'
+
+                            # FC start button pressed
+                            elif _cur_fc > 0 and not self._ai_event_flags['fc']:
+                                self._ai_event_flags['fc'] = True
+                                _force_trigger = '一爆開始（FC）'
+
+                            # FC END button pressed
+                            elif _cur_fc_end > 0 and not self._ai_event_flags['fc_end']:
+                                self._ai_event_flags['fc_end'] = True
+                                _force_trigger = '一爆結束（FC END）'
+
+                            # SC button pressed
+                            elif _cur_sc > 0 and not self._ai_event_flags['sc']:
+                                self._ai_event_flags['sc'] = True
+                                _force_trigger = '二爆開始（SC）'
+
+                            # DROP → request post-roast summary (separate call)
+                            if _cur_drop > 0 and not self._ai_event_flags['drop']:
+                                self._ai_event_flags['drop'] = True
+                                if self.aw.ai_advisor.enabled:
+                                    _summary = _build_roast_summary(
+                                        self.timeindex, sample_timex,
+                                        self.temp2, self.mode,
+                                        self.backgroundprofile,
+                                        self.timeindexB, self.timeB, self.temp2B,
+                                    )
+                                    self.aw.ai_advisor.request_summary(_summary)
+
+                            # reset flags when a new roast resets charge
+                            if _cur_charge < 0:
+                                self._ai_event_flags = {
+                                    'charge': False, 'near_t1': False,
+                                    'dry_end': False, 'fc': False,
+                                    'fc_end': False, 'sc': False, 'drop': False,
+                                }
+
+                            # periodic (or event-triggered) advice during active roast
+                            if _cur_charge > 0 and _cur_drop == 0:
+                                _bg = self.backgroundprofile
+                                self.aw.ai_advisor.request_advice(
+                                    bt=t2_final,
+                                    et=t1_final,
+                                    ror_bt=self.rateofchange2,
+                                    ror_et=self.rateofchange1,
+                                    timeindex=self.timeindex,
+                                    timex=sample_timex,
+                                    mode=self.mode,
+                                    timeB=self.timeB if _bg else None,
+                                    timeindexB=self.timeindexB if _bg else None,
+                                    temp2B=self.temp2B if _bg else None,
+                                    delta2B=self.delta2B if _bg else None,
+                                    ror_values=list(self._ai_ror_buffer),
+                                    force_trigger=_force_trigger,
+                                    phases=self.phases,
+                                )
+                        except Exception as _ai_e:  # pylint: disable=broad-except
+                            _log.debug('AI advisor error: %s', _ai_e)
 
                     if local_flagstart:
                         ror_start = 0
@@ -13601,6 +13768,8 @@ class tgraphcanvas(QObject):
 
             if not bool(self.aw.simulator):
                 QTimer.singleShot(300,self.StartAsyncSamplingAction)
+            if getattr(self.aw, 'ai_advisor', None) and self.aw.ai_advisor.enabled:
+                self.aw.aiAdvisorWindow.setVisible(True)
             _log.info('MODE: ON MONITOR (sampling @%ss)', float2float(self.delay/1000))
         except Exception as ex: # pylint: disable=broad-except
             _log.exception(ex)
@@ -13801,6 +13970,8 @@ class tgraphcanvas(QObject):
 
     def OffMonitor(self, respectAlwaysON:bool = True) -> None:
         _log.info('MODE: OFF MONITOR')
+        if getattr(self.aw, 'aiAdvisorWindow', None):
+            self.aw.aiAdvisorWindow.setVisible(False)
         if self.flagon:
             try:
                 # reset

@@ -105,7 +105,7 @@ except Exception: # pylint: disable=broad-except
 
 
 from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox, QLabel, QMainWindow, QFileDialog, QGraphicsDropShadowEffect,
-                         QInputDialog, QGroupBox, QLineEdit,
+                         QInputDialog, QGroupBox, QLineEdit, QTextEdit,
                          QSizePolicy, QVBoxLayout, QHBoxLayout, QPushButton,
                          QLCDNumber, QSpinBox, QComboBox,
                          QSlider,
@@ -1408,6 +1408,8 @@ class ApplicationWindow(QMainWindow):
     updatePlusStatusSignal = pyqtSignal() # can be called from another thread or a QTimer to trigger to update the plus icon status
     setTitleSignal = pyqtSignal(str,bool) # can be called from another thread or a QTimer to set the profile title in the main GUI thread
     sendmessageSignal = pyqtSignal(str,bool,str)
+    aiAdviceSignal = pyqtSignal(str)   # thread-safe delivery of AI advice to main thread
+    aiQuerySignal  = pyqtSignal()      # fired when a query starts (for status indicator)
     openPropertiesSignal = pyqtSignal()
     soundpopSignal = pyqtSignal()
     setCanvasColorSignal = pyqtSignal(str)
@@ -1527,7 +1529,10 @@ class ApplicationWindow(QMainWindow):
         'schedule_visible_filter', 'scheduler_tasks_visible', 'scheduler_completed_details_visible', 'scheduler_filters_visible', 'scheduler_auto_open',
         'main_menu_actions_with_shortcuts', 'ui_mode', 'UIModeMenu',  'productionModeAction', 'defaultModeAction', 'expertModeAction', 'calculatorAction',
         'helpAboutAction', 'checkUpdateAction', 'errorAction', 'messageAction', 'serialAction', 'platformAction', 'aboutQtAction',
-        'helpDocumentationAction', 'KshortCAction' ]
+        'helpDocumentationAction', 'KshortCAction',
+        'ai_advisor', 'aiAdvisorAction', 'aiAdvisorWindow', 'aiAdvisorLabel',
+        'aiStatusLabel', 'aiAskBtn', 'aiExportBtn',
+        'importExcelPlanAction' ]
 
     nLCDS: Final[int] = 10 # maximum number of LCDs and extra devices (2x10 => 20 in total!)
 
@@ -2527,6 +2532,12 @@ class ApplicationWindow(QMainWindow):
         self.populateThemeMenu()
         self.updateRecentThemeActions()
 
+        self.aiAdvisorAction:QAction = QAction(QApplication.translate('Menu', 'AI Advisor...'), self)
+        self.aiAdvisorAction.triggered.connect(self.openAIAdvisorConfig)
+
+        self.importExcelPlanAction:QAction = QAction(QApplication.translate('Menu', '匯入 Excel 烘焙計畫...'), self)
+        self.importExcelPlanAction.triggered.connect(self.openExcelImport)
+
         self.autosaveAction:QAction = QAction(QApplication.translate('Menu', 'Autosave...'), self)
         self.autosaveAction.triggered.connect(self.autosaveconf)
 
@@ -2859,6 +2870,40 @@ class ApplicationWindow(QMainWindow):
         self.messagelabel.setFont(f)
 
         self.messagelabel.setIndent(6)
+
+        # AI Advisor floating window (Tool type: stays on top of main window, no taskbar entry)
+        from PyQt6.QtCore import Qt as _Qt
+        from PyQt6.QtWidgets import QHBoxLayout as _QHBox
+        self.aiAdvisorWindow: QWidget = QWidget(self, _Qt.WindowType.Tool)
+        self.aiAdvisorWindow.setWindowTitle('AI 烘焙指導員')
+        self.aiAdvisorWindow.setMinimumSize(420, 300)
+        _aiLayout = QVBoxLayout(self.aiAdvisorWindow)
+        _aiLayout.setContentsMargins(6, 6, 6, 6)
+        _aiLayout.setSpacing(4)
+        # status bar
+        self.aiStatusLabel: QLabel = QLabel('⬜ 就緒')
+        self.aiStatusLabel.setStyleSheet('color:#888;font-size:9pt;padding:2px 4px;')
+        _aiLayout.addWidget(self.aiStatusLabel)
+        # main advice display
+        self.aiAdvisorLabel: QTextEdit = QTextEdit()
+        self.aiAdvisorLabel.setReadOnly(True)
+        self.aiAdvisorLabel.setStyleSheet(
+            'QTextEdit { background-color: #141414; color: #90ee90; '
+            'border: 1px solid #2a4a2a; padding: 6px; font-size: 11pt; }'
+        )
+        _aiLayout.addWidget(self.aiAdvisorLabel)
+        # button row
+        _aiBtnRow = _QHBox()
+        self.aiAskBtn: QPushButton = QPushButton('📣 立即詢問')
+        self.aiAskBtn.clicked.connect(self._on_ai_ask_now)
+        self.aiExportBtn: QPushButton = QPushButton('💾 匯出記錄')
+        self.aiExportBtn.clicked.connect(self._on_ai_export)
+        for _b in (self.aiAskBtn, self.aiExportBtn):
+            _b.setStyleSheet('font-size:9pt;padding:3px 8px;')
+            _aiBtnRow.addWidget(_b)
+        _aiBtnRow.addStretch()
+        _aiLayout.addLayout(_aiBtnRow)
+        self.aiAdvisorWindow.setVisible(False)
         # set a few broad style parameters
         if platform.system() == 'Linux':
             self.button_font_size_pt = 11
@@ -3289,8 +3334,7 @@ class ApplicationWindow(QMainWindow):
         self.buttonCONTROL.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.buttonCONTROL.setMinimumHeight(self.standard_button_height)
         self.buttonCONTROL.clicked.connect(self.PIDcontrol)
-        if self.app.artisanviewerMode:
-            self.buttonCONTROL.setVisible(False)
+        self.buttonCONTROL.setVisible(False)  # no PID device
 
         #create EVENT record button
         self.buttonEVENT: AuxEventPushButton = AuxEventPushButton(QApplication.translate('Button', 'EVENT'))
@@ -3840,13 +3884,13 @@ class ApplicationWindow(QMainWindow):
         LCDlayout.addStretch()
         del w
 
-        #PID Buttons
-        pidbuttonLayout.addWidget(self.buttonSVp20)
-        pidbuttonLayout.addWidget(self.buttonSVp10)
-        pidbuttonLayout.addWidget(self.buttonSVp5)
-        pidbuttonLayout.addWidget(self.buttonSVm5)
-        pidbuttonLayout.addWidget(self.buttonSVm10)
-        pidbuttonLayout.addWidget(self.buttonSVm20)
+        #PID Buttons (hidden — no PID device)
+        self.buttonSVp20.setVisible(False)
+        self.buttonSVp10.setVisible(False)
+        self.buttonSVp5.setVisible(False)
+        self.buttonSVm5.setVisible(False)
+        self.buttonSVm10.setVisible(False)
+        self.buttonSVm20.setVisible(False)
 
         # phases LCDs
 
@@ -4328,6 +4372,14 @@ class ApplicationWindow(QMainWindow):
         if not self.app.artisanviewerMode:
             self.notificationManager = NotificationManager()
 
+        # AI Roasting Advisor
+        from artisanlib.ai_advisor import AIAdvisor
+        self.ai_advisor: AIAdvisor = AIAdvisor()
+        self.aiAdviceSignal.connect(self._on_ai_advice)
+        self.aiQuerySignal.connect(self._on_ai_query_start)
+        self.ai_advisor.on_advice = self.aiAdviceSignal.emit
+        self.ai_advisor.on_query_start = self.aiQuerySignal.emit
+
 #        if sys.platform.startswith('darwin') and QVersionNumber.fromString(qVersion())[0] < QVersionNumber(6,5,0):
 #            # only on macOS we install the eventFilter to catch the signal on switching between light and dark modes
 #            self.installEventFilter(self)
@@ -4387,7 +4439,7 @@ class ApplicationWindow(QMainWindow):
         roast_menu = QMenu(f"&{QApplication.translate('Menu', 'Roast')}")
         roast_menu.addAction(self.editGraphAction)
         roast_menu.addAction(self.backgroundAction)
-        roast_menu.addAction(self.flavorAction)
+        roast_menu.addAction(self.importExcelPlanAction)
         if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
             roast_menu.addSeparator()
             roast_menu.addAction(self.switchAction)
@@ -4397,19 +4449,14 @@ class ApplicationWindow(QMainWindow):
 
     def create_config_menu(self, ui_mode:UI_MODE) -> QMenu:
         config_menu = QMenu(f"&{QApplication.translate('Menu', 'Config')}")
-        if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
-            config_menu.addMenu(self.machineMenu)
         if ui_mode is UI_MODE.EXPERT:
             config_menu.addAction(self.deviceAction)
             config_menu.addAction(self.commportAction)
             config_menu.addSeparator()
             config_menu.addAction(self.calibrateDelayAction)
             config_menu.addSeparator()
-            config_menu.addAction(self.curvesAction)
+            pass  # Curves removed
         if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
-            config_menu.addSeparator()
-            config_menu.addAction(self.eventsAction)
-            config_menu.addAction(self.alarmAction)
             config_menu.addSeparator()
             config_menu.addAction(self.phasesGraphAction)
             if ui_mode is UI_MODE.EXPERT:
@@ -4424,12 +4471,7 @@ class ApplicationWindow(QMainWindow):
             config_menu.addAction(self.autosaveAction)
             config_menu.addAction(self.batchAction)
             config_menu.addSeparator()
-            config_menu.addMenu(self.temperatureConfMenu)
-        if ui_mode is not UI_MODE.PRODUCTION:
-            config_menu.addMenu(self.languageMenu)
-        # the UI mode selector should always be present
-        config_menu.addSeparator()
-        config_menu.addMenu(self.UIModeMenu)
+            config_menu.addAction(self.aiAdvisorAction)
         return config_menu
 
     def create_tools_menu(self, ui_mode:UI_MODE) -> QMenu:
@@ -4438,13 +4480,7 @@ class ApplicationWindow(QMainWindow):
             if ui_mode is UI_MODE.EXPERT:
                 tools_menu.addMenu(self.analyzeMenu)
             tools_menu.addAction(self.roastCompareAction)
-            tools_menu.addAction(self.designerAction)
-            if ui_mode is UI_MODE.EXPERT:
-                tools_menu.addAction(self.simulatorAction)
-                tools_menu.addAction(self.wheeleditorAction)
-            tools_menu.addSeparator()
-            if ui_mode is UI_MODE.EXPERT:
-                tools_menu.addAction(self.transformAction)
+            # Designer / Simulator / Transform removed
             tools_menu.addMenu(self.temperatureMenu)
             tools_menu.addSeparator()
             tools_menu.addAction(self.calculatorAction)
@@ -4458,19 +4494,11 @@ class ApplicationWindow(QMainWindow):
         view_menu.addAction(self.eventsEditorAction)
         if self.ui_mode is not UI_MODE.PRODUCTION or len(self.extraeventslabels) > 0:
             view_menu.addAction(self.buttonsAction)
-        if self.ui_mode is not UI_MODE.PRODUCTION or self.slidersVisible():
-            view_menu.addAction(self.slidersAction)
-        view_menu.addSeparator()
-        view_menu.addAction(self.scheduleAction)
-        if self.app.artisanviewerMode:
-            self.scheduleAction.setEnabled(False) # no scheduler in ArtisanViewer mode
+        # Sliders / Schedule / Extra LCDs removed
         view_menu.addSeparator()
         view_menu.addAction(self.lcdsAction)
         view_menu.addAction(self.deltalcdsAction)
-        if self.ui_mode is not UI_MODE.PRODUCTION or self.qmc.Controlbuttonflag:
-            view_menu.addAction(self.pidlcdsAction)
-        if self.ui_mode is not UI_MODE.PRODUCTION or len(self.qmc.extradevices)>0:
-            view_menu.addAction(self.extralcdsAction)
+        # PID LCDs / Extra LCDs hidden
         view_menu.addAction(self.phaseslcdsAction)
         if self.ui_mode is not UI_MODE.PRODUCTION or self.scale1_model is not None:
             view_menu.addAction(self.scalelcdsAction)
@@ -7032,10 +7060,7 @@ class ApplicationWindow(QMainWindow):
         else:
             self.pidcontrol.activateONOFFeasySV(False)
             self.pidcontrol.activateSVSlider(False)
-        if self.app.artisanviewerMode:
-            self.buttonCONTROL.setVisible(False)
-        else:
-            self.buttonCONTROL.setVisible(res)
+        self.buttonCONTROL.setVisible(False)  # no PID device
         self.LCD6frame.setVisible(lcds)
         self.LCD7frame.setVisible(lcds)
 
@@ -18173,14 +18198,10 @@ class ApplicationWindow(QMainWindow):
             self.plus_user_id = settings.value('plus_user_id',self.plus_user_id)
             self.plus_account_id = settings.value('plus_account_id',self.plus_account_id)
             plus.stock.coffee_label_normal_order = settings.value('standard_bean_labels',plus.stock.coffee_label_normal_order)
-            #restore mode
+            #restore mode (fixed to Celsius)
             old_mode = self.qmc.mode
-            self.qmc.mode = ('F' if str(settings.value('Mode',self.qmc.mode)) == 'F' else 'C')
-            #convert modes only if needed comparing the new uploaded mode to the old one.
-            #otherwise it would incorrectly convert the uploaded phases
-            if self.qmc.mode == 'F' and old_mode == 'C':
-                self.qmc.fahrenheitMode()
-            if self.qmc.mode == 'C' and old_mode == 'F':
+            self.qmc.mode = 'C'
+            if old_mode == 'F':
                 self.qmc.celsiusMode()
             if settings.contains('DebugLogLevel'):
                 try:
@@ -18443,7 +18464,7 @@ class ApplicationWindow(QMainWindow):
             self.qmc.AUCLCDmode = toInt(settings.value('AUCLCDmode',self.qmc.AUCLCDmode))
             self.qmc.AUCshowFlag = toBool(settings.value('AUCshowFlag',self.qmc.AUCshowFlag))
             self.keyboardmoveflag = toInt(settings.value('keyboardmoveflag',int(self.keyboardmoveflag)))
-            self.ui_mode = UI_MODE(toInt(settings.value('UI_mode',int(self.ui_mode))))
+            self.ui_mode = UI_MODE.EXPERT  # fixed to Expert mode
             self.qmc.ambientTempSource = toInt(settings.value('AmbientTempSource',int(self.qmc.ambientTempSource)))
             self.qmc.ambientHumiditySource = toInt(settings.value('AmbientHumiditySource',int(self.qmc.ambientHumiditySource)))
             self.qmc.ambientPressureSource = toInt(settings.value('AmbientPressureSource',int(self.qmc.ambientPressureSource)))
@@ -19003,6 +19024,32 @@ class ApplicationWindow(QMainWindow):
                 settings.endGroup()
 #--- END GROUP Notifications
 
+#--- BEGIN GROUP AIAdvisor
+            settings.beginGroup('AIAdvisor')
+            try:
+                from artisanlib.ai_advisor import AIProvider
+                self.ai_advisor.enabled = toBool(settings.value('enabled', self.ai_advisor.enabled))
+                provider_str = toString(settings.value('provider', self.ai_advisor.provider.value))
+                self.ai_advisor.provider = AIProvider(provider_str)
+                self.ai_advisor.api_key = toString(settings.value('api_key', self.ai_advisor.api_key))
+                self.ai_advisor.model = toString(settings.value('model', self.ai_advisor.model))
+                self.ai_advisor.ollama_url = toString(settings.value('ollama_url', self.ai_advisor.ollama_url))
+                self.ai_advisor.interval = max(10, toInt(settings.value('interval', self.ai_advisor.interval)))
+                self.ai_advisor.tts_enabled = toBool(settings.value('tts_enabled', self.ai_advisor.tts_enabled))
+                self.ai_advisor.tts_rate   = max(-5, min(5, toInt(settings.value('tts_rate', self.ai_advisor.tts_rate))))
+                self.ai_advisor.tts_volume = max(0, min(100, toInt(settings.value('tts_volume', self.ai_advisor.tts_volume))))
+                self.ai_advisor.tts_mode   = toString(settings.value('tts_mode', self.ai_advisor.tts_mode))
+                self.ai_advisor.tts_prefix = toBool(settings.value('tts_prefix', self.ai_advisor.tts_prefix))
+                self.ai_advisor.tts_voice  = toString(settings.value('tts_voice', self.ai_advisor.tts_voice))
+                _wx = toInt(settings.value('window_x', -1))
+                _wy = toInt(settings.value('window_y', -1))
+                if _wx >= 0 and _wy >= 0:
+                    self.aiAdvisorWindow.move(_wx, _wy)
+            except Exception as e: # pylint: disable=broad-except
+                _log.exception(e)
+            settings.endGroup()
+#--- END GROUP AIAdvisor
+
 #--- BEGIN GROUP Axis
             #loads max-min temp limits of graph
             settings.beginGroup('Axis')
@@ -19281,8 +19328,8 @@ class ApplicationWindow(QMainWindow):
 
             self.qmc.title_show_always = toBool(settings.value('titleshowalways',self.qmc.title_show_always))
             self.qmc.roastpropertiesflag = toInt(settings.value('roastpropertiesflag',self.qmc.roastpropertiesflag))
-            self.qmc.roastpropertiesAutoOpenFlag = toInt(settings.value('roastpropertiesAutoOpenFlag',self.qmc.roastpropertiesAutoOpenFlag))
-            self.qmc.roastpropertiesAutoOpenDropFlag = toInt(settings.value('roastpropertiesAutoOpenDropFlag',self.qmc.roastpropertiesAutoOpenDropFlag))
+            self.qmc.roastpropertiesAutoOpenFlag = 0  # forced: no auto-popup on CHARGE
+            self.qmc.roastpropertiesAutoOpenDropFlag = 0  # forced: no auto-popup on DROP
             self.qmc.customflavorlabels = list(map(str,list(toStringList(settings.value('customflavorlabels',self.qmc.customflavorlabels)))))
 
 #--- BEGIN GROUP Sliders
@@ -20833,6 +20880,29 @@ class ApplicationWindow(QMainWindow):
             self.settingsSetValue(settings, default_settings, 'notificationsflag',self.notificationsflag, read_defaults)
             settings.endGroup()
 #--- END GROUP Notifications
+
+#--- BEGIN GROUP AIAdvisor
+            settings.beginGroup('AIAdvisor')
+            try:
+                self.settingsSetValue(settings, default_settings, 'enabled', self.ai_advisor.enabled, read_defaults)
+                self.settingsSetValue(settings, default_settings, 'provider', self.ai_advisor.provider.value, read_defaults)
+                self.settingsSetValue(settings, default_settings, 'api_key', self.ai_advisor.api_key, read_defaults)
+                self.settingsSetValue(settings, default_settings, 'model', self.ai_advisor.model, read_defaults)
+                self.settingsSetValue(settings, default_settings, 'ollama_url', self.ai_advisor.ollama_url, read_defaults)
+                self.settingsSetValue(settings, default_settings, 'interval', self.ai_advisor.interval, read_defaults)
+                self.settingsSetValue(settings, default_settings, 'tts_enabled', self.ai_advisor.tts_enabled, read_defaults)
+                self.settingsSetValue(settings, default_settings, 'tts_rate',    self.ai_advisor.tts_rate,    read_defaults)
+                self.settingsSetValue(settings, default_settings, 'tts_volume',  self.ai_advisor.tts_volume,  read_defaults)
+                self.settingsSetValue(settings, default_settings, 'tts_mode',    self.ai_advisor.tts_mode,    read_defaults)
+                self.settingsSetValue(settings, default_settings, 'tts_prefix',  self.ai_advisor.tts_prefix,  read_defaults)
+                self.settingsSetValue(settings, default_settings, 'tts_voice',   self.ai_advisor.tts_voice,   read_defaults)
+                _pos = self.aiAdvisorWindow.pos()
+                self.settingsSetValue(settings, default_settings, 'window_x', _pos.x(), read_defaults)
+                self.settingsSetValue(settings, default_settings, 'window_y', _pos.y(), read_defaults)
+            except Exception as e: # pylint: disable=broad-except
+                _log.exception(e)
+            settings.endGroup()
+#--- END GROUP AIAdvisor
 
 #--- BEGIN GROUP Axis
             settings.beginGroup('Axis')
@@ -25032,7 +25102,103 @@ class ApplicationWindow(QMainWindow):
 #                dialog.setFixedSize(dialog.size())  # this badly interacts with keeping the window geometry in qsettings
 
 
+    # ---- AI Advisor ----
+
     @pyqtSlot()
+    def _on_ai_query_start(self) -> None:
+        self.aiStatusLabel.setText('🔄 AI 查詢中…')
+        self.aiStatusLabel.setStyleSheet('color:#ffd700;font-size:9pt;padding:2px 4px;')
+        self.aiAskBtn.setEnabled(False)
+
+    @pyqtSlot(str)
+    def _on_ai_advice(self, advice: str) -> None:
+        """Receive AI advice and display it (called from background thread via signal)."""
+        self.sendmessageSignal.emit(f'🤖 {advice[:80]}', True, '')
+        self.soundpopSignal.emit()
+        ts_last = self.ai_advisor.history[-1][0] if self.ai_advisor.history else ''
+        self.aiStatusLabel.setText(f'✅ 上次更新 {ts_last}')
+        self.aiStatusLabel.setStyleSheet('color:#888;font-size:9pt;padding:2px 4px;')
+        self.aiAskBtn.setEnabled(True)
+        blocks = []
+        for ts, text in reversed(list(self.ai_advisor.history)):
+            blocks.append(self._format_ai_block(ts, text))
+        self.aiAdvisorLabel.setHtml('<br>'.join(blocks))
+        self.aiAdvisorLabel.verticalScrollBar().setValue(0)
+
+    @pyqtSlot()
+    def _on_ai_ask_now(self) -> None:
+        """Manually trigger an immediate AI query."""
+        qmc = self.qmc
+        if not qmc or not self.ai_advisor.enabled:
+            return
+        bt  = qmc.temp2[-1]  if qmc.temp2  else 0.0
+        et  = qmc.temp1[-1]  if qmc.temp1  else 0.0
+        ror = qmc.rateofchange2 if hasattr(qmc, 'rateofchange2') else 0.0
+        self.ai_advisor.force_query(
+            bt=bt, et=et, ror_bt=ror,
+            timeindex=qmc.timeindex, timex=qmc.timex, mode=qmc.mode,
+            ror_values=list(getattr(qmc, '_ai_ror_buffer', [])),
+        )
+
+    @pyqtSlot()
+    def _on_ai_export(self) -> None:
+        """Save AI advice history to a text file."""
+        import os
+        ts = libtime.strftime('%Y%m%d_%H%M%S')
+        default = os.path.join(os.path.expanduser('~'), f'ai_roast_log_{ts}.txt')
+        path, _ = QFileDialog.getSaveFileName(
+            self.aiAdvisorWindow,
+            QApplication.translate('Dialog', 'Save AI Advice Log'),
+            default, 'Text files (*.txt)')
+        if path:
+            self.ai_advisor.export_advice_log(path)
+
+    @staticmethod
+    def _format_ai_block(ts: str, text: str) -> str:
+        """Parse 現況/操作/預期 sections, detect urgency, render with colours."""
+        import re
+        section_colors = {'現況': '#90ee90', '操作': '#ffd700', '預期': '#87ceeb'}
+        _urgent_kw   = ('緊急', '大幅', '崩潰', '趨近0', '負值', '暴衝', '過度')
+        _warning_kw  = ('下滑', '偏低', '不足', '注意', '過快', '回升')
+        badge, border = '🟢', '#1a4a1a'
+        lo = text.lower()
+        if any(k in text for k in _urgent_kw):
+            badge, border = '🔴', '#6a1a1a'
+        elif any(k in text for k in _warning_kw):
+            badge, border = '🟡', '#4a3a00'
+        lines = text.strip().splitlines()
+        html_lines = [
+            f'<span style="color:#aaaaaa;font-size:9pt;">{badge} {ts}</span>'
+        ]
+        for line in lines:
+            m = re.match(r'^(現況|操作|預期)[：:]\s*(.*)', line)
+            if m:
+                label, content = m.group(1), m.group(2)
+                color = section_colors.get(label, '#90ee90')
+                html_lines.append(
+                    f'<span style="color:{color};font-weight:bold;">{label}：</span>'
+                    f'<span style="color:{color};">{content}</span>'
+                )
+            else:
+                html_lines.append(f'<span style="color:#cccccc;">{line}</span>')
+        div = (f'<div style="border-left:3px solid {border};'
+               f'padding:4px 6px;margin:4px 0;">')
+        return div + '<br>'.join(html_lines) + '</div>'
+
+    @pyqtSlot()
+    @pyqtSlot(bool)
+    def openAIAdvisorConfig(self, _: bool = False) -> None:
+        from artisanlib.ai_advisor_dialog import AIAdvisorDialog
+        dialog = AIAdvisorDialog(self, self)
+        dialog.show()
+
+    @pyqtSlot()
+    @pyqtSlot(bool)
+    def openExcelImport(self, _: bool = False) -> None:
+        from artisanlib.excel_import import ExcelImportDialog
+        dialog = ExcelImportDialog(self, self)
+        dialog.exec()
+
     @pyqtSlot(bool)
     def deviceassigment(self, _:bool = False) -> None:
         from artisanlib.devices import DeviceAssignmentDlg
@@ -27998,13 +28164,7 @@ def qt_message_handler(mode:QtMsgType, context:'QMessageLogContext', message:str
         context.line, context.function, context.file, mode_str, message)
 
 def initialize_locale(my_app:Artisan) -> str:
-    locale:str
-    if QSettings().contains('resetqsettings') and not toInt(QSettings().value('resetqsettings')):
-        locale = toString(QSettings().value('locale'))
-        if locale in {'en_US', 'None'}:
-            locale = 'en'
-    else:
-        locale = ''
+    locale:str = 'zh_TW'  # fixed to Traditional Chinese
 
     qt_translation_modules:list[str] = [
         'qtbase',

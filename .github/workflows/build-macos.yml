@@ -1,0 +1,82 @@
+name: Build macOS
+
+on:
+  workflow_dispatch:          # 手動在 GitHub Actions 頁面按 Run workflow 即可觸發
+  push:
+    tags:
+      - 'v*'                  # 推 git tag（如 v2.12.0）時自動觸發並建立 Release
+
+jobs:
+  build-macos:
+    runs-on: macos-13         # Intel macOS — 與 spec 的 target_arch='x86_64' 一致
+
+    steps:
+      # ── 1. Checkout ───────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Python ─────────────────────────────────────────────────────────────
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # ── 3. Dependencies ───────────────────────────────────────────────────────
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+
+      # ── 4. Set env for spec file ──────────────────────────────────────────────
+      - name: Set build environment
+        run: |
+          echo "PYTHON_V=3.13" >> $GITHUB_ENV
+          SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
+          echo "QT_PATH=$SITE/PyQt6/Qt6" >> $GITHUB_ENV
+          echo "MACOSX_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+
+      # ── 5. PyInstaller ────────────────────────────────────────────────────────
+      - name: Build with PyInstaller
+        working-directory: src
+        run: |
+          pyinstaller --noconfirm --log-level=INFO artisan-mac.spec
+
+      # ── 6. Verify .dmg ────────────────────────────────────────────────────────
+      - name: Verify .dmg
+        working-directory: src
+        run: |
+          ls -lh artisan-mac-*.dmg
+          DMG=$(ls artisan-mac-*.dmg)
+          SIZE=$(stat -f%z "$DMG")
+          echo "DMG: $DMG  size: $SIZE bytes"
+          if [ "$SIZE" -lt 50000000 ]; then
+            echo "ERROR: DMG smaller than 50 MB — build likely failed"
+            exit 1
+          fi
+
+      # ── 7a. Upload artifact（手動觸發時）──────────────────────────────────────
+      - name: Upload DMG artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: artisan-mac-dmg
+          path: src/artisan-mac-*.dmg
+          retention-days: 30
+
+      # ── 7b. Create GitHub Release（推 tag 時）────────────────────────────────
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src/artisan-mac-*.dmg
+          name: "Artisan ${{ github.ref_name }}"
+          body: |
+            macOS 版安裝檔（Intel x86_64，需 macOS 13+）
+
+            安裝方式：掛載 .dmg → 將 Artisan.app 拖入 Applications 資料夾
+
+            > 若出現「無法驗證開發者」：右鍵點 Artisan.app → 選「打開」→ 確認開啟
+          draft: false
+          prerelease: false
