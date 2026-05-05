@@ -43,7 +43,8 @@ jobs:
         run: |
           $ver = python -c "import artisanlib; print(artisanlib.__version__)"
           $bld = python -c "import artisanlib; print(artisanlib.__build__)"
-          python -c "from pyinstaller_versionfile import create_versionfile; create_versionfile('version-metadata.yml', 'version_info-win.txt', version='$ver.$bld')"
+          $scripts = python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+          & "$scripts\create-version-file.exe" version-metadata.yml --outfile version_info-win.txt --version "$ver.$bld"
 
       - name: Build with PyInstaller
         working-directory: src
