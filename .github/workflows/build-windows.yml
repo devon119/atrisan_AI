@@ -8,48 +8,34 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # ── 1. Checkout ────────────────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── 1b. Junction so spec's hardcoded C:\projects\artisan path works ────
-      - name: Create junction for spec path
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force "C:\projects" | Out-Null
-          cmd /c mklink /J "C:\projects\artisan" "$env:GITHUB_WORKSPACE"
-
-      # ── 2. Python ──────────────────────────────────────────────────────────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
-      # ── 3. Install dependencies ────────────────────────────────────────────
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: pip install -r src\requirements.txt
 
-      # ── 4. Set env vars the spec file needs ────────────────────────────────
       - name: Set build environment
         shell: pwsh
         run: |
-          $pythonPath = (python -c "import sys; print(sys.prefix)")
+          $pythonPath = python -c "import sys; print(sys.prefix)"
           $qtTransl   = "$pythonPath\Lib\site-packages\PyQt6\Qt6\translations"
-          echo "APPVEYOR=True"            >> $env:GITHUB_ENV
           echo "PYTHON_PATH=$pythonPath"  >> $env:GITHUB_ENV
           echo "PYQT=6"                   >> $env:GITHUB_ENV
           echo "QT_TRANSL=$qtTransl"      >> $env:GITHUB_ENV
 
-      # ── 5. Install NSIS ────────────────────────────────────────────────────
       - name: Install NSIS
         run: choco install nsis --no-progress -y
 
-      # ── 6. Download VC Redist (spec copies it into the installer) ──────────
       - name: Download VC Redist
+        shell: pwsh
         run: |
-          curl -L "https://aka.ms/vs/17/release/vc_redist.x64.exe" -o "C:\projects\vc_redist.x64.exe"
+          curl -L "https://aka.ms/vs/17/release/vc_redist.x64.exe" -o "$env:GITHUB_WORKSPACE\vc_redist.x64.exe"
 
-      # ── 7. Generate version_info-win.txt ───────────────────────────────────
       - name: Generate version info
         working-directory: src
         shell: pwsh
@@ -58,22 +44,18 @@ jobs:
           $bld = python -c "import artisanlib; print(artisanlib.__build__)"
           create-version-file version-metadata.yml --outfile version_info-win.txt --version "$ver.$bld"
 
-      # ── 8. PyInstaller ─────────────────────────────────────────────────────
       - name: Build with PyInstaller
         working-directory: src
         run: pyinstaller --noconfirm --log-level=WARN artisan-win.spec
 
-      # ── 9. NSIS installer ──────────────────────────────────────────────────
       - name: Build installer with NSIS
         working-directory: src
         shell: pwsh
         run: |
           $ver = python -c "import artisanlib; print(artisanlib.__version__)"
           $bld = python -c "import artisanlib; print(artisanlib.__build__)"
-          $nsis = "C:\Program Files (x86)\NSIS\makensis.exe"
-          & $nsis /DPRODUCT_VERSION=$ver /DPRODUCT_BUILD=$bld setup-install3-pi.nsi
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VERSION=$ver /DPRODUCT_BUILD=$bld setup-install3-pi.nsi
 
-      # ── 10. Upload installer ───────────────────────────────────────────────
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:

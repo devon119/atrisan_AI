@@ -95,8 +95,13 @@ if os.environ.get('APPVEYOR'):
     PYTHON = os.environ.get('PYTHON_PATH')
     PYQT = os.environ.get('PYQT')
     QT_TRANSL = os.environ.get('QT_TRANSL')
+elif os.environ.get('GITHUB_ACTIONS'):
+    ARTISAN_SRC = os.path.join(os.environ.get('GITHUB_WORKSPACE', ''), 'src')
+    PYTHON = os.environ.get('PYTHON_PATH')
+    PYQT = os.environ.get('PYQT', '6')
+    QT_TRANSL = os.environ.get('QT_TRANSL')
 else:
-    msg =f'artisan-win.spec is intended only to run on Appveyor CI.'
+    msg =f'artisan-win.spec is intended only to run on Appveyor CI or GitHub Actions.'
     logging.error(msg)
     sys.exit('Fatal Error')
 
