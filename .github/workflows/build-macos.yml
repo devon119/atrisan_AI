@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-13         # Intel macOS — 與 spec 的 target_arch='x86_64' 一致
+    runs-on: macos-14         # Apple Silicon (M1/M2/M3) — arm64
 
     steps:
       # ── 1. Checkout ───────────────────────────────────────────────────────────

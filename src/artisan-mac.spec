@@ -161,7 +161,7 @@ exe = EXE(pyz,
             console=False,
             disable_windowed_traceback=False,
             argv_emulation=False, # False for GUI apps
-            target_arch='x86_64', #'arm64', #'universal2',
+            target_arch='arm64', #'x86_64', #'universal2',
             codesign_identity=None,
             entitlements_file=None
             )
