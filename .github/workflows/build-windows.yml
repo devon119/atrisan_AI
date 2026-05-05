@@ -8,11 +8,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # ── 1. Checkout to the path the spec file expects ──────────────────────
+      # ── 1. Checkout ────────────────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: C:\projects\artisan
+
+      # ── 1b. Junction so spec's hardcoded C:\projects\artisan path works ────
+      - name: Create junction for spec path
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force "C:\projects" | Out-Null
+          cmd /c mklink /J "C:\projects\artisan" "$env:GITHUB_WORKSPACE"
 
       # ── 2. Python ──────────────────────────────────────────────────────────
       - name: Set up Python
@@ -22,7 +27,7 @@ jobs:
 
       # ── 3. Install dependencies ────────────────────────────────────────────
       - name: Install Python dependencies
-        run: pip install -r C:\projects\artisan\src\requirements.txt
+        run: pip install -r src\requirements.txt
 
       # ── 4. Set env vars the spec file needs ────────────────────────────────
       - name: Set build environment
@@ -46,7 +51,7 @@ jobs:
 
       # ── 7. Generate version_info-win.txt ───────────────────────────────────
       - name: Generate version info
-        working-directory: C:\projects\artisan\src
+        working-directory: src
         shell: pwsh
         run: |
           $ver = python -c "import artisanlib; print(artisanlib.__version__)"
@@ -55,12 +60,12 @@ jobs:
 
       # ── 8. PyInstaller ─────────────────────────────────────────────────────
       - name: Build with PyInstaller
-        working-directory: C:\projects\artisan\src
+        working-directory: src
         run: pyinstaller --noconfirm --log-level=WARN artisan-win.spec
 
       # ── 9. NSIS installer ──────────────────────────────────────────────────
       - name: Build installer with NSIS
-        working-directory: C:\projects\artisan\src
+        working-directory: src
         shell: pwsh
         run: |
           $ver = python -c "import artisanlib; print(artisanlib.__version__)"
@@ -73,5 +78,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artisan-win-setup
-          path: C:\projects\artisan\src\artisan-win*setup.exe
+          path: src\artisan-win*setup.exe
           retention-days: 30
