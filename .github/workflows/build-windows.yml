@@ -24,9 +24,10 @@ jobs:
         run: |
           $pythonPath = python -c "import sys; print(sys.prefix)"
           $qtTransl   = "$pythonPath\Lib\site-packages\PyQt6\Qt6\translations"
-          echo "PYTHON_PATH=$pythonPath"  >> $env:GITHUB_ENV
-          echo "PYQT=6"                   >> $env:GITHUB_ENV
-          echo "QT_TRANSL=$qtTransl"      >> $env:GITHUB_ENV
+          echo "PYTHON_PATH=$pythonPath"            >> $env:GITHUB_ENV
+          echo "PYQT=6"                             >> $env:GITHUB_ENV
+          echo "QT_TRANSL=$qtTransl"                >> $env:GITHUB_ENV
+          echo "$pythonPath\Scripts"                >> $env:GITHUB_PATH
 
       - name: Install NSIS
         run: choco install nsis --no-progress -y
