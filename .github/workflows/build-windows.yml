@@ -43,11 +43,12 @@ jobs:
         run: |
           $ver = python -c "import artisanlib; print(artisanlib.__version__)"
           $bld = python -c "import artisanlib; print(artisanlib.__build__)"
-          create-version-file version-metadata.yml --outfile version_info-win.txt --version "$ver.$bld"
+          python -c "from pyinstaller_versionfile import create_versionfile; create_versionfile('version-metadata.yml', 'version_info-win.txt', version='$ver.$bld')"
 
       - name: Build with PyInstaller
         working-directory: src
-        run: pyinstaller --noconfirm --log-level=WARN artisan-win.spec
+        shell: pwsh
+        run: python -m PyInstaller --noconfirm --log-level=WARN artisan-win.spec
 
       - name: Build installer with NSIS
         working-directory: src
@@ -55,7 +56,9 @@ jobs:
         run: |
           $ver = python -c "import artisanlib; print(artisanlib.__version__)"
           $bld = python -c "import artisanlib; print(artisanlib.__build__)"
-          & "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VERSION=$ver /DPRODUCT_BUILD=$bld setup-install3-pi.nsi
+          $nsis = (Get-Command makensis -ErrorAction SilentlyContinue)?.Source
+          if (-not $nsis) { $nsis = "C:\Program Files (x86)\NSIS\makensis.exe" }
+          & $nsis /DPRODUCT_VERSION=$ver /DPRODUCT_BUILD=$bld setup-install3-pi.nsi
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
