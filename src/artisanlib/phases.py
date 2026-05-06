@@ -20,12 +20,14 @@ from artisanlib.dialogs import ArtisanDialog
 from artisanlib.main import UI_MODE
 
 from PyQt6.QtCore import Qt, pyqtSlot, QSettings
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
-    QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLayout, QSpinBox)
+    QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLayout, QSpinBox, QPushButton,
+    QFrame)
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget, QPushButton # pylint: disable=unused-import
+    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
 
 class phasesGraphDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:
@@ -42,6 +44,7 @@ class phasesGraphDlg(ArtisanDialog):
         self.org_autoFCsFlag = bool(self.aw.qmc.autoFCsFlag)
         self.org_phasesLCDmode_l = list(self.aw.qmc.phasesLCDmode_l)
         self.org_phasesLCDmode_all = list(self.aw.qmc.phasesLCDmode_all)
+        self.org_holographic_phases = [dict(p) for p in self.aw.qmc.holographic_phases]
         #
         dryLabel = QLabel(QApplication.translate('Label', 'Drying'))
         midLabel = QLabel(QApplication.translate('Label', 'Maillard'))
@@ -172,6 +175,48 @@ class phasesGraphDlg(ArtisanDialog):
 
         self.events2phases()
 
+        # --- Holographic phases section ---
+        holo_labels = ['T0', 'T1', QApplication.translate('Label', '大理石')]
+        self.hp_enabled: list[QCheckBox] = []
+        self.hp_min: list[QSpinBox] = []
+        self.hp_max: list[QSpinBox] = []
+        temp_suffix = ' F' if self.aw.qmc.mode == 'F' else ' C'
+
+        holoLayout = QGridLayout()
+        holoLayout.addWidget(QLabel(QApplication.translate('Label', 'Event')), 0, 0, Qt.AlignmentFlag.AlignHCenter)
+        holoLayout.addWidget(QLabel(QApplication.translate('Label', 'Auto')), 0, 1, Qt.AlignmentFlag.AlignHCenter)
+        holoLayout.addWidget(QLabel(QApplication.translate('Label', 'BT min')), 0, 2, Qt.AlignmentFlag.AlignHCenter)
+        holoLayout.addWidget(QLabel(QApplication.translate('Label', 'BT max')), 0, 3, Qt.AlignmentFlag.AlignHCenter)
+
+        for i, (label, hp) in enumerate(zip(holo_labels, self.aw.qmc.holographic_phases)):
+            row = i + 1
+            holoLayout.addWidget(QLabel(label), row, 0, Qt.AlignmentFlag.AlignRight)
+            cb = QCheckBox()
+            cb.setChecked(bool(hp.get('enabled', False)))
+            cb.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            self.hp_enabled.append(cb)
+            holoLayout.addWidget(cb, row, 1, Qt.AlignmentFlag.AlignHCenter)
+            sp_min = QSpinBox()
+            sp_min.setAlignment(Qt.AlignmentFlag.AlignRight)
+            sp_min.setMinimumWidth(80)
+            sp_min.setRange(0, 1000)
+            sp_min.setSuffix(temp_suffix)
+            sp_min.setValue(int(hp.get('bt_min', 140)))
+            self.hp_min.append(sp_min)
+            holoLayout.addWidget(sp_min, row, 2)
+            sp_max = QSpinBox()
+            sp_max.setAlignment(Qt.AlignmentFlag.AlignRight)
+            sp_max.setMinimumWidth(80)
+            sp_max.setRange(0, 1000)
+            sp_max.setSuffix(temp_suffix)
+            sp_max.setValue(int(hp.get('bt_max', 160)))
+            self.hp_max.append(sp_max)
+            holoLayout.addWidget(sp_max, row, 3)
+
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+
         boxedPhaseLayout = QHBoxLayout()
         boxedPhaseLayout.addStretch()
         boxedPhaseLayout.addLayout(phaseLayout)
@@ -189,10 +234,17 @@ class phasesGraphDlg(ArtisanDialog):
         boxedPhaseFlagLayout.addStretch()
         buttonsLayout = QHBoxLayout()
         buttonsLayout.addWidget(self.dialogbuttons)
+        boxedHoloLayout = QHBoxLayout()
+        boxedHoloLayout.addStretch()
+        boxedHoloLayout.addLayout(holoLayout)
+        boxedHoloLayout.addStretch()
+
         mainLayout = QVBoxLayout()
         mainLayout.addLayout(boxedPhaseLayout)
         if self.aw.ui_mode is UI_MODE.EXPERT:
             mainLayout.addLayout(boxedPhaseFlagLayout)
+        mainLayout.addWidget(separator)
+        mainLayout.addLayout(boxedHoloLayout)
         mainLayout.addStretch()
         mainLayout.addSpacing(10)
         mainLayout.addLayout(buttonsLayout)
@@ -316,6 +368,13 @@ class phasesGraphDlg(ArtisanDialog):
             self.aw.qmc.phasesbuttonflag = True
         else:
             self.aw.qmc.phasesbuttonflag = False
+
+        # save holographic phase settings
+        for i, hp in enumerate(self.aw.qmc.holographic_phases):
+            hp['enabled'] = self.hp_enabled[i].isChecked()
+            hp['bt_min'] = self.hp_min[i].value()
+            hp['bt_max'] = self.hp_max[i].value()
+
         self.aw.qmc.redraw(recomputeAllDeltas=False)
         self.savePhasesSettings()
         #save window position (only; not size!)
@@ -335,6 +394,7 @@ class phasesGraphDlg(ArtisanDialog):
         self.aw.qmc.autoFCsFlag = bool(self.org_autoFCsFlag)
         self.aw.qmc.phasesLCDmode_l = list(self.org_phasesLCDmode_l)
         self.aw.qmc.phasesLCDmode_all = list(self.org_phasesLCDmode_all)
+        self.aw.qmc.holographic_phases = [dict(p) for p in self.org_holographic_phases]
         self.aw.qmc.redraw(recomputeAllDeltas=False)
         self.savePhasesSettings()
         #save window position (only; not size!)

@@ -44,7 +44,7 @@ import plus.blend
 #from artisanlib.suppress_errors import suppress_stdout_stderr
 from artisanlib.util import (deltaLabelUTF8, stringfromseconds,stringtoseconds, toInt, toFloat, abbrevString,
         scaleFloat2String, comma2dot, weight_units, render_weight, weight_units_lower, volume_units, float2floatWeightVolume, float2float,
-        convertWeight, convertVolume, float2str)
+        convertWeight, convertVolume, float2str, deserialize, serialize)
 from artisanlib.dialogs import ArtisanDialog, ArtisanResizeablDialog, tareDlg
 from artisanlib.widgets import MyQComboBox, ClickableQLabel, ClickableTextEdit, MyTableWidgetItemNumber
 
@@ -1045,6 +1045,19 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.delRecentButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.delRecentButton.setToolTip(QApplication.translate('Tooltip','Remove roast properties from list of recent roasts'))
 
+        # load from history .alog file
+        self._loaded_history_filename:str = ''
+        self._loaded_history_profile:dict = {}
+        self.loadHistoryButton = QPushButton(QApplication.translate('Button','載入歷史'))
+        self.loadHistoryButton.clicked.connect(self.loadHistorySlot)
+        self.loadHistoryButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.loadHistoryButton.setToolTip(QApplication.translate('Tooltip','Load roast properties from a saved .alog file'))
+        self.saveHistoryButton = QPushButton(QApplication.translate('Button','存檔'))
+        self.saveHistoryButton.clicked.connect(self.saveHistorySlot)
+        self.saveHistoryButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.saveHistoryButton.setEnabled(False)
+        self.saveHistoryButton.setToolTip(QApplication.translate('Tooltip','Save current properties back to the loaded .alog file'))
+
         self.recentRoastEnabled()
 
         #bean size
@@ -1308,6 +1321,7 @@ class editGraphDlg(ArtisanResizeablDialog):
         titleLine.addWidget(self.titleedit)
         titleLine.addWidget(self.addRecentButton)
         titleLine.addWidget(self.delRecentButton)
+        titleLine.addWidget(self.loadHistoryButton)
         if self.aw.ui_mode is UI_MODE.EXPERT:
             titleLine.addSpacing(2)
             titleLine.addWidget(self.titleShowAlwaysFlag)
@@ -1583,6 +1597,7 @@ class editGraphDlg(ArtisanResizeablDialog):
             self.roastpropertiesAutoOpen.setVisible(False)
             self.roastpropertiesAutoOpenDROP.setVisible(False)
         okLayout.addStretch()
+        okLayout.addWidget(self.saveHistoryButton)
         okLayout.addWidget(self.dialogbuttons)
         okLayout.setSpacing(10)
         okLayout.setContentsMargins(5, 15, 5, 15) # left, top, right, bottom
@@ -2528,6 +2543,298 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.recentRoastEnabled()
 
     @pyqtSlot(str)
+    @pyqtSlot(bool)
+    def loadHistorySlot(self, _:bool = False) -> None:
+        filename = self.aw.ArtisanOpenFileDialog(
+            msg=QApplication.translate('Message','載入歷史烘焙資料'),
+            ext='*.alog')
+        if not filename:
+            return
+        try:
+            profile = deserialize(filename)
+        except Exception:  # pylint: disable=broad-except
+            return
+        if not profile:
+            return
+        self._loaded_history_filename = filename
+        self._loaded_history_profile = profile
+        self.saveHistoryButton.setEnabled(True)
+        # Title
+        if 'title' in profile:
+            self.titleedit.setEditText(str(profile['title']))
+        if 'title_show_always' in profile:
+            self.titleShowAlwaysFlag.setChecked(bool(profile['title_show_always']))
+        # Beans
+        if 'beans' in profile:
+            self.beansedit.setPlainText(str(profile['beans']))
+        # Weight
+        if 'weight' in profile and isinstance(profile['weight'], (list, tuple)) and len(profile['weight']) >= 3:
+            w = profile['weight']
+            self.weightinedit.setText(f"{float(w[0]):g}" if w[0] else '0')
+            self.weightoutedit.setText(f"{float(w[1]):g}" if w[1] else '0')
+            unit_str = str(w[2])
+            if unit_str in weight_units:
+                self.unitsComboBox.setCurrentIndex(weight_units.index(unit_str))
+        # Defects weight
+        if 'roasted_defects_weight' in profile:
+            dw = profile['roasted_defects_weight']
+            self.weightoutdefectsedit.setText(f"{float(dw):g}" if dw else '')
+        if 'roasted_defects_mode' in profile:
+            self.aw.qmc.roasted_defects_mode = bool(profile['roasted_defects_mode'])
+        # Volume
+        if 'volume' in profile and isinstance(profile['volume'], (list, tuple)) and len(profile['volume']) >= 3:
+            v = profile['volume']
+            self.volumeinedit.setText(f"{float(v[0]):g}" if v[0] else '0')
+            self.volumeoutedit.setText(f"{float(v[1]):g}" if v[1] else '0')
+            unit_str = str(v[2])
+            if unit_str in volume_units:
+                self.volumeUnitsComboBox.setCurrentIndex(volume_units.index(unit_str))
+        # Density
+        if 'density' in profile and isinstance(profile['density'], (list, tuple)) and len(profile['density']) >= 1:
+            self.bean_density_in_edit.setText(f"{float(profile['density'][0]):g}")
+        if 'density_roasted' in profile and isinstance(profile['density_roasted'], (list, tuple)) and len(profile['density_roasted']) >= 1:
+            self.bean_density_out_edit.setText(f"{float(profile['density_roasted'][0]):g}")
+        # Bean size
+        if 'beansize_min' in profile:
+            self.bean_size_min_edit.setText(str(int(round(float(profile['beansize_min'])))))
+        if 'beansize_max' in profile:
+            self.bean_size_max_edit.setText(str(int(round(float(profile['beansize_max'])))))
+        # Color
+        if 'whole_color' in profile:
+            self.whole_color_edit.setText(float2str(float(profile['whole_color'])))
+        if 'ground_color' in profile:
+            self.ground_color_edit.setText(float2str(float(profile['ground_color'])))
+        if 'color_system_idx' in profile and isinstance(profile['color_system_idx'], int):
+            if 0 <= profile['color_system_idx'] < self.colorSystemComboBox.count():
+                self.colorSystemComboBox.setCurrentIndex(profile['color_system_idx'])
+        # Greens temp
+        if 'greens_temp' in profile:
+            self.greens_temp_edit.setText(f"{float(profile['greens_temp']):g}")
+        # Moisture
+        if 'moisture_greens' in profile:
+            self.moisture_greens_edit.setText(f"{float(profile['moisture_greens']):g}")
+        if 'moisture_roasted' in profile:
+            self.moisture_roasted_edit.setText(f"{float(profile['moisture_roasted']):g}")
+        # Ambient conditions
+        if 'ambientTemp' in profile:
+            self.ambientedit.setText(f"{float(profile['ambientTemp']):g}")
+        if 'ambient_humidity' in profile:
+            self.ambient_humidity_edit.setText(f"{float(profile['ambient_humidity']):g}")
+        if 'ambient_pressure' in profile:
+            self.pressureedit.setText(f"{float(profile['ambient_pressure']):g}")
+        # Flags
+        if 'heavyFC_flag' in profile:
+            self.heavyFC.setChecked(bool(profile['heavyFC_flag']))
+        if 'lowFC_flag' in profile:
+            self.lowFC.setChecked(bool(profile['lowFC_flag']))
+        if 'lightCut_flag' in profile:
+            self.lightCut.setChecked(bool(profile['lightCut_flag']))
+        if 'darkCut_flag' in profile:
+            self.darkCut.setChecked(bool(profile['darkCut_flag']))
+        if 'drops_flag' in profile:
+            self.drops.setChecked(bool(profile['drops_flag']))
+        if 'oily_flag' in profile:
+            self.oily.setChecked(bool(profile['oily_flag']))
+        if 'uneven_flag' in profile:
+            self.uneven.setChecked(bool(profile['uneven_flag']))
+        if 'tipping_flag' in profile:
+            self.tipping.setChecked(bool(profile['tipping_flag']))
+        if 'scorching_flag' in profile:
+            self.scorching.setChecked(bool(profile['scorching_flag']))
+        if 'divots_flag' in profile:
+            self.divots.setChecked(bool(profile['divots_flag']))
+        # Notes
+        if 'roastingnotes' in profile:
+            self.roastingeditor.setPlainText(str(profile['roastingnotes']))
+        if 'cuppingnotes' in profile:
+            self.cuppingeditor.setPlainText(str(profile['cuppingnotes']))
+        # Setup fields (update qmc attrs; if setup_ui is open, also update widgets)
+        if 'organization' in profile:
+            self.aw.qmc.organization = str(profile['organization'])
+            if self.setup_ui is not None:
+                self.setup_ui.lineEditOrganization.setText(self.aw.qmc.organization)
+        if 'operator' in profile:
+            self.aw.qmc.operator = str(profile['operator'])
+            if self.setup_ui is not None:
+                self.setup_ui.lineEditOperator.setText(self.aw.qmc.operator)
+        if 'roastertype' in profile:
+            self.aw.qmc.roastertype = str(profile['roastertype'])
+            if self.setup_ui is not None:
+                self.setup_ui.lineEditMachine.setText(self.aw.qmc.roastertype)
+        if 'roastersize' in profile:
+            self.aw.qmc.roastersize = float(profile['roastersize'])
+            if self.setup_ui is not None:
+                self.setup_ui.doubleSpinBoxRoasterSize.setValue(self.aw.qmc.roastersize)
+        if 'roasterheating' in profile:
+            self.aw.qmc.roasterheating = int(profile['roasterheating'])
+            if self.setup_ui is not None:
+                self.setup_ui.comboBoxHeating.setCurrentIndex(self.aw.qmc.roasterheating)
+        if 'drumspeed' in profile:
+            self.aw.qmc.drumspeed = str(profile['drumspeed'])
+            if self.setup_ui is not None:
+                self.setup_ui.lineEditDrumSpeed.setText(self.aw.qmc.drumspeed)
+        # --- Events & Data: load curve + event data into qmc ---
+        if 'timex' in profile:
+            self.aw.qmc.timex = list(profile['timex'])
+        if 'temp1' in profile:
+            self.aw.qmc.temp1 = list(profile['temp1'])
+        if 'temp2' in profile:
+            self.aw.qmc.temp2 = list(profile['temp2'])
+        if 'timeindex' in profile and isinstance(profile['timeindex'], (list, tuple)) and len(profile['timeindex']) >= 8:
+            self.aw.qmc.timeindex = list(profile['timeindex'])
+        # extra curves
+        if 'extratimex' in profile:
+            self.aw.qmc.extratimex = [list(x) for x in profile['extratimex']]
+        if 'extratemp1' in profile:
+            self.aw.qmc.extratemp1 = [list(x) for x in profile['extratemp1']]
+        if 'extratemp2' in profile:
+            self.aw.qmc.extratemp2 = [list(x) for x in profile['extratemp2']]
+        # special events
+        if 'specialevents' in profile:
+            self.aw.qmc.specialevents = list(profile['specialevents'])
+        if 'specialeventstype' in profile:
+            self.aw.qmc.specialeventstype = list(profile['specialeventstype'])
+        if 'specialeventsStrings' in profile:
+            self.aw.qmc.specialeventsStrings = list(profile['specialeventsStrings'])
+        if 'specialeventsvalue' in profile:
+            self.aw.qmc.specialeventsvalue = list(profile['specialeventsvalue'])
+        # update main event time labels from loaded timex/timeindex
+        timex = self.aw.qmc.timex
+        tidx = self.aw.qmc.timeindex
+        t0 = timex[tidx[0]] if tidx[0] >= 0 and tidx[0] < len(timex) else 0.0
+        def _evt_str(idx:int) -> str:
+            if idx and idx < len(timex):
+                return stringfromseconds(timex[idx] - t0)
+            return stringfromseconds(0)
+        self.chargeedit.setText(stringfromseconds(0))
+        self.dryedit.setText(_evt_str(tidx[1]))
+        self.Cstartedit.setText(_evt_str(tidx[2]))
+        self.Cendedit.setText(_evt_str(tidx[3]))
+        self.CCstartedit.setText(_evt_str(tidx[4]))
+        self.CCendedit.setText(_evt_str(tidx[5]))
+        self.dropedit.setText(stringfromseconds(timex[tidx[6]] - t0) if tidx[6] and tidx[6] < len(timex) else stringfromseconds(0))
+        self.cooledit.setText(_evt_str(tidx[7]))
+        # force Events/Data tabs to reinitialize when opened
+        self.tabInitialized[2] = False
+        self.tabInitialized[3] = False
+        self.aw.qmc.fileDirty()
+
+    @pyqtSlot(bool)
+    def saveHistorySlot(self, _:bool = False) -> None:
+        if not self._loaded_history_filename or not self._loaded_history_profile:
+            return
+        p = self._loaded_history_profile
+        # update metadata fields from current form state
+        p['title'] = ' '.join(self.titleedit.currentText().split())
+        p['title_show_always'] = self.titleShowAlwaysFlag.isChecked()
+        p['beans'] = self.beansedit.toPlainText()
+        # weight
+        try:
+            w0 = float(comma2dot(self.weightinedit.text()))
+        except Exception:  # pylint: disable=broad-except
+            w0 = 0.0
+        try:
+            w1 = float(comma2dot(self.weightoutedit.text()))
+        except Exception:  # pylint: disable=broad-except
+            w1 = 0.0
+        p['weight'] = (w0, w1, self.unitsComboBox.currentText())
+        # volume
+        try:
+            v0 = float(comma2dot(self.volumeinedit.text()))
+        except Exception:  # pylint: disable=broad-except
+            v0 = 0.0
+        try:
+            v1 = float(comma2dot(self.volumeoutedit.text()))
+        except Exception:  # pylint: disable=broad-except
+            v1 = 0.0
+        p['volume'] = (v0, v1, self.volumeUnitsComboBox.currentText())
+        # density (format matches close_OK: (value, 'g', 1, 'l'))
+        try:
+            p['density'] = (float(comma2dot(self.bean_density_in_edit.text())), 'g', 1, 'l')
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['density_roasted'] = (float(comma2dot(self.bean_density_out_edit.text())), 'g', 1, 'l')
+        except Exception:  # pylint: disable=broad-except
+            pass
+        # defects weight
+        try:
+            p['roasted_defects_weight'] = float(comma2dot(self.weightoutdefectsedit.text())) if self.weightoutdefectsedit.text().strip() else 0.0
+        except Exception:  # pylint: disable=broad-except
+            p['roasted_defects_weight'] = 0.0
+        p['roasted_defects_mode'] = self.aw.qmc.roasted_defects_mode
+        # bean size
+        try:
+            p['beansize_min'] = int(self.bean_size_min_edit.text())
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['beansize_max'] = int(self.bean_size_max_edit.text())
+        except Exception:  # pylint: disable=broad-except
+            pass
+        # color
+        try:
+            p['whole_color'] = float(comma2dot(self.whole_color_edit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['ground_color'] = float(comma2dot(self.ground_color_edit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        p['color_system_idx'] = self.colorSystemComboBox.currentIndex()
+        # greens temp / moisture / ambient
+        try:
+            p['greens_temp'] = float(comma2dot(self.greens_temp_edit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['moisture_greens'] = float(comma2dot(self.moisture_greens_edit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['moisture_roasted'] = float(comma2dot(self.moisture_roasted_edit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['ambientTemp'] = float(comma2dot(self.ambientedit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['ambient_humidity'] = float(comma2dot(self.ambient_humidity_edit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        try:
+            p['ambient_pressure'] = float(comma2dot(self.pressureedit.text()))
+        except Exception:  # pylint: disable=broad-except
+            pass
+        # flags
+        p['heavyFC_flag'] = self.heavyFC.isChecked()
+        p['lowFC_flag']   = self.lowFC.isChecked()
+        p['lightCut_flag']= self.lightCut.isChecked()
+        p['darkCut_flag'] = self.darkCut.isChecked()
+        p['drops_flag']   = self.drops.isChecked()
+        p['oily_flag']    = self.oily.isChecked()
+        p['uneven_flag']  = self.uneven.isChecked()
+        p['tipping_flag'] = self.tipping.isChecked()
+        p['scorching_flag']= self.scorching.isChecked()
+        p['divots_flag']  = self.divots.isChecked()
+        # notes
+        p['roastingnotes'] = self.roastingeditor.toPlainText()
+        p['cuppingnotes']  = self.cuppingeditor.toPlainText()
+        # setup fields
+        if self.setup_ui is not None:
+            p['organization']  = self.setup_ui.lineEditOrganization.text()
+            p['operator']      = self.setup_ui.lineEditOperator.text()
+            p['roastertype']   = self.setup_ui.lineEditMachine.text()
+            p['roastersize']   = self.setup_ui.doubleSpinBoxRoasterSize.value()
+            p['roasterheating']= self.setup_ui.comboBoxHeating.currentIndex()
+            p['drumspeed']     = self.setup_ui.lineEditDrumSpeed.text()
+        try:
+            serialize(self._loaded_history_filename, p)
+            self.aw.sendmessage(QApplication.translate('Message','已存檔: {0}').format(self._loaded_history_filename))
+        except Exception as ex:  # pylint: disable=broad-except
+            self.aw.sendmessage(QApplication.translate('Message','存檔失敗: {0}').format(str(ex)))
+
     def recentRoastEnabled(self,_:str = '') -> None:
         try:
             title = self.titleedit.currentText()

@@ -365,7 +365,7 @@ class tgraphcanvas(QObject):
         'deltaETsamples', 'deltaBTsamples', 'profile_sampling_interval', 'background_profile_sampling_interval', 'profile_meter', 'optimalSmoothing', 'polyfitRoRcalc',
         'patheffects', 'graphstyle', 'graphfont', 'buttonvisibility', 'buttonactions', 'buttonactionstrings', 'extrabuttonactions', 'extrabuttonactionstrings',
         'xextrabuttonactions', 'xextrabuttonactionstrings', 'chargeTimerFlag', 'autoChargeFlag', 'autoDropFlag', 'autoChargeMode', 'autoDropMode', 'autoChargeIdx', 'autoDropIdx', 'markTPflag',
-        'autoDRYflag', 'autoFCsFlag', 'autoCHARGEenabled', 'autoDRYenabled', 'autoFCsenabled', 'autoDROPenabled', 'projectionconstant',
+        'autoDRYflag', 'autoFCsFlag', 'holographic_phases', 'holographic_phases_triggered', 'autoCHARGEenabled', 'autoDRYenabled', 'autoFCsenabled', 'autoDROPenabled', 'projectionconstant',
         'projectionmode', 'transMappingMode', 'weight', 'roasted_defects_weight', 'volume', 'density', 'roasted_defects_mode', 'density_roasted', 'volumeCalcUnit', 'volumeCalcWeightInStr',
         'volumeCalcWeightOutStr', 'container_names', 'container_weights', 'specialevents', 'etypes', 'etypesdefault',
         'alt_etypesdefault', 'default_etypes_set', 'specialeventstype',
@@ -461,6 +461,7 @@ class tgraphcanvas(QObject):
         self.palette:dict[str,str] = {'background':'#ffffff','grid':'#e5e5e5','ylabel':'#808080','xlabel':'#808080','title':'#0c6aa6',
                         'title_focus':'#cc0f50', 'title_hidden':'#808080',
                         'rect1':'#e5e5e5','rect2':'#b2b2b2','rect3':'#e5e5e5','rect4':'#bde0ee','rect5':'#d3d3d3',
+                        'holo0':'#5c9e5c','holo1':'#3a7abf','holo2':'#b87333',
                         'et':'#cc0f50','bt':'#0a5c90','xt':'#404040','yt':'#404040','deltaet':'#cc0f50',
                         'deltabt':'#0a5c90','markers':'#000000','text':'#000000','watermarks':'#ffff00','timeguide':'#0a5c90',
                         'canvas':'#f8f8f8','legendbg':'#ffffff','legendborder':'#a9a9a9',
@@ -1790,6 +1791,15 @@ class tgraphcanvas(QObject):
         # flags to control automatic DRY and FCs events based on phases limits
         self.autoDRYflag:bool = False
         self.autoFCsFlag:bool = False
+
+        # holographic phase settings: one entry per holographic event (T0/T1/大理石)
+        # each dict: enabled, bt_min, bt_max, color
+        self.holographic_phases: list[dict] = [
+            {'enabled': False, 'bt_min': 140, 'bt_max': 160, 'color': '#5c9e5c'},
+            {'enabled': False, 'bt_min': 160, 'bt_max': 180, 'color': '#3a7abf'},
+            {'enabled': False, 'bt_min': 180, 'bt_max': 200, 'color': '#b87333'},
+        ]
+        self.holographic_phases_triggered: list[bool] = [False, False, False]
 
         self.autoCHARGEenabled:bool = True # gets disabled on undo of the CHARGE event and prevents further autoCHARGE marks
         self.autoDRYenabled:bool = True # gets disabled on undo of the DRY event and prevents further autoDRY marks
@@ -5321,6 +5331,20 @@ class tgraphcanvas(QObject):
                         if self.autoFCsFlag and self.autoFCsenabled and self.TPalarmtimeindex and self.timeindex[0] > -1 and not self.timeindex[2] and not self.timeindex[3] and sample_temp2[-1] >= self.phases[2]:
                             # after DRY (if FCs event not yet set) check for BT exceeding FC-min as specified in the phases dialog
                             self.markFCsSignal.emit(False) # queued
+                        # auto-trigger holographic events (T0/T1/大理石) by BT range
+                        if self.timeindex[0] > -1:  # only after CHARGE
+                            holographic_labels = ['T0', 'T1', '大理石']
+                            for _hi, (_hlabel, _hphase) in enumerate(zip(holographic_labels, self.holographic_phases)):
+                                if (_hphase.get('enabled') and
+                                        not self.holographic_phases_triggered[_hi] and
+                                        _hphase['bt_min'] <= sample_temp2[-1] <= _hphase['bt_max']):
+                                    try:
+                                        _btn_idx = self.aw.extraeventslabels.index(_hlabel)
+                                        if _btn_idx < len(self.aw.buttonlist) and self.aw.buttonlist[_btn_idx].isEnabled():
+                                            self.holographic_phases_triggered[_hi] = True
+                                            self.aw.recordextraevent(_btn_idx)
+                                    except (ValueError, IndexError):
+                                        pass
 
                     #process active quantifiers
                     try:
@@ -8177,6 +8201,13 @@ class tgraphcanvas(QObject):
             self.aw.buttonDROP.setFlat(False)
             self.aw.buttonDRY.setFlat(False)
             self.aw.buttonCOOL.setFlat(False)
+            # re-enable all extra event buttons that were locked during the roast
+            for i, btn in enumerate(self.aw.buttonlist):
+                btn.setEnabled(True)
+                if i < len(self.aw.buttonStates):
+                    self.aw.buttonStates[i] = 0
+                self.aw.setExtraEventButtonStyleSignal.emit(i, 'normal')
+            self.holographic_phases_triggered = [False, False, False]
             self.aw.buttonONOFF.setText(QApplication.translate('Button', 'ON'))
             if self.aw.simulator:
                 self.aw.buttonONOFF.setStyleSheet(self.aw.pushbuttonstyles_simulator['OFF'])
@@ -9928,6 +9959,19 @@ class tgraphcanvas(QObject):
                         self.ax.add_patch(rect1)
                         self.ax.add_patch(rect2)
                         self.ax.add_patch(rect3)
+
+                    # draw holographic phase background bands (T0/T1/大理石)
+                    for _hi, _hp in enumerate(self.holographic_phases):
+                        if _hp.get('enabled') and _hp.get('bt_max', 0) > _hp.get('bt_min', 0):
+                            _rect = patches.Rectangle(
+                                (0, _hp['bt_min']),
+                                width=1,
+                                height=(_hp['bt_max'] - _hp['bt_min']),
+                                transform=trans,
+                                color=self.palette.get(f'holo{_hi}', '#808080'),
+                                alpha=0.18,
+                                path_effects=[])
+                            self.ax.add_patch(_rect)
 
                     #if self.eventsGraphflag == 0 then that means don't plot event bars
 
@@ -14504,8 +14548,6 @@ class tgraphcanvas(QObject):
 
             self.flagstart = True
 
-
-
             # start Monitor if not yet running
             if not self.flagon:
                 self.timealign(redraw=False)
@@ -14841,6 +14883,21 @@ class tgraphcanvas(QObject):
             if self.profileDataSemaphore.available() < 1:
                 self.profileDataSemaphore.release(1)
         if self.flagstart:
+            # start audio recording on CHARGE and record the event
+            try:
+                import os
+                from artisanlib.audio_roast import default_session_dir
+                base = os.path.join(os.path.expanduser('~'), 'Documents', 'ArtisanAudio')
+                title = self.title if self.title else ''
+                sdir = default_session_dir(base, title)
+                self.aw.audioRoastRecorder.start(sdir)
+                bt  = float(self.temp2[self.timeindex[0]]) if self.timeindex[0] > -1 and len(self.temp2) > self.timeindex[0] else 0.0
+                et  = float(self.temp1[self.timeindex[0]]) if self.timeindex[0] > -1 and len(self.temp1) > self.timeindex[0] else 0.0
+                ror = float(self.delta2[self.timeindex[0]]) if self.timeindex[0] > -1 and len(self.delta2) > self.timeindex[0] else 0.0
+                self.aw.audioRoastRecorder.record_event('CHARGE', bt, et, ror)
+                self.aw.audioSpectrumWindow.on_event('CHARGE', 0.0)
+            except Exception:  # pylint: disable=broad-except
+                pass
             # redraw (within timealign) should not be called if semaphore is hold!
             # NOTE: the following self.aw.eventaction might do serial communication that acquires a lock, so release it here
             self.timealign(redraw=True,recompute=False,force=True) # redraws at least the canvas if redraw=True, so no need here for doing another canvas.draw()
@@ -15668,6 +15725,18 @@ class tgraphcanvas(QObject):
                                 _log.exception(e)
                         if self.roastpropertiesAutoOpenDropFlag:
                             self.aw.openPropertiesSignal.emit()
+                        # record DROP event + stop audio recording
+                        try:
+                            bt  = self.temp2[self.timeindex[6]] if len(self.temp2) > self.timeindex[6] else 0.0
+                            et  = self.temp1[self.timeindex[6]] if len(self.temp1) > self.timeindex[6] else 0.0
+                            ror = self.delta2[self.timeindex[6]] if len(self.delta2) > self.timeindex[6] else 0.0
+                            elapsed = self.aw.audioRoastRecorder.elapsed()
+                            self.aw.audioRoastRecorder.record_event('DROP', float(bt), float(et), float(ror))
+                            self.aw.audioSpectrumWindow.on_event('DROP', elapsed)
+                            self.aw.audioRoastRecorder.stop()
+                            self.aw.audioSpectrumWindow.on_stop()
+                        except Exception:  # pylint: disable=broad-except
+                            pass
                     self.aw.onMarkMoveToNext(self.aw.buttonDROP)
                 except Exception as e: # pylint: disable=broad-except
                     _log.exception(e)
@@ -15970,6 +16039,21 @@ class tgraphcanvas(QObject):
                             self.specialeventstype[-1] = eventtype
                             self.specialeventsvalue[-1] = eventvalue
                             self.specialeventsStrings[-1] = eventdescription
+                        # record event to audio session
+                        try:
+                            if self.aw.audioRoastRecorder.is_recording():
+                                evt_name = eventdescription or (
+                                    self.aw.extraeventslabels[extraevent]
+                                    if extraevent is not None and extraevent < len(self.aw.extraeventslabels)
+                                    else 'Event')
+                                bt  = float(self.temp2[i]) if len(self.temp2) > i else 0.0
+                                et  = float(self.temp1[i]) if len(self.temp1) > i else 0.0
+                                ror = float(self.delta2[i]) if len(self.delta2) > i else 0.0
+                                elapsed = self.aw.audioRoastRecorder.elapsed()
+                                self.aw.audioRoastRecorder.record_event(evt_name, bt, et, ror)
+                                self.aw.audioSpectrumWindow.on_event(evt_name, elapsed)
+                        except Exception:  # pylint: disable=broad-except
+                            pass
                         etype = self.specialeventstype[-1]
                         tx = self.timex[self.specialevents[-1]]
                         sevalue = self.specialeventsvalue[-1]

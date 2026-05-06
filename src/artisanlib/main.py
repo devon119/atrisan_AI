@@ -1532,7 +1532,9 @@ class ApplicationWindow(QMainWindow):
         'helpDocumentationAction', 'KshortCAction',
         'ai_advisor', 'aiAdvisorAction', 'aiAdvisorWindow', 'aiAdvisorLabel',
         'aiStatusLabel', 'aiAskBtn', 'aiExportBtn',
-        'importExcelPlanAction' ]
+        'importExcelPlanAction',
+        'roastPlanAction',
+        'audioRoastRecorder', 'audioSpectrumWindow', 'audioSpectrumAction', 'audioDeviceMenu' ]
 
     nLCDS: Final[int] = 10 # maximum number of LCDs and extra devices (2x10 => 20 in total!)
 
@@ -2537,6 +2539,14 @@ class ApplicationWindow(QMainWindow):
 
         self.importExcelPlanAction:QAction = QAction(QApplication.translate('Menu', '匯入 Excel 烘焙計畫...'), self)
         self.importExcelPlanAction.triggered.connect(self.openExcelImport)
+
+        self.roastPlanAction:QAction = QAction(QApplication.translate('Menu', '建立烘焙計畫...'), self)
+        self.roastPlanAction.triggered.connect(self.openRoastPlan)
+
+        self.audioSpectrumAction:QAction = QAction(QApplication.translate('Menu', '音訊頻譜視窗...'), self)
+        self.audioSpectrumAction.triggered.connect(self.openAudioSpectrum)
+
+        self.audioDeviceMenu:QMenu = QMenu(QApplication.translate('Menu', '麥克風裝置'), self)
 
         self.autosaveAction:QAction = QAction(QApplication.translate('Menu', 'Autosave...'), self)
         self.autosaveAction.triggered.connect(self.autosaveconf)
@@ -4380,6 +4390,16 @@ class ApplicationWindow(QMainWindow):
         self.ai_advisor.on_advice = self.aiAdviceSignal.emit
         self.ai_advisor.on_query_start = self.aiQuerySignal.emit
 
+        # Audio Roast Recorder
+        from artisanlib.audio_roast import AudioRoastRecorder
+        from artisanlib.audio_spectrum_window import AudioSpectrumWindow
+        self.audioRoastRecorder: AudioRoastRecorder = AudioRoastRecorder(self)
+        self.audioSpectrumWindow: AudioSpectrumWindow = AudioSpectrumWindow(self)
+        self.audioRoastRecorder.spectrumUpdated.connect(self.audioSpectrumWindow.on_spectrum)
+        self.audioRoastRecorder.errorSignal.connect(
+            lambda msg: self.sendmessage(f'音訊錄音錯誤: {msg}'))
+        self._refreshAudioDeviceMenu()
+
 #        if sys.platform.startswith('darwin') and QVersionNumber.fromString(qVersion())[0] < QVersionNumber(6,5,0):
 #            # only on macOS we install the eventFilter to catch the signal on switching between light and dark modes
 #            self.installEventFilter(self)
@@ -4440,6 +4460,10 @@ class ApplicationWindow(QMainWindow):
         roast_menu.addAction(self.editGraphAction)
         roast_menu.addAction(self.backgroundAction)
         roast_menu.addAction(self.importExcelPlanAction)
+        roast_menu.addAction(self.roastPlanAction)
+        roast_menu.addSeparator()
+        roast_menu.addAction(self.audioSpectrumAction)
+        roast_menu.addMenu(self.audioDeviceMenu)
         if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
             roast_menu.addSeparator()
             roast_menu.addAction(self.switchAction)
@@ -11563,15 +11587,19 @@ class ApplicationWindow(QMainWindow):
         if updateButtons and self.mark_last_button_pressed: # not if triggered from mutiplebutton actions:
             try:
                 self.qmc.eventactionsemaphore.acquire(1)
-                # reset color of last pressed button
+                # reset color of last pressed button (skip if button was locked/disabled)
                 if self.lastbuttonpressed != -1 and len(self.buttonlist)>self.lastbuttonpressed:
-                    self.setExtraEventButtonStyleSignal.emit(self.lastbuttonpressed, 'normal')
+                    if self.buttonlist[self.lastbuttonpressed].isEnabled():
+                        self.setExtraEventButtonStyleSignal.emit(self.lastbuttonpressed, 'normal')
 
                 #toggle button if it has nonzero state prior to toggling
                 if self.buttonStates[ee] != 0:
                     self.setExtraEventButtonStyleSignal.emit(ee, 'normal')
                 else:
                     self.setExtraEventButtonStyleSignal.emit(ee, 'pressed')
+                    # lock button: disable it so it cannot be re-pressed this roast
+                    if len(self.buttonlist) > ee:
+                        self.buttonlist[ee].setEnabled(False)
 
             except Exception as e: # pylint: disable=broad-except
                 _log.exception(e)
@@ -12969,6 +12997,8 @@ class ApplicationWindow(QMainWindow):
                         # if we found our button, move one more to the right
                         if this_index == self.keyboardmoveindex:
                             self.moveKbutton('right') # now to the next
+                    # lock this button so it cannot be re-pressed (undo disabled)
+                    button.setEnabled(False)
                     # disable all buttons before this_index until the previous registered event
                     for i in range(this_index-1,-1,-1):
                         self.keyboardButtonList[i].setEnabled(False)
@@ -18358,6 +18388,13 @@ class ApplicationWindow(QMainWindow):
             self.qmc.phasesLCDmode_all = [toBool(x) for x in toList(settings.value('phasesLCDmode_all',self.qmc.phasesLCDmode_all))]
             self.qmc.autoDRYflag = toBool(settings.value('autoDry',self.qmc.autoDRYflag))
             self.qmc.autoFCsFlag = toBool(settings.value('autoFCs',self.qmc.autoFCsFlag))
+            try:
+                import json as _json
+                _hp_json = settings.value('holographicPhases', None)
+                if _hp_json is not None:
+                    self.qmc.holographic_phases = _json.loads(_hp_json)
+            except Exception: # pylint: disable=broad-except
+                pass
 
 #--- BEGIN GROUP events
             #restore Events settings
@@ -19329,7 +19366,7 @@ class ApplicationWindow(QMainWindow):
             self.qmc.title_show_always = toBool(settings.value('titleshowalways',self.qmc.title_show_always))
             self.qmc.roastpropertiesflag = toInt(settings.value('roastpropertiesflag',self.qmc.roastpropertiesflag))
             self.qmc.roastpropertiesAutoOpenFlag = 0  # forced: no auto-popup on CHARGE
-            self.qmc.roastpropertiesAutoOpenDropFlag = 0  # forced: no auto-popup on DROP
+            self.qmc.roastpropertiesAutoOpenDropFlag = 0
             self.qmc.customflavorlabels = list(map(str,list(toStringList(settings.value('customflavorlabels',self.qmc.customflavorlabels)))))
 
 #--- BEGIN GROUP Sliders
@@ -19607,6 +19644,7 @@ class ApplicationWindow(QMainWindow):
                     self.extraeventsdescriptions = extraeventsdescriptions
                     self.extraeventbuttoncolor = extraeventbuttoncolor
                     self.extraeventbuttontextcolor = extraeventbuttontextcolor
+                self._ensure_holographic_events()  # add T0/T1/大理石 buttons if missing, sync colors
                 self.buttonpalettemaxlen = [min(self.buttonpalettemaxlen_max,max(self.buttonpalettemaxlen_min,toInt(x))) for x in toList(settings.value('buttonpalettemaxlen',self.buttonpalettemaxlen))]
                 self.buttonpalette_buttonsize = [min(2,max(0,toInt(x))) for x in toList(settings.value('buttonpalette_buttonsize',self.buttonpalette_buttonsize))]
                 self.buttonpalette_mark_last_button_pressed = [toBool(x) for x in toList(settings.value('buttonpalette_mark_last_button_pressed',self.buttonpalette_mark_last_button_pressed))]
@@ -20428,6 +20466,11 @@ class ApplicationWindow(QMainWindow):
             #phase triggered DRY and FCs
             self.settingsSetValue(settings, default_settings, 'autoDry',self.qmc.autoDRYflag, read_defaults)
             self.settingsSetValue(settings, default_settings, 'autoFCs',self.qmc.autoFCsFlag, read_defaults)
+            try:
+                import json as _json
+                self.settingsSetValue(settings, default_settings, 'holographicPhases', _json.dumps(self.qmc.holographic_phases), read_defaults)
+            except Exception: # pylint: disable=broad-except
+                pass
             #save statistics
             self.settingsSetValue(settings, default_settings, 'Statistics',self.qmc.statisticsflags, read_defaults)
             self.settingsSetValue(settings, default_settings, 'AnalysisResultsLoc',[toFloat(x) for x in list(self.qmc.analysisresultsloc)[:2]], read_defaults)
@@ -25198,6 +25241,60 @@ class ApplicationWindow(QMainWindow):
         from artisanlib.excel_import import ExcelImportDialog
         dialog = ExcelImportDialog(self, self)
         dialog.exec()
+
+    def openRoastPlan(self, _: bool = False) -> None:
+        from artisanlib.roast_plan import RoastPlanDlg
+        dlg = RoastPlanDlg(self)
+        dlg.exec()
+
+    def openAudioSpectrum(self, _: bool = False) -> None:
+        self.audioSpectrumWindow.show()
+        self.audioSpectrumWindow.raise_()
+
+    def _refreshAudioDeviceMenu(self) -> None:
+        from artisanlib.audio_roast import AudioRoastRecorder
+        self.audioDeviceMenu.clear()
+        default_action = self.audioDeviceMenu.addAction('系統預設麥克風')
+        default_action.setCheckable(True)
+        default_action.setChecked(self.audioRoastRecorder._device_idx is None)
+        default_action.triggered.connect(lambda: self._selectAudioDevice(None))
+        self.audioDeviceMenu.addSeparator()
+        for idx, name in AudioRoastRecorder.list_devices():
+            act = self.audioDeviceMenu.addAction(f'{idx}: {name}')
+            act.setCheckable(True)
+            act.setChecked(self.audioRoastRecorder._device_idx == idx)
+            act.triggered.connect(lambda _checked, i=idx: self._selectAudioDevice(i))
+
+    def _selectAudioDevice(self, device_idx) -> None:
+        self.audioRoastRecorder.set_device(device_idx)
+        self._refreshAudioDeviceMenu()
+
+    def _ensure_holographic_events(self) -> None:
+        """Add T0/T1/大理石紋 extra event buttons if not already present, and sync colors from holographic_phases."""
+        holographic = [
+            ('T0', '#5c9e5c', '#ffffff'),
+            ('T1', '#3a7abf', '#ffffff'),
+            ('大理石', '#b87333', '#ffffff'),
+        ]
+        existing = list(self.extraeventslabels)
+        for hi, (label, bg, fg) in enumerate(holographic):
+            # color source: palette overrides default bg
+            bg = self.qmc.palette.get(f'holo{hi}', bg)
+            if label not in existing:
+                self.extraeventslabels.append(label)
+                self.extraeventsdescriptions.append(label)
+                self.extraeventsvalues.append(0.0)
+                self.extraeventstypes.append(4)       # untyped custom event
+                self.extraeventbuttoncolor.append(bg)
+                self.extraeventbuttontextcolor.append(fg)
+                self.extraeventsactionstrings.append('')
+                self.extraeventsactions.append(0)
+                self.extraeventsvisibility.append(1)  # visible during ON state
+            else:
+                # sync color from holographic_phases to keep them in sync
+                idx = existing.index(label)
+                if idx < len(self.extraeventbuttoncolor):
+                    self.extraeventbuttoncolor[idx] = bg
 
     @pyqtSlot(bool)
     def deviceassigment(self, _:bool = False) -> None:

@@ -45,6 +45,7 @@ PyYAML==6.0.3
 psutil==7.2.2
 protobuf==7.34.0
 numpy==2.4.4
+sounddevice==0.5.2
 scipy==1.17.1
 wquantiles==0.6
 colorspacious==1.1.2

@@ -299,6 +299,22 @@ class graphColorDlg(ArtisanDialog):
         self.statsanalysisbkgndLayout.addWidget(self.statsanalysisbkgndButton)
         self.statsanalysisbkgndLayout.addWidget(self.statsanalysisbkgndSpinBox)
 
+        self.holo0Label = QLabel('T0 (全息)')
+        self.holo0Label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.holo0Button = self.colorButton(self.aw.qmc.palette['holo0'])
+        self.holo0Button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.holo0Button.clicked.connect(self.setColorSlot)
+        self.holo1Label = QLabel('T1 (全息)')
+        self.holo1Label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.holo1Button = self.colorButton(self.aw.qmc.palette['holo1'])
+        self.holo1Button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.holo1Button.clicked.connect(self.setColorSlot)
+        self.holo2Label = QLabel(QApplication.translate('Label','大理石 (全息)'))
+        self.holo2Label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.holo2Button = self.colorButton(self.aw.qmc.palette['holo2'])
+        self.holo2Button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.holo2Button.clicked.connect(self.setColorSlot)
+
         #TAB2
         self.lcd1LEDButton = QPushButton(QApplication.translate('Button','Digits'))
         self.lcd1LEDButton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -466,6 +482,12 @@ class graphColorDlg(ArtisanDialog):
         grid.addWidget(self.analysismaskLabel,12,2)
         grid.addLayout(self.statsanalysisbkgndLayout,13,3)
         grid.addWidget(self.statsanalysisbkgndLabel,13,2)
+        grid.addWidget(self.holo0Button,14,3)
+        grid.addWidget(self.holo0Label,14,2)
+        grid.addWidget(self.holo1Button,15,3)
+        grid.addWidget(self.holo1Label,15,2)
+        grid.addWidget(self.holo2Button,16,3)
+        grid.addWidget(self.holo2Label,16,2)
         graphLayout = QVBoxLayout()
         graphLayout.addLayout(grid)
 
@@ -731,6 +753,9 @@ class graphColorDlg(ArtisanDialog):
                 (self.metboxButton,'metbox'),
                 (self.analysismaskButton,'analysismask'),
                 (self.statsanalysisbkgndButton,'statsanalysisbkgnd'),
+                (self.holo0Button,'holo0'),
+                (self.holo1Button,'holo1'),
+                (self.holo2Button,'holo2'),
                 ]:
             self.setColorButton(ll,tt)
 
@@ -924,6 +949,15 @@ class graphColorDlg(ArtisanDialog):
             self.setColor('Analysis Mask',self.analysismaskButton,'analysismask')
         elif widget == self.statsanalysisbkgndButton:
             self.setColor('Analysis Result',self.statsanalysisbkgndButton,'statsanalysisbkgnd')
+        elif widget == self.holo0Button:
+            self.setColor('T0 全息',self.holo0Button,'holo0')
+            self._sync_holo_extra_buttons()
+        elif widget == self.holo1Button:
+            self.setColor('T1 全息',self.holo1Button,'holo1')
+            self._sync_holo_extra_buttons()
+        elif widget == self.holo2Button:
+            self.setColor('大理石 全息',self.holo2Button,'holo2')
+            self._sync_holo_extra_buttons()
 
     def colorButton(self, s:str) -> QPushButton:
         button = QPushButton(s)
@@ -953,6 +987,16 @@ class graphColorDlg(ArtisanDialog):
             elif title == 'DeltaBT':
                 self.aw.setLabelColor(self.aw.label5, self.aw.qmc.palette[color], self.aw.qmc.DeltaBTflag)
             self.aw.sendmessage(QApplication.translate('Message','Color of {0} set to {1}').format(title,str(self.aw.qmc.palette[color])))
+
+    def _sync_holo_extra_buttons(self) -> None:
+        holo_labels = ['T0', 'T1', '大理石']
+        holo_keys = ['holo0', 'holo1', 'holo2']
+        for label, key in zip(holo_labels, holo_keys):
+            if label in self.aw.extraeventslabels:
+                idx = self.aw.extraeventslabels.index(label)
+                if idx < len(self.aw.extraeventbuttoncolor):
+                    self.aw.extraeventbuttoncolor[idx] = self.aw.qmc.palette[key]
+        self.aw.realignbuttons()
 
     @pyqtSlot(int)
     def adjustintensity(self, _:int) -> None:
