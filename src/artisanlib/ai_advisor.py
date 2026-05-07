@@ -55,22 +55,22 @@ ROAST_SYSTEM_PROMPT = """你是擁有20年經驗的咖啡烘焙師兼指導員�
 操作：<火力方向（加/減/維持）+ 風門提醒（排煙需求/蓄熱需求）+ 兩者互動注意事項>
 預期：<60～90秒後RoR和BT的預期方向；不需給精確數字，說明趨勢即可>
 
-【重要原則】操作行只提示方向與注意事項，不規定具體幅度——烘焙師根據現場判斷。
+【重要原則】語氣像有20年經驗的老師傅在旁邊低聲提點——口語、直接、有溫度。不規定具體幅度，烘焙師自己判斷現場。
 
 範例A（梅納期RoR偏低）：
-現況：梅納期，BT 138°C，RoR 持續下滑（18.5→13.2°C/min），低於目標（15～25），趨勢仍向下。
-操作：考慮加火，熱慣性約40秒後才反映；風門維持現況，過大的風門會加速RoR下滑。
-預期：RoR應止跌回升，BT持續穩升；若調整後RoR仍未止跌，再評估是否繼續加火。
+現況：梅納期，BT 138°C，RoR一路滑下來了（13.2°C/min），還不到目標，趨勢沒有止住的跡象。
+操作：火要補一下，不過別急，熱慣性要40秒才會反映；風門先別動，開太大只會讓RoR跌更快。
+預期：補火之後RoR應該慢慢穩住，BT繼續往上走；如果還是沒起色，再評估要不要再補。
 
 範例B（一爆，排煙優先）：
-現況：一爆開始，BT 202°C，RoR 9.1°C/min（目標8～10），爆裂聲密集，煙量大。
-操作：注意排煙，這是最重要的排煙時機；開大風門後RoR會下降，視RoR反應決定是否補火。
-預期：煙氣排出後豆表風味更乾淨；RoR方向持續緩降為佳，DTR朝20～25%推進。
+現況：一爆來了，BT 202°C，RoR 9.1°C/min 還算穩，爆裂聲密集，煙量開始大了。
+操作：風門要開——現在是這爐最重要的排煙時機，不排掉這批煙豆子會帶煙燻味；風門開大後RoR會往下，注意一下要不要補火。
+預期：煙氣排掉之後風味會乾淨很多；RoR繼續緩降就好，顧著DTR往20～25%走。
 
 範例C（RoR翻揚，風門與火力互動）：
-現況：梅納期末，BT 172°C，RoR翻揚（11→14°C/min），違反平滑遞減原則。
-操作：考慮減火；若風門目前偏大也可先縮小風門觀察，兩者都會使RoR下降，不需同時動。
-預期：RoR應止揚回落，恢復緩降節奏；動作後40～60秒觀察效果再決定下一步。
+現況：梅納期末，BT 172°C，RoR在翻揚（14°C/min），這條線不能讓它繼續往上。
+操作：火減一下；如果風門開得比較大，也可以先縮小風門看看效果——兩件事不要同時做，一步一步來。
+預期：40～60秒後RoR應該止揚回落，恢復緩降節奏；動完之後盯著看，再決定下一步。
 
 ---
 
@@ -301,41 +301,41 @@ def _detect_ror_anomaly(ror_values: 'list[float]') -> 'tuple[str|None, str]':
     reversal = last4[-1] - min(prev4[-2:] + last4[:2])
     if prev_slope < -0.3 and last_slope > 0.3 and reversal >= 1.5:
         return ('flick',
-                f'現況：⚠️ 偵測到RoR翻揚！RoR從下滑趨勢反轉上揚 {reversal:.1f}°C/min，違反平滑遞減原則\n'
-                f'操作：立即減火（下調1～2格），視情況稍開大風門降溫\n'
-                f'預期：40～60秒後RoR止揚回落，恢復平滑遞減；若未見效再多減1格')
+                f'現況：⚠️ RoR在翻揚！剛才還在往下，現在反彈了 {reversal:.1f}°C/min，這條線不能讓它繼續往上\n'
+                f'操作：火要減——如果風門也偏大的話可以先縮一點看看，不要兩件事同時動\n'
+                f'預期：40～60秒後RoR應該會止揚回落；動完之後盯著，沒效果再調')
     # Crash: sharp drop from recent peak
     recent_max = max(ror_values[-8:])
     current = ror_values[-1]
     drop = recent_max - current
     if drop >= 4.0 and last_slope < -0.5:
         return ('crash',
-                f'現況：⚠️ 偵測到RoR驟降！從近期高點 {recent_max:.1f} 急降至 {current:.1f}°C/min（跌幅 {drop:.1f}）\n'
-                f'操作：立即加火（上調1格），確認風門是否過大或環境突然失溫\n'
-                f'預期：若及時補火，40秒後RoR止跌；若情況未改善，再補1格並縮小風門')
+                f'現況：⚠️ RoR在驟降！從 {recent_max:.1f} 掉到 {current:.1f}°C/min，跌了 {drop:.1f}，不正常\n'
+                f'操作：補火；同時看一下風門是不是開太大了，或者環境突然降溫\n'
+                f'預期：及時補火的話40秒後應該會止跌；還沒止住的話再補，同時縮小風門')
     return None, ''
 
 
 def _dtr_rule_advice(dtr_pct: float, bt: float, ror_bt: float) -> str:
     """Generate DTR milestone advice for the development phase."""
     if dtr_pct >= 25.0:
-        return (f'現況：發展期，DTR {dtr_pct:.1f}%，已達建議上限（25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-                f'操作：立即下豆——確認出豆槽就位、冷卻盤風扇已開；繼續等待會造成過度發展、苦味加重\n'
-                f'預期：下豆後BT回落，記錄本次發展時間與豆色作為下一爐參考')
+        return (f'現況：DTR {dtr_pct:.1f}% 了，到上限了，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
+                f'操作：出豆——出豆槽就位了嗎？冷卻盤風扇開了嗎？再等下去苦味會出來\n'
+                f'預期：出豆後記一下這爐的發展時間跟豆色，下一爐參考用')
     if dtr_pct >= 22.0:
-        return (f'現況：發展期，DTR {dtr_pct:.1f}%，發展良好（目標20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-                f'操作：用取樣棒確認豆色與香氣（應已轉深棕、烘焙香穩定）；'
-                f'{"RoR已低於6°C/min，隨時可下豆" if ror_bt < 6 else "RoR仍正常，依豆種風味目標決定下豆時機"}\n'
-                f'預期：再1～3%後達到25%上限；淺烘可在此出豆，中深烘繼續觀察')
+        return (f'現況：DTR {dtr_pct:.1f}%，發展不錯，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
+                f'操作：取樣棒拿出來看一下豆色跟聞一下香氣；'
+                f'{"RoR剩 " + f"{ror_bt:.1f}" + " 了，差不多可以出豆了" if ror_bt < 6 else "RoR還好，看你要烘到哪個深度"}\n'
+                f'預期：再1～3%就到25%上限；淺烘在這裡出沒問題，中深烘繼續盯著')
     if dtr_pct >= 20.0:
-        return (f'現況：發展期，DTR {dtr_pct:.1f}%，進入下豆決策窗口（目標20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-                f'操作：用取樣棒確認豆色；確認冷卻盤風扇已開、出豆槽就位；'
-                f'依豆種選擇下豆點（淺烘20%、中烘22%、深烘25%）\n'
-                f'預期：每30秒DTR約增加0.5～1%，保持專注觀察豆色、香氣與RoR')
+        return (f'現況：DTR {dtr_pct:.1f}%，進下豆窗口了，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
+                f'操作：取樣棒看豆色；冷卻盤風扇開了沒、出豆槽就位了沒？'
+                f'淺烘現在就可以考慮出，中烘22%，深烘25%\n'
+                f'預期：每30秒DTR大概增加0.5～1%，眼睛耳朵都要專注了')
     # 18%
-    return (f'現況：發展期，DTR {dtr_pct:.1f}%，即將進入下豆窗口（目標20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-            f'操作：現在開啟冷卻盤風扇備用；此時勿再加火，準備進入下豆決策\n'
-            f'預期：約1～2分鐘後DTR達到20%，開始用取樣棒確認豆色與香氣')
+    return (f'現況：DTR {dtr_pct:.1f}%，快要進下豆窗口了，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
+            f'操作：冷卻盤風扇先開起來備著；火不要再加了，準備進決策\n'
+            f'預期：再1～2分鐘DTR會到20%，那時候開始取樣棒確認豆色香氣')
 
 
 # ---------------------------------------------------------------------------
@@ -465,58 +465,58 @@ def _fire_recommendation(ror_bt: float, bt: float,
         # Keep absolute safety bounds as a hard floor/ceiling.
         diff = ror_bt - bg_ror
         if ror_bt < lo * 0.5:
-            return +2, (f'RoR {ror_bt:.1f}°C/min 嚴重不足（參考 {bg_ror:.1f}，下限 {lo:.0f}），'
-                        f'立即積極加火（上調2格），熱慣性約40秒後才反映，現在就動')
+            return +2, (f'RoR 掉到 {ror_bt:.1f} 了，跟參考曲線差太遠（目標 {bg_ror:.1f}），'
+                        f'火要補，而且要快——熱慣性40秒才反映，現在就動')
         if ror_bt > hi * 1.4:
-            return -2, (f'RoR {ror_bt:.1f}°C/min 嚴重超標（參考 {bg_ror:.1f}，上限 {hi:.0f}），'
-                        f'立即減火（下調2格）並稍開大風門')
+            return -2, (f'RoR {ror_bt:.1f} 跑太高了（參考 {bg_ror:.1f}），'
+                        f'火減下來，風門也可以開一點幫忙壓')
         if diff < -4:
-            return +2, (f'RoR 大幅落後參考曲線（現 {ror_bt:.1f}，目標 {bg_ror:.1f}，差 {-diff:.1f}°C/min），'
-                        f'積極加火（上調2格），熱慣性40秒後反映')
+            return +2, (f'RoR 落後參考曲線 {-diff:.1f}°C/min（現 {ror_bt:.1f}，目標 {bg_ror:.1f}），'
+                        f'積極補火，別等，40秒後才看得到效果')
         if diff < -2:
-            return +1, (f'RoR 落後參考曲線（現 {ror_bt:.1f}，目標 {bg_ror:.1f}，差 {-diff:.1f}°C/min），'
-                        f'輕微加火（上調1格），約60秒後RoR追近目標')
+            return +1, (f'RoR 比參考慢了一點（現 {ror_bt:.1f}，目標 {bg_ror:.1f}），'
+                        f'稍微加火，60秒後應該會追上來')
         if diff > +4:
-            return -2, (f'RoR 大幅超前參考曲線（現 {ror_bt:.1f}，目標 {bg_ror:.1f}，差 +{diff:.1f}°C/min），'
-                        f'積極減火（下調2格），避免發展過快')
+            return -2, (f'RoR 跑太快了，超前參考曲線 {diff:.1f}°C/min（現 {ror_bt:.1f}，目標 {bg_ror:.1f}），'
+                        f'火要減，不然發展會壓縮')
         if diff > +2:
-            return -1, (f'RoR 略超前參考曲線（現 {ror_bt:.1f}，目標 {bg_ror:.1f}，差 +{diff:.1f}°C/min），'
-                        f'輕微減火（下調1格）')
+            return -1, (f'RoR 比參考快了一點（現 {ror_bt:.1f}，目標 {bg_ror:.1f}），'
+                        f'火微減一下，拉回節奏')
         if two_min_warn:
-            return +1, (f'入豆後2分鐘 RoR 僅 {ror_bt:.1f}°C/min（應≥15），'
-                        f'入豆溫或火力不足，立即加火（上調1格）')
+            return +1, (f'投豆兩分鐘了，RoR 才 {ror_bt:.1f}——有點低，'
+                        f'入豆溫或初始火力可能不夠，補一點火')
         if pace_warn and '偏快' in pace_warn:
-            return -1, f'進度偏快，輕微減火（下調1格）調整節奏'
+            return -1, f'進度偏快，火稍微收一點，別讓豆表跑太前面'
         if pace_warn and '偏慢' in pace_warn:
-            return +1, f'進度偏慢，輕微加火（上調1格）'
-        return 0, f'RoR {ror_bt:.1f}°C/min 與參考曲線吻合（目標 {bg_ror:.1f}°C/min），維持現況'
+            return +1, f'進度有點慢，補火讓它追上來'
+        return 0, f'RoR {ror_bt:.1f} 跟參考曲線貼得不錯（目標 {bg_ror:.1f}），現況維持就好'
 
     # ── No background: fall back to fixed-target rules ──
     if ror_bt < lo * 0.6:
-        return +2, (f'RoR 嚴重不足（目標 {lo:.0f}～{hi:.0f}，現 {ror_bt:.1f}°C/min），'
-                    f'立即積極加火（上調2格），熱慣性約40秒後才反映，現在就動')
+        return +2, (f'RoR 掉到 {ror_bt:.1f} 了，嚴重偏低——'
+                    f'火要補，而且要快，別猶豫，熱慣性40秒才反映')
     if ror_bt < lo:
         deficit = lo - ror_bt
         notch = 2 if deficit > 4 else 1
-        return +notch, (f'RoR 偏低（目標 {lo:.0f}～{hi:.0f}，現 {ror_bt:.1f}°C/min），'
-                        f'加火（上調{notch}格），40～60秒後RoR將止跌回升')
+        return +notch, (f'RoR {ror_bt:.1f} 有點低，補{"一點" if notch == 1 else "積極補"}火，'
+                        f'40～60秒後應該會止跌')
     if ror_bt < 6.0 and bt >= fc_start:
-        return 0, (f'RoR {ror_bt:.1f}°C/min 偏低，接近下豆時機——'
-                   f'確認冷卻盤風扇已開、出豆槽就位，用取樣棒確認豆色後準備下豆')
+        return 0, (f'RoR 只剩 {ror_bt:.1f} 了，快到出豆時機——'
+                   f'冷卻盤風扇開了沒？出豆槽就位了嗎？取樣棒確認一下豆色')
     if ror_bt > hi * 1.3:
-        return -2, (f'RoR 嚴重過高（目標 {lo:.0f}～{hi:.0f}，現 {ror_bt:.1f}°C/min），'
-                    f'立即減火（下調2格）並稍開大風門，避免豆表焦化')
+        return -2, (f'RoR {ror_bt:.1f} 跑太高，要趕快壓——'
+                    f'火減下來，風門也可以開一點，別讓豆表焦化')
     if ror_bt > hi:
-        return -1, (f'RoR 略高（目標 {lo:.0f}～{hi:.0f}，現 {ror_bt:.1f}°C/min），'
-                    f'輕微減火（下調1格）或稍開大風門')
+        return -1, (f'RoR {ror_bt:.1f} 稍微偏高，火微減一下或稍開風門，'
+                    f'讓它回到節奏')
     if two_min_warn:
-        return +1, (f'入豆後2分鐘 RoR 僅 {ror_bt:.1f}°C/min（應≥15），'
-                    f'入豆溫或火力不足，立即加火（上調1格）')
+        return +1, (f'投豆兩分鐘了，RoR 才 {ror_bt:.1f}——'
+                    f'入豆溫或初始火力可能偏低，補火')
     if pace_warn and '偏快' in pace_warn:
-        return -1, f'進度偏快，輕微減火（下調1格）調整節奏，避免豆表色感過深'
+        return -1, f'進度有點快，火稍微收一下，豆表色感別跑太前面'
     if pace_warn and '偏慢' in pace_warn:
-        return +1, f'進度偏慢，輕微加火（上調1格），確保5分鐘內到達150°C'
-    return 0, f'RoR 正常（{lo:.0f}～{hi:.0f}°C/min），維持現況，不需調整'
+        return +1, f'進度有點慢，補火讓它在5分鐘內到達150°C'
+    return 0, f'RoR {ror_bt:.1f} 在目標範圍，節奏不錯，維持就好'
 
 
 def _expected_outcome(fire_delta: int, ror_bt: float, bt: float,
@@ -529,22 +529,22 @@ def _expected_outcome(fire_delta: int, ror_bt: float, bt: float,
     target_lo = bg_ror if bg_ror is not None else lo
     if fire_delta == +2:
         new_ror = min(ror_bt + 3.5, target_hi)
-        base = f'約40秒後RoR止跌，預計回升至 {new_ror:.0f}°C/min；BT繼續上升'
+        base = f'40秒左右RoR應該會止跌往上，盯著它；BT繼續往上走'
     elif fire_delta == +1:
         new_ror = min(ror_bt + 2.0, target_hi)
-        base = f'約60秒後RoR止跌穩定，預計達 {new_ror:.0f}°C/min；BT持續穩升'
+        base = f'60秒後RoR應該會穩住，BT繼續穩升；如果還沒止跌再評估'
     elif fire_delta == -2:
         new_ror = max(ror_bt - 3.0, target_lo)
-        base = f'約40秒後RoR明顯下降至 {new_ror:.0f}°C/min；注意不要降過頭'
+        base = f'40秒後RoR應該明顯下來；注意別讓它降過頭，隨時準備收手'
     elif fire_delta == -1:
         new_ror = max(ror_bt - 1.5, target_lo)
-        base = f'約60秒後RoR緩降至 {new_ror:.0f}°C/min；BT升幅趨緩'
+        base = f'60秒後RoR會緩緩下來，BT升幅也會趨緩；觀察一下效果'
     else:
         mins_to_150 = ''
         if bt < 150 and ror_bt > 0.5:
             eta = ((150 - bt) / ror_bt * 60 + time_since_charge) / 60
-            mins_to_150 = f'；預計 {eta:.1f} 分鐘到達150°C'
-        base = f'維持RoR {ror_bt:.1f}°C/min，90秒後BT約 {proj_bt:.0f}°C{mins_to_150}'
+            mins_to_150 = f'；照這節奏約 {eta:.1f} 分鐘到達150°C'
+        base = f'節奏穩，90秒後BT大概到 {proj_bt:.0f}°C{mins_to_150}'
     # BT gap note when background is available and there's a meaningful deviation
     if bg_bt is not None:
         bt_diff = bt - bg_bt
@@ -576,9 +576,9 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         if bg_bt is not None:
             diff = bt - bg_bt
             bg_note = f'（參考曲線 {bg_bt:.1f}°C，偏差 {diff:+.1f}°C）'
-        return (f'現況：回溫中，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，BT 仍在下降（RoR {ror_bt:.1f}°C/min）\n'
-                f'操作：維持入豆火力，等待BT到達最低回溫點後自然回升\n'
-                f'預期：回溫點預計在 85～100°C，回溫後RoR轉正開始乾燥期')
+        return (f'現況：回溫中，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，還在往下走（RoR {ror_bt:.1f}°C/min）\n'
+                f'操作：火維持就好，等豆子吸熱到最低點自然會回頭\n'
+                f'預期：回溫點大概在85～100°C，到了之後RoR會轉正，乾燥期正式開始')
 
     # --- 剛到回溫點（TP）---
     if is_tp:
@@ -617,9 +617,9 @@ def _compute_rule_advice(bt: float, ror_bt: float,
 
     # --- 投豆（CHARGE 按鈕）---
     if 'CHARGE' in trigger:
-        return (f'現況：投豆完成，{mins}:{secs:02d}，BT 開始下降回溫中，請保持入豆火力\n'
-                f'操作：維持現有火力，等待BT到達回溫點（目標85～100°C，約90秒）\n'
-                f'預期：BT持續下降至回溫點後轉正，乾燥期正式開始')
+        return (f'現況：投豆了，{mins}:{secs:02d}，BT 開始往下掉，正常的\n'
+                f'操作：火維持不動，等豆子回溫，回溫點大概在85～100°C、約90秒後\n'
+                f'預期：BT會繼續降到最低點再回頭，那時候乾燥期正式開始')
 
     # --- 脫水結束（DRY END 按鈕）---
     if '脫水結束' in trigger:
@@ -638,10 +638,10 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
         _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
                                              fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
-        return (f'現況：脫水期結束，進入梅納期，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
-                f'；豆色應已轉黃，銀皮持續脫落\n'
+        return (f'現況：脫水期過了，進梅納期了，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
+                f'；豆色應該已經轉黃，銀皮陸續在脫\n'
                 f'操作：{action_text}\n'
-                f'預期：梅納褐化反應主導，BT穩步上升，焦糖香漸濃，RoR維持平滑遞減至一爆（約{fc_start:.0f}°C）')
+                f'預期：接下來是梅納反應的天下，BT穩步往上，焦糖香會越來越明顯，RoR緩緩往下走到一爆')
 
     # --- 一爆開始（FC 按鈕）---
     if '一爆開始' in trigger:
@@ -659,10 +659,10 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
         _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
                                              fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
-        return (f'現況：⚡ 一爆開始（FC），{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
-                f'；爆裂聲密集，煙量與銀皮量達到最大\n'
-                f'操作：{action_text}；進入發展期計時\n'
-                f'預期：爆裂聲持續，RoR應緩降至8～10°C/min，煙量排出後豆表風味更乾淨，DTR目標20～25%')
+        return (f'現況：一爆來了，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
+                f'；爆裂聲密集，煙跟銀皮現在最多\n'
+                f'操作：{action_text}；計時開始\n'
+                f'預期：爆裂聲會持續一陣子，RoR慢慢往下；煙排掉了豆表風味會乾淨很多，目標DTR 20～25%')
 
     # --- 一爆結束（FC END 按鈕）---
     if '一爆結束' in trigger:
@@ -676,17 +676,17 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
         _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
                                              fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
-        return (f'現況：一爆密集結束（FC END），{mins}:{secs:02d}，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
-                f'；爆裂聲漸稀，進入安靜發展段\n'
-                f'操作：{action_text}；專注DTR進度\n'
-                f'預期：發展期中段，RoR目標8～10°C/min持續緩降，DTR達20%時開始下豆決策窗口')
+        return (f'現況：一爆密集段過了，{mins}:{secs:02d}，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
+                f'；爆裂聲漸稀，進入安靜的發展段\n'
+                f'操作：{action_text}；盯著DTR\n'
+                f'預期：RoR繼續緩降，DTR到20%就進入下豆決策窗口了')
 
     # --- 二爆開始（SC 按鈕）---
     if '二爆開始' in trigger:
-        return (f'現況：⚠️ 二爆開始（SC），{mins}:{secs:02d}，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min — 深烘區間'
-                f'；油脂開始滲出豆表，煙量再次增大\n'
-                f'操作：立即評估是否下豆；若繼續，風門全開（5/5）排出油煙，每10秒確認豆色與煙量\n'
-                f'預期：二爆後豆體快速碳化風險上升，建議最多再等20～30秒；油煙若變濃烈請立即下豆')
+        return (f'現況：二爆來了，{mins}:{secs:02d}，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min——深烘領域了'
+                f'；豆油開始滲出，煙量又大起來\n'
+                f'操作：現在要判斷要不要出豆；如果還要繼續，風門全開排油煙，每10秒看一次豆色跟煙量\n'
+                f'預期：過了二爆碳化速度很快，最多再撐20～30秒；油煙一變濃就出豆，不要猶豫')
 
     # --- 接近梅納窗口結束（BT 自動偵測）---
     if '接近梅納窗口' in trigger or '162' in trigger:
@@ -702,10 +702,10 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_pre_target,
                                              '梅納末段預開，一爆到來時立即全開',
                                              fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
-        return (f'現況：梅納期末段（T2），BT {bt:.1f}°C，即將進入一爆前醞釀'
-                f'，RoR {ror_bt:.1f}°C/min（{ror_eval}）；焦糖香濃郁，豆色深棕\n'
-                f'操作：{action_text}；注意聽豆聲\n'
-                f'預期：再升5～10°C即可能出現一爆，一爆聲響立即按FC記錄，並同步全開風門排出煙氣')
+        return (f'現況：梅納期尾聲了，BT {bt:.1f}°C，一爆快來了'
+                f'，RoR {ror_bt:.1f}°C/min（{ror_eval}）；焦糖香應該很濃，豆色深棕\n'
+                f'操作：{action_text}；耳朵要豎起來聽\n'
+                f'預期：再5～10°C就可能開始爆了，一聽到爆裂聲立刻按FC記錄，同時把風門開大排煙')
 
     # --- 正常烘焙階段 ---
     stage = _stage_label(bt, dry_end=dry_end, fc_start=fc_start)
