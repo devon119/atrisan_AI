@@ -311,7 +311,7 @@ def _detect_ror_anomaly(ror_values: 'list[float]') -> 'tuple[str|None, str]':
     if drop >= 4.0 and last_slope < -0.5:
         return ('crash',
                 f'現況：⚠️ RoR在驟降！從 {recent_max:.1f} 掉到 {current:.1f}°C/min，跌了 {drop:.1f}，不正常\n'
-                f'操作：補火；同時看一下風門是不是開太大了，或者環境突然降溫\n'
+                f'操作：補火；另外看一下風門是不是開太大了，或者環境突然降溫\n'
                 f'預期：及時補火的話40秒後應該會止跌；還沒止住的話，擇一再試：補火或縮小風門')
     return None, ''
 
