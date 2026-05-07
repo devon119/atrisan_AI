@@ -1221,10 +1221,18 @@ class AIAdvisor:
         'zh-TW-YunJheNeural',      # 男聲
     )
 
+    # Keywords that trigger louder/slower TTS emphasis
+    _ALERT_TTS_KW: Final[tuple] = (
+        '注意', '嚴重', '先別', '不建議', '暫別開', '別讓', '趕快', '要快', '緊急',
+    )
+
     def _tts_edge(self, text: str) -> None:
-        """Neural TTS via Microsoft Edge — sounds far more natural than SAPI."""
+        """Neural TTS via Microsoft Edge.
+        Alert segments (containing warning keywords) are spoken louder and slower.
+        """
         import asyncio
         import os
+        import re
         import tempfile
 
         try:
@@ -1234,31 +1242,37 @@ class AIAdvisor:
             self._tts_windows(text)
             return
 
-        # Pick voice: use configured name if it looks like an Edge voice, else auto-select
-        if self.tts_voice and 'Neural' in self.tts_voice:
-            voice = self.tts_voice
-        else:
-            voice = self._EDGE_VOICES_ZH_TW[0]
-
-        # Map tts_rate (-5…+5) → Edge rate string (+/-50%)
+        voice = self.tts_voice if (self.tts_voice and 'Neural' in self.tts_voice) \
+            else self._EDGE_VOICES_ZH_TW[0]
         rate_pct = self.tts_rate * 10
-        rate_str = f'{rate_pct:+d}%'
 
-        async def _generate(path: str) -> None:
-            communicate = edge_tts.Communicate(text, voice, rate=rate_str)
-            await communicate.save(path)
+        # Split into segments; alert segments get louder + slower prosody
+        raw_parts = [p.strip() for p in re.split(r'[；;\n]', text) if p.strip()]
+        segments: list[tuple[str, bool]] = [
+            (p, any(kw in p for kw in self._ALERT_TTS_KW)) for p in raw_parts
+        ]
 
-        tmpfile = tempfile.mktemp(suffix='.mp3')
+        async def _gen_all(jobs: list[tuple[str, str, bool]]) -> None:
+            for path, seg, is_alert in jobs:
+                vol  = '+50%' if is_alert else '+0%'
+                rate = f'{rate_pct - 15:+d}%' if is_alert else f'{rate_pct:+d}%'
+                comm = edge_tts.Communicate(seg, voice, rate=rate, volume=vol)
+                await comm.save(path)
+
+        jobs = [(tempfile.mktemp(suffix='.mp3'), seg, is_alert)
+                for seg, is_alert in segments]
         try:
-            asyncio.run(_generate(tmpfile))
-            self._play_mp3(tmpfile)
+            asyncio.run(_gen_all(jobs))
+            for path, _, _ in jobs:
+                self._play_mp3(path)
         except Exception as e:  # pylint: disable=broad-except
             _log.debug('Edge TTS failed: %s', e)
         finally:
-            try:
-                os.unlink(tmpfile)
-            except Exception:  # pylint: disable=broad-except
-                pass
+            for path, _, _ in jobs:
+                try:
+                    os.unlink(path)
+                except Exception:  # pylint: disable=broad-except
+                    pass
 
     @staticmethod
     def _play_mp3(path: str) -> None:
