@@ -394,8 +394,14 @@ def _coordinated_action(ror_bt: float, bt: float,
     elif need_cool_urgently and damper_delta > 0:
         # Opening damper helps cool — reinforce it
         damper_reminder = f'風門也可以開大一點（{damper_reason}），幫忙把RoR壓下來'
+    elif fire_delta_base == +1 and damper_delta > 0:
+        # Mild heat needed + damper wants to open: compensate fire first, open damper conservatively
+        damper_reminder = f'補火優先（{damper_reason}）；如要排煙稍開一點就好，別開太大，RoR本來就偏低'
+    elif fire_delta_base == -1 and damper_delta > 0:
+        # Mild cool needed + damper wants to open: both lower RoR, pick one first
+        damper_reminder = f'開風門和減火效果相近（{damper_reason}），擇一先試，觀察效果再決定下一步'
     elif damper_delta > 0:
-        damper_reminder = f'注意排煙（{damper_reason}）；開大風門後RoR會下降，視情況決定是否補火'
+        damper_reminder = f'注意排煙（{damper_reason}）；開大風門後RoR會下降，視情況同步補火'
     elif damper_delta < 0:
         damper_reminder = f'可縮小風門（{damper_reason}）；縮小後RoR會上升，視情況同步減火'
     else:
@@ -473,7 +479,7 @@ def _fire_recommendation(ror_bt: float, bt: float,
                         f'火要補，而且要快——熱慣性40秒才反映，現在就動')
         if ror_bt > hi * 1.4:
             return -2, (f'RoR {ror_bt:.1f} 跑太高了（參考 {bg_ror:.1f}），'
-                        f'火減下來，風門也可以開一點幫忙壓')
+                        f'減火或開風門擇一先試，不要同時動，容易過頭')
         if diff < -4:
             return +2, (f'RoR 落後參考曲線 {-diff:.1f}°C/min（現 {ror_bt:.1f}，目標 {bg_ror:.1f}），'
                         f'積極補火，別等，40秒後才看得到效果')
@@ -509,10 +515,10 @@ def _fire_recommendation(ror_bt: float, bt: float,
                    f'冷卻盤風扇開了沒？出豆槽就位了嗎？取樣棒確認一下豆色')
     if ror_bt > hi * 1.3:
         return -2, (f'RoR {ror_bt:.1f} 跑太高，要趕快壓——'
-                    f'火減下來，風門也可以開一點，別讓豆表焦化')
+                    f'減火或開風門擇一先試，不要同時動，容易矯枉過正')
     if ror_bt > hi:
-        return -1, (f'RoR {ror_bt:.1f} 稍微偏高，火微減一下或稍開風門，'
-                    f'讓它回到節奏')
+        return -1, (f'RoR {ror_bt:.1f} 稍微偏高，減火或稍開風門選一個先試，'
+                    f'觀察效果再決定下一步')
     if two_min_warn:
         return +1, (f'投豆兩分鐘了，RoR 才 {ror_bt:.1f}——'
                     f'入豆溫或初始火力可能偏低，補火')
