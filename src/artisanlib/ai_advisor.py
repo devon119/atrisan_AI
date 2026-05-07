@@ -51,24 +51,26 @@ ROAST_SYSTEM_PROMPT = """你是擁有20年經驗的咖啡烘焙師兼指導員�
 
 每次回應固定三行，格式如下（禁止開場白、問候語或多餘文字）：
 
-現況：<目前階段 + BT + RoR當前值與趨勢 + ET/BT差距若異常>
-操作：<火力（加/減火幾格）+ 風門（開大/縮小/維持），含具體幅度與原因>
-預期：<60～90秒後RoR和BT的預期變化，以及風門調整對排煙/風味的影響>
+現況：<目前階段 + BT + RoR當前值與趨勢 + 必要時加ET/BT差距異常說明>
+操作：<火力方向（加/減/維持）+ 風門提醒（排煙需求/蓄熱需求）+ 兩者互動注意事項>
+預期：<60～90秒後RoR和BT的預期方向；不需給精確數字，說明趨勢即可>
 
-範例A（梅納期RoR不足，風門適中）：
-現況：梅納期，BT 138°C，RoR 持續下滑（18.5→13.2°C/min）← 低於目標（15～25），ET/BT差距 30°C 正常。
-操作：立即輕微加火（上調1格），風門維持中段（3/5），熱慣性約40秒後才反映，現在就動。
-預期：60秒後RoR止跌回升至16°C/min，銀皮持續排出，風門無需調整。
+【重要原則】操作行只提示方向與注意事項，不規定具體幅度——烘焙師根據現場判斷。
 
-範例B（FC後發展期，需開大風門排煙）：
-現況：發展期初段，BT 203°C，一爆密集中，RoR 趨穩（9.1°C/min）← 正常（8～10），煙量增大。
-操作：維持火力，立即開大風門（4→5/5），排出大量煙氣與銀皮，避免煙燻味附著豆表。
-預期：RoR繼續緩降至8°C/min，煙燻風味減少，DTR達20%時準備下豆。
+範例A（梅納期RoR偏低）：
+現況：梅納期，BT 138°C，RoR 持續下滑（18.5→13.2°C/min），低於目標（15～25），趨勢仍向下。
+操作：考慮加火，熱慣性約40秒後才反映；風門維持現況，過大的風門會加速RoR下滑。
+預期：RoR應止跌回升，BT持續穩升；若調整後RoR仍未止跌，再評估是否繼續加火。
 
-範例C（RoR翻揚，同步縮小風門補熱）：
-現況：梅納期末，BT 172°C，RoR翻揚上升（11→14°C/min），風門偏大可能散熱過快。
-操作：微減火（下調1格），同時稍縮小風門（4→3/5），穩定熱源防止RoR繼續上揚。
-預期：40秒後RoR止揚回落至11～12°C/min，維持梅納反應節奏。
+範例B（一爆，排煙優先）：
+現況：一爆開始，BT 202°C，RoR 9.1°C/min（目標8～10），爆裂聲密集，煙量大。
+操作：注意排煙，這是最重要的排煙時機；開大風門後RoR會下降，視RoR反應決定是否補火。
+預期：煙氣排出後豆表風味更乾淨；RoR方向持續緩降為佳，DTR朝20～25%推進。
+
+範例C（RoR翻揚，風門與火力互動）：
+現況：梅納期末，BT 172°C，RoR翻揚（11→14°C/min），違反平滑遞減原則。
+操作：考慮減火；若風門目前偏大也可先縮小風門觀察，兩者都會使RoR下降，不需同時動。
+預期：RoR應止揚回落，恢復緩降節奏；動作後40～60秒觀察效果再決定下一步。
 
 ---
 
@@ -125,10 +127,10 @@ RoR偏差已標注在數據的（← 符號後），請直接依此判斷力道�
   銀皮與煙量最多，排煙不足直接導致煙燻味、土味附著豆表。
 - 發展期深烘（二爆前後）：全開（5/5），油脂揮發，持續大排煙。
 
-風門與RoR的互動：
-- 開大風門 → 散熱增加 → RoR下降 0.5～2°C/min（約15～30秒後反映）
-- 縮小風門 → 保熱增加 → RoR上升 0.5～1.5°C/min
-- 風門可作為「微調RoR」的輔助工具，比火力調整更精細，但效果較小。
+風門與RoR的互動（提醒用，不需規定幅度）：
+- 開大風門 → 散熱增加 → RoR會下降（約15～30秒後反映）；提醒烘焙師注意是否需要補火
+- 縮小風門 → 保熱增加 → RoR會上升；提醒烘焙師注意是否需要同步減火
+- 風門可作為「輔助微調RoR」的工具，比火力調整反應更快；具體調多少由現場決定
 
 ET/BT 差距解讀：
 - 正常差距：ET 比 BT 高 20～35°C（乾燥期）/ 15～25°C（梅納期）/ 10～20°C（發展期）
@@ -367,74 +369,33 @@ def _coordinated_action(ror_bt: float, bt: float,
                          dry_end: float = 160.0,
                          fc_start: float = 200.0,
                          bg_ror: 'float|None' = None) -> 'tuple[int, str]':
-    """Combine fire and damper into a single coordinated action string.
-
-    When damper_cur is known: quantifies RoR impact, recalculates fire compensation.
-    When damper_cur is None: gives target + conditional advice.
-    Returns (final_fire_delta, action_text).
+    """Combine fire recommendation with a damper reminder.
+    Does not prescribe exact adjustments — user decides based on real situation.
+    Returns (fire_delta_base, action_text).
     """
     lo, hi = _ror_range(bt, dry_end, fc_start)
     target_lo = bg_ror if bg_ror is not None else lo
     target_hi = bg_ror if bg_ror is not None else hi
 
+    # Determine if damper adjustment is recommended vs current position
     if damper_cur is not None:
         damper_delta = damper_target - damper_cur
-        ror_impact = -damper_delta * _DAMPER_ROR_PER_NOTCH
-        projected_ror = ror_bt + ror_impact
-
-        # Recalculate fire need based on projected RoR after damper change
-        if projected_ror < target_lo * 0.6:
-            fire_delta = +2
-        elif projected_ror < target_lo:
-            fire_delta = +1
-        elif projected_ror > target_hi * 1.3:
-            fire_delta = -2
-        elif projected_ror > target_hi:
-            fire_delta = -1
-        else:
-            fire_delta = 0
-
-        # Damper part
         if damper_delta > 0:
-            damper_text = (f'開大風門（{damper_cur}→{damper_target}/5，{damper_reason}）'
-                           f'，RoR 將下降約 {abs(ror_impact):.1f}°C/min')
+            damper_reminder = f'注意排煙（{damper_reason}）；開大風門會使 RoR 下降，視 RoR 反應決定是否補火'
         elif damper_delta < 0:
-            damper_text = (f'縮小風門（{damper_cur}→{damper_target}/5，{damper_reason}）'
-                           f'，RoR 將上升約 {abs(ror_impact):.1f}°C/min')
+            damper_reminder = f'可縮小風門（{damper_reason}）；縮小風門會使 RoR 上升，視情況決定是否同步減火'
         else:
-            damper_text = f'風門維持 {damper_cur}/5（{damper_reason}）'
-
-        # Fire compensation part
-        if damper_delta == 0:
-            fire_comp = fire_text_base
-        elif fire_delta == 0:
-            fire_comp = (f'預估 RoR {projected_ror:.1f}°C/min 仍在目標（{target_lo:.0f}～{target_hi:.0f}），'
-                         f'火力不需額外調整')
-        elif fire_delta > 0:
-            fire_comp = (f'同步加火（上調{fire_delta}格）補償散熱；'
-                         f'預估 RoR 回到 {projected_ror + fire_delta * 1.5:.1f}°C/min')
-        else:
-            fire_comp = (f'同步減火（下調{abs(fire_delta)}格）配合風門壓制 RoR；'
-                         f'預估穩定在 {projected_ror + fire_delta * 1.5:.1f}°C/min')
-
-        action = f'{damper_text}；{fire_comp}' if damper_delta != 0 else f'{fire_comp}；{damper_text}'
-        return fire_delta, action
-
+            damper_reminder = f'風門維持現況（{damper_reason}）'
     else:
-        # damper_cur unknown — give target with conditional guidance
-        assumed_cur = 3  # reasonable mid-roast assumption
-        est_delta = damper_target - assumed_cur
-        impact_est = abs(est_delta) * _DAMPER_ROR_PER_NOTCH
-        damper_text = f'風門調至 {damper_target}/5（{damper_reason}）'
-        if est_delta > 0:
-            cond = (f'若目前開度 < {damper_target}/5，RoR 將下降約 {impact_est:.1f}°C/min；'
-                    f'若 RoR 降至 {target_lo:.0f}°C/min 以下，同步加火 1 格補償')
-        elif est_delta < 0:
-            cond = (f'若目前開度 > {damper_target}/5，RoR 將上升約 {impact_est:.1f}°C/min；'
-                    f'若 RoR 升至 {target_hi:.0f}°C/min 以上，同步減火 1 格')
+        # No damper data — give stage-appropriate general reminder
+        if damper_target >= 4:
+            damper_reminder = f'注意排煙（{damper_reason}）；開大風門後 RoR 會下降，視情況決定是否補火'
+        elif damper_target <= 2:
+            damper_reminder = f'風門保持小開蓄熱（{damper_reason}）；若縮小風門後 RoR 回升，視情況決定是否減火'
         else:
-            cond = 'RoR 影響中性，維持現有火力'
-        return fire_delta_base, f'{fire_text_base}；{damper_text}，{cond}'
+            damper_reminder = f'風門維持中段（{damper_reason}）'
+
+    return fire_delta_base, f'{fire_text_base}；{damper_reminder}'
 
 
 # ---------------------------------------------------------------------------
