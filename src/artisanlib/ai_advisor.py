@@ -866,11 +866,12 @@ class AIAdvisor:
 
         # TTS
         self.tts_enabled: bool = False
-        self.tts_rate: int = 0        # -5 (slow) … +5 (fast); maps to SAPI Rate / macOS WPM
-        self.tts_volume: int = 80     # 0–100 (Windows only)
-        self.tts_mode: str = 'full'   # 'full' = all 3 lines, 'action' = 操作 line only
-        self.tts_prefix: bool = True  # prepend 注意！/提示，to speech
-        self.tts_voice: str = ''      # SAPI voice description (Windows); '' = auto
+        self.tts_provider: str = 'auto'  # 'auto' / 'edge' / 'sapi' / 'say'
+        self.tts_rate: int = 0           # -5 (slow) … +5 (fast)
+        self.tts_volume: int = 80        # 0–100 (Windows SAPI only)
+        self.tts_mode: str = 'full'      # 'full' = all 3 lines, 'action' = 操作 line only
+        self.tts_prefix: bool = True     # prepend 注意！/提示，to speech
+        self.tts_voice: str = ''         # SAPI description or Edge voice name; '' = auto
         self._tts_busy: bool = False
 
         self.on_advice: Optional[Callable[[str], None]] = None
@@ -1136,12 +1137,102 @@ class AIAdvisor:
         self._tts_busy = True
         try:
             import platform
-            if platform.system() == 'Darwin':
+            is_mac = platform.system() == 'Darwin'
+            provider = self.tts_provider
+
+            if provider == 'auto':
+                # Prefer Edge TTS if available, else fall back to platform default
+                try:
+                    import edge_tts as _et  # noqa: F401
+                    provider = 'edge'
+                except ImportError:
+                    provider = 'say' if is_mac else 'sapi'
+
+            if provider == 'edge':
+                self._tts_edge(text)
+            elif is_mac:
                 self._tts_macos(text)
             else:
                 self._tts_windows(text)
         finally:
             self._tts_busy = False
+
+    # Default Edge TTS voices for Traditional Chinese
+    _EDGE_VOICES_ZH_TW: tuple = (
+        'zh-TW-HsiaoChenNeural',   # 女聲，自然親切
+        'zh-TW-HsiaoYuNeural',     # 女聲，明亮
+        'zh-TW-YunJheNeural',      # 男聲
+    )
+
+    def _tts_edge(self, text: str) -> None:
+        """Neural TTS via Microsoft Edge — sounds far more natural than SAPI."""
+        import asyncio
+        import os
+        import tempfile
+
+        try:
+            import edge_tts  # type: ignore[import]
+        except ImportError:
+            _log.warning('edge-tts not installed, falling back to SAPI')
+            self._tts_windows(text)
+            return
+
+        # Pick voice: use configured name if it looks like an Edge voice, else auto-select
+        if self.tts_voice and 'Neural' in self.tts_voice:
+            voice = self.tts_voice
+        else:
+            voice = self._EDGE_VOICES_ZH_TW[0]
+
+        # Map tts_rate (-5…+5) → Edge rate string (+/-50%)
+        rate_pct = self.tts_rate * 10
+        rate_str = f'{rate_pct:+d}%'
+
+        async def _generate(path: str) -> None:
+            communicate = edge_tts.Communicate(text, voice, rate=rate_str)
+            await communicate.save(path)
+
+        tmpfile = tempfile.mktemp(suffix='.mp3')
+        try:
+            asyncio.run(_generate(tmpfile))
+            self._play_mp3(tmpfile)
+        except Exception as e:  # pylint: disable=broad-except
+            _log.debug('Edge TTS failed: %s', e)
+        finally:
+            try:
+                os.unlink(tmpfile)
+            except Exception:  # pylint: disable=broad-except
+                pass
+
+    @staticmethod
+    def _play_mp3(path: str) -> None:
+        """Play an MP3 file synchronously using Windows MCI (no extra dependencies)."""
+        import platform
+        if platform.system() == 'Darwin':
+            import subprocess
+            subprocess.run(['afplay', path], capture_output=True)
+            return
+        try:
+            import ctypes
+            winmm = ctypes.windll.winmm  # type: ignore[attr-defined]
+            safe = path.replace('/', '\\')
+            winmm.mciSendStringW(f'open "{safe}" type mpegvideo alias _edge_snd', None, 0, None)
+            winmm.mciSendStringW('play _edge_snd wait', None, 0, None)
+            winmm.mciSendStringW('close _edge_snd', None, 0, None)
+        except Exception as e:  # pylint: disable=broad-except
+            _log.debug('MCI playback failed: %s', e)
+
+    @staticmethod
+    def list_edge_voices() -> 'list[str]':
+        """Return available Edge TTS voices for zh-TW (async, blocking call)."""
+        import asyncio
+        try:
+            import edge_tts  # type: ignore[import]
+            async def _fetch():
+                voices = await edge_tts.list_voices()
+                return [v['ShortName'] for v in voices if v.get('Locale', '').startswith('zh-TW')]
+            return asyncio.run(_fetch())
+        except Exception:  # pylint: disable=broad-except
+            return list(AIAdvisor._EDGE_VOICES_ZH_TW)
 
     def _tts_windows(self, text: str) -> None:
         try:
@@ -1184,7 +1275,14 @@ class AIAdvisor:
 
     @staticmethod
     def list_available_voices() -> 'list[str]':
-        """Return SAPI voice descriptions available on this Windows machine."""
+        """Return available voices: Edge neural voices first, then SAPI fallback."""
+        results: list[str] = []
+        # Edge voices
+        try:
+            results = AIAdvisor.list_edge_voices()
+        except Exception:  # pylint: disable=broad-except
+            pass
+        # SAPI voices
         try:
             import pythoncom  # type: ignore[import]
             pythoncom.CoInitialize()
@@ -1192,11 +1290,13 @@ class AIAdvisor:
                 import win32com.client  # type: ignore[import]
                 speaker = win32com.client.Dispatch('SAPI.SpVoice')
                 voices = speaker.GetVoices()
-                return [voices.Item(i).GetDescription() for i in range(voices.Count)]
+                sapi = [voices.Item(i).GetDescription() for i in range(voices.Count)]
+                results += sapi
             finally:
                 pythoncom.CoUninitialize()
         except Exception:  # pylint: disable=broad-except
-            return []
+            pass
+        return results
 
     def _tts_macos(self, text: str) -> None:
         import subprocess
