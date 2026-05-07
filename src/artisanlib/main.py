@@ -25198,17 +25198,39 @@ class ApplicationWindow(QMainWindow):
 
     @staticmethod
     def _format_ai_block(ts: str, text: str) -> str:
-        """Parse 現況/操作/預期 sections, detect urgency, render with colours."""
+        """Parse 現況/操作/預期 sections, detect urgency, render with colours.
+        Warning sub-items (containing 注意/⚠️/嚴重/先別/不建議) are rendered
+        on their own line in red with larger font.
+        """
         import re
         section_colors = {'現況': '#90ee90', '操作': '#ffd700', '預期': '#87ceeb'}
-        _urgent_kw   = ('緊急', '大幅', '崩潰', '趨近0', '負值', '暴衝', '過度')
-        _warning_kw  = ('下滑', '偏低', '不足', '注意', '過快', '回升')
+        _urgent_kw  = ('緊急', '大幅', '崩潰', '趨近0', '負值', '暴衝', '過度')
+        _warning_kw = ('下滑', '偏低', '不足', '注意', '過快', '回升')
+        _alert_kw   = ('注意', '⚠️', '嚴重', '先別', '不建議', '暫別開', '別讓')
         badge, border = '🟢', '#1a4a1a'
-        lo = text.lower()
         if any(k in text for k in _urgent_kw):
             badge, border = '🔴', '#6a1a1a'
         elif any(k in text for k in _warning_kw):
             badge, border = '🟡', '#4a3a00'
+
+        def _render_content(content: str, base_color: str) -> str:
+            """Split by ；; render alert sub-items in red+large on their own line."""
+            parts = [p.strip() for p in re.split(r'[；;]', content) if p.strip()]
+            normal: list[str] = []
+            alerts: list[str] = []
+            for part in parts:
+                if any(kw in part for kw in _alert_kw):
+                    alerts.append(
+                        f'<span style="color:#ff5555;font-size:11pt;font-weight:bold;">'
+                        f'⚠ {part}</span>'
+                    )
+                else:
+                    normal.append(f'<span style="color:{base_color};">{part}</span>')
+            result = '；'.join(normal)
+            if alerts:
+                result += '<br>' + '<br>'.join(alerts)
+            return result
+
         lines = text.strip().splitlines()
         html_lines = [
             f'<span style="color:#aaaaaa;font-size:9pt;">{badge} {ts}</span>'
@@ -25218,11 +25240,13 @@ class ApplicationWindow(QMainWindow):
             if m:
                 label, content = m.group(1), m.group(2)
                 color = section_colors.get(label, '#90ee90')
+                rendered = _render_content(content, color)
                 html_lines.append(
                     f'<span style="color:{color};font-weight:bold;">{label}：</span>'
-                    f'<span style="color:{color};">{content}</span>'
+                    f'{rendered}'
                 )
-            else:
+            elif line.strip():
+                # continuation lines (e.g. 趨勢：...)
                 html_lines.append(f'<span style="color:#cccccc;">{line}</span>')
         div = (f'<div style="border-left:3px solid {border};'
                f'padding:4px 6px;margin:4px 0;">')
