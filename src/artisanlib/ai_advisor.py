@@ -103,12 +103,12 @@ ROAST_SYSTEM_PROMPT = """你是擁有20年經驗的咖啡烘焙師兼指導員�
 - 乾燥期（回溫點～轉黃160°C）：RoR 目標 15～25°C/min
   → RoR < 12：積極加火（上調2格）
   → RoR 12～15：輕微加火（上調1格）
-  → RoR > 25：減火或開風門
+  → RoR > 25：減火為主（乾燥期風門小開蓄熱，不輕易調風門）
 - 梅納期（轉黃160°C～FC一爆）：RoR 目標 10～15°C/min
   → RoR < 8：加火（上調1格）
   → RoR > 16：減火（下調1格）
 - 發展期（FC一爆後）：RoR 目標 8～10°C/min，DTR目標20～25%
-  → RoR 回升超過10 → 減火或開風門
+  → RoR 回升超過10 → 減火（發展期風門已全開，不靠風門控RoR）
   → RoR 低於6 → 接近下豆時機
 
 「嚴重不足」或「嚴重超標」時，操作力道加倍。
@@ -371,55 +371,69 @@ def _coordinated_action(ror_bt: float, bt: float,
                          dry_end: float = 160.0,
                          fc_start: float = 200.0,
                          bg_ror: 'float|None' = None) -> 'tuple[int, str]':
-    """Combine fire recommendation with a damper reminder.
-    Does not prescribe exact adjustments — user decides based on real situation.
+    """Combine fire recommendation with a stage-aware damper reminder.
+    Priority logic differs by roast stage:
+      乾燥期: fire primary, damper barely moves
+      梅納期: RoR low → close damper first (faster); RoR high → pick one (fire or open)
+      發展期: damper fully open for smoke, only fire controls RoR
     Returns (fire_delta_base, action_text).
     """
-    lo, hi = _ror_range(bt, dry_end, fc_start)
-    target_lo = bg_ror if bg_ror is not None else lo
-    target_hi = bg_ror if bg_ror is not None else hi
+    damper_cur_eff = damper_cur if damper_cur is not None else 3
+    damper_delta = damper_target - damper_cur_eff  # >0 should open, <0 should close
 
-    # Avoid contradictory advice: if we urgently need more heat, don't suggest opening damper
-    need_heat_urgently = fire_delta_base >= +2
-    need_cool_urgently = fire_delta_base <= -2
+    need_heat = fire_delta_base > 0
+    need_cool = fire_delta_base < 0
 
-    damper_cur_eff = damper_cur if damper_cur is not None else 3  # assume mid if unknown
-    damper_delta = damper_target - damper_cur_eff
+    if bt < dry_end:
+        # ── 乾燥期：火力主導，風門小開蓄熱，幾乎不動 ──
+        if need_heat and damper_delta > 0:
+            damper_reminder = f'風門先別開（{damper_reason}），開大散熱會讓RoR更難拉上來，靠補火'
+        elif need_heat:
+            damper_reminder = f'風門維持小開（{damper_reason}），蓄熱靠火力'
+        elif need_cool and damper_delta > 0:
+            damper_reminder = f'減火或稍開風門擇一先試（{damper_reason}），觀察效果再決定'
+        elif need_cool:
+            damper_reminder = f'風門維持現況（{damper_reason}），靠減火控制'
+        else:
+            damper_reminder = f'風門維持小開（{damper_reason}），節奏穩'
 
-    if need_heat_urgently and damper_delta > 0:
-        # Opening damper lowers RoR — hold or close instead
-        damper_reminder = '風門先別動甚至可稍縮小，別讓熱能再散失，先把RoR拉回來再說'
-    elif need_heat_urgently and damper_delta == 0:
-        damper_reminder = '風門維持現況，專注把火補上去'
-    elif need_heat_urgently and damper_delta < 0:
-        # Closing damper raises RoR — consistent with urgent heat, reinforce
-        damper_reminder = f'可縮小風門（{damper_reason}），縮小後RoR會回升，配合補火效果更快'
-    elif need_cool_urgently and damper_delta > 0:
-        # Both reduce RoR — but pick one first to avoid overcorrection
-        damper_reminder = f'開風門同樣能降RoR（{damper_reason}），但減火跟開風門擇一先試，效果出來再評估'
-    elif need_cool_urgently and damper_delta < 0:
-        # Closing damper raises RoR — contradicts urgent cooling
-        damper_reminder = f'此時不建議縮小風門（{damper_reason}），維持或稍開配合減火，雙向把RoR壓下來'
-    elif fire_delta_base == +1 and damper_delta > 0:
-        # Mild heat + damper open: fire first, open conservatively
-        damper_reminder = f'補火優先（{damper_reason}）；如要排煙稍開一點就好，別開太大，RoR本來就偏低'
-    elif fire_delta_base == +1 and damper_delta < 0:
-        # Mild heat + damper close: closing helps, say so clearly
-        damper_reminder = f'可縮小風門（{damper_reason}），縮小後RoR回升，配合補火一起把節奏拉回來'
-    elif fire_delta_base == -1 and damper_delta > 0:
-        # Mild cool + damper open: both lower RoR, pick one
-        damper_reminder = f'開風門和減火效果相近（{damper_reason}），擇一先試，觀察效果再決定下一步'
-    elif fire_delta_base == -1 and damper_delta < 0:
-        # Mild cool + damper close: closing raises RoR — contradicts cooling
-        damper_reminder = f'此時縮小風門反而讓RoR升（{damper_reason}），建議維持風門，靠減火控制就好'
-    elif damper_delta > 0:
-        # fire == 0, damper open: fine, just warn about RoR drop
-        damper_reminder = f'注意排煙（{damper_reason}）；開大風門後RoR會微降，幅度不大時不必補火'
-    elif damper_delta < 0:
-        # fire == 0, damper close: warn about RoR rise
-        damper_reminder = f'可縮小風門（{damper_reason}）；縮小後RoR會微升，留意節奏別跑過頭'
+    elif bt < fc_start:
+        # ── 梅納期：RoR低→先縮風門（更快）；RoR高→擇一先試 ──
+        if need_heat and damper_delta < 0:
+            # Damper currently too open → closing raises RoR faster than fire
+            urgency = '積極' if fire_delta_base >= 2 else ''
+            damper_reminder = (f'先{urgency}縮小風門（{damper_reason}），'
+                               f'比補火反應快；觀察後效果不夠再補火')
+        elif need_heat and damper_delta > 0:
+            # Target says open but RoR low — opening makes it worse
+            damper_reminder = f'風門暫別開（{damper_reason}），開大會讓RoR再跌；先靠補火把節奏拉回來'
+        elif need_heat:
+            damper_reminder = f'風門維持中段（{damper_reason}），補火觀察'
+        elif need_cool and damper_delta > 0:
+            # Both options reduce RoR — pick one
+            damper_reminder = f'減火或稍開風門擇一先試（{damper_reason}），觀察效果再決定下一步'
+        elif need_cool and damper_delta < 0:
+            # Closing raises RoR — contradicts cooling
+            damper_reminder = f'此時縮小風門反而升RoR（{damper_reason}），靠減火控制就好，風門維持現況'
+        elif need_cool:
+            damper_reminder = f'風門維持中段（{damper_reason}），減火觀察'
+        else:
+            # fire_delta == 0
+            if damper_delta > 0:
+                damper_reminder = f'可稍開風門排蒸汽（{damper_reason}），開後RoR會微降，幅度小不需補火'
+            elif damper_delta < 0:
+                damper_reminder = f'可縮小風門（{damper_reason}），縮後RoR會微升，留意節奏別跑過頭'
+            else:
+                damper_reminder = f'風門維持中段（{damper_reason}），節奏穩'
+
     else:
-        damper_reminder = f'風門維持現況（{damper_reason}）'
+        # ── 發展期：風門全開固定排煙，RoR只靠火力控制 ──
+        if need_heat:
+            damper_reminder = f'風門全開繼續排煙（{damper_reason}），發展期靠補火把RoR穩住'
+        elif need_cool:
+            damper_reminder = f'風門全開繼續排煙（{damper_reason}），靠減火把RoR壓回來'
+        else:
+            damper_reminder = f'風門全開排煙（{damper_reason}），節奏穩'
 
     return fire_delta_base, f'{fire_text_base}；{damper_reminder}'
 
