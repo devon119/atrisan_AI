@@ -1465,9 +1465,9 @@ class RoastPlanDlg(ArtisanDialog):
                 cell = ws.cell(row=row_num, column=c)
                 cell.font      = Font(bold=bold, size=10, color='FF3E2723')
                 cell.fill      = PatternFill('solid', fgColor=bg)
-                cell.alignment = Alignment(horizontal='center', vertical='middle')
+                cell.alignment = Alignment(horizontal='center', vertical='center')
                 cell.border    = bdr
-            ws.cell(row=row_num, column=1).alignment = Alignment(horizontal='left', vertical='middle')
+            ws.cell(row=row_num, column=1).alignment = Alignment(horizontal='left', vertical='center')
 
         # Title header
         ws.append([f'烘豆計畫表 — {ctx.get("country","")} · {ctx.get("variety","")} · {ctx.get("roastLabel","")}'])
