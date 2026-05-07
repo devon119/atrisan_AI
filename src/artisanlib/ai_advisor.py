@@ -379,23 +379,27 @@ def _coordinated_action(ror_bt: float, bt: float,
     target_lo = bg_ror if bg_ror is not None else lo
     target_hi = bg_ror if bg_ror is not None else hi
 
-    # Determine if damper adjustment is recommended vs current position
-    if damper_cur is not None:
-        damper_delta = damper_target - damper_cur
-        if damper_delta > 0:
-            damper_reminder = f'注意排煙（{damper_reason}）；開大風門會使 RoR 下降，視 RoR 反應決定是否補火'
-        elif damper_delta < 0:
-            damper_reminder = f'可縮小風門（{damper_reason}）；縮小風門會使 RoR 上升，視情況決定是否同步減火'
-        else:
-            damper_reminder = f'風門維持現況（{damper_reason}）'
+    # Avoid contradictory advice: if we urgently need more heat, don't suggest opening damper
+    need_heat_urgently = fire_delta_base >= +2
+    need_cool_urgently = fire_delta_base <= -2
+
+    damper_cur_eff = damper_cur if damper_cur is not None else 3  # assume mid if unknown
+    damper_delta = damper_target - damper_cur_eff
+
+    if need_heat_urgently and damper_delta > 0:
+        # Opening damper would make RoR worse — flip to "hold or close slightly"
+        damper_reminder = '風門先別動甚至可稍縮小，別讓熱能再散失，先把RoR拉回來再說'
+    elif need_heat_urgently and damper_delta == 0:
+        damper_reminder = '風門維持現況，專注把火補上去'
+    elif need_cool_urgently and damper_delta > 0:
+        # Opening damper helps cool — reinforce it
+        damper_reminder = f'風門也可以開大一點（{damper_reason}），幫忙把RoR壓下來'
+    elif damper_delta > 0:
+        damper_reminder = f'注意排煙（{damper_reason}）；開大風門後RoR會下降，視情況決定是否補火'
+    elif damper_delta < 0:
+        damper_reminder = f'可縮小風門（{damper_reason}）；縮小後RoR會上升，視情況同步減火'
     else:
-        # No damper data — give stage-appropriate general reminder
-        if damper_target >= 4:
-            damper_reminder = f'注意排煙（{damper_reason}）；開大風門後 RoR 會下降，視情況決定是否補火'
-        elif damper_target <= 2:
-            damper_reminder = f'風門保持小開蓄熱（{damper_reason}）；若縮小風門後 RoR 回升，視情況決定是否減火'
-        else:
-            damper_reminder = f'風門維持中段（{damper_reason}）'
+        damper_reminder = f'風門維持現況（{damper_reason}）'
 
     return fire_delta_base, f'{fire_text_base}；{damper_reminder}'
 
@@ -737,6 +741,15 @@ def _compute_rule_advice(bt: float, ror_bt: float,
     situation_parts.append(f'RoR {ror_bt:.1f}°C/min（{ror_status}），趨勢：{trend}')
     if pace_warn:
         situation_parts.append(pace_warn.replace('⚠️ ', '').rstrip('。'))
+
+    # Sensory cues by stage
+    if bt >= fc_start:
+        situation_parts.append('爆裂聲注意聽，豆色持續加深')
+    elif bt >= dry_end:
+        situation_parts.append('焦糖香應漸濃，銀皮持續脫落')
+    elif bt >= 145:
+        situation_parts.append('豆表開始起皺，草香轉甜香')
+
     situation = '，'.join(situation_parts)
 
     fire_delta_base, fire_text_base = _fire_recommendation(ror_bt, bt, pace_warn, time_since_charge,
@@ -744,7 +757,18 @@ def _compute_rule_advice(bt: float, ror_bt: float,
     damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
     fire_delta, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
                                                    fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
+
+    # Equipment readiness reminder in development phase
+    equip_hint = ''
+    if bt >= fc_start:
+        if ror_bt < 6:
+            equip_hint = '冷卻盤風扇開了嗎？出豆槽就位了嗎？'
+        else:
+            equip_hint = '冷卻盤備著，隨時準備'
+
     expected = _expected_outcome(fire_delta, ror_bt, bt, time_since_charge, bg_bt, bg_ror)
+    if equip_hint:
+        expected = f'{expected}；{equip_hint}'
 
     return f'現況：{situation}\n操作：{action_text}\n預期：{expected}'
 
