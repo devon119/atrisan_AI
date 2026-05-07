@@ -335,6 +335,109 @@ def _dtr_rule_advice(dtr_pct: float, bt: float, ror_bt: float) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Damper / fire coordination helpers
+# ---------------------------------------------------------------------------
+
+_DAMPER_ROR_PER_NOTCH: Final[float] = 0.75  # °C/min RoR drop per damper notch opened
+
+
+def _damper_stage_target(bt: float, trigger: str,
+                          dry_end: float = 160.0,
+                          fc_start: float = 200.0) -> 'tuple[int, str]':
+    """Return (target_position 1-5, reason) based on roast stage."""
+    if any(k in trigger for k in ('一爆開始', '一爆結束', '二爆', 'FC')):
+        return 5, '一爆/發展期排煙需求最大，煙氣與銀皮量達峰值'
+    if bt >= fc_start:
+        return 5, '發展期全開排煙，確保風味乾淨'
+    if '脫水結束' in trigger or bt >= dry_end:
+        return 3, '梅納期：排煙與保熱平衡'
+    if bt >= 145:
+        return 3, 'T1玻璃轉化後：排出水蒸氣防蒸汽味'
+    if bt >= 130:
+        return 2, '乾燥期末：稍開排蒸汽'
+    return 1, '乾燥期：小開蓄熱'
+
+
+def _coordinated_action(ror_bt: float, bt: float,
+                         damper_cur: 'int|None',
+                         damper_target: int,
+                         damper_reason: str,
+                         fire_delta_base: int,
+                         fire_text_base: str,
+                         dry_end: float = 160.0,
+                         fc_start: float = 200.0,
+                         bg_ror: 'float|None' = None) -> 'tuple[int, str]':
+    """Combine fire and damper into a single coordinated action string.
+
+    When damper_cur is known: quantifies RoR impact, recalculates fire compensation.
+    When damper_cur is None: gives target + conditional advice.
+    Returns (final_fire_delta, action_text).
+    """
+    lo, hi = _ror_range(bt, dry_end, fc_start)
+    target_lo = bg_ror if bg_ror is not None else lo
+    target_hi = bg_ror if bg_ror is not None else hi
+
+    if damper_cur is not None:
+        damper_delta = damper_target - damper_cur
+        ror_impact = -damper_delta * _DAMPER_ROR_PER_NOTCH
+        projected_ror = ror_bt + ror_impact
+
+        # Recalculate fire need based on projected RoR after damper change
+        if projected_ror < target_lo * 0.6:
+            fire_delta = +2
+        elif projected_ror < target_lo:
+            fire_delta = +1
+        elif projected_ror > target_hi * 1.3:
+            fire_delta = -2
+        elif projected_ror > target_hi:
+            fire_delta = -1
+        else:
+            fire_delta = 0
+
+        # Damper part
+        if damper_delta > 0:
+            damper_text = (f'開大風門（{damper_cur}→{damper_target}/5，{damper_reason}）'
+                           f'，RoR 將下降約 {abs(ror_impact):.1f}°C/min')
+        elif damper_delta < 0:
+            damper_text = (f'縮小風門（{damper_cur}→{damper_target}/5，{damper_reason}）'
+                           f'，RoR 將上升約 {abs(ror_impact):.1f}°C/min')
+        else:
+            damper_text = f'風門維持 {damper_cur}/5（{damper_reason}）'
+
+        # Fire compensation part
+        if damper_delta == 0:
+            fire_comp = fire_text_base
+        elif fire_delta == 0:
+            fire_comp = (f'預估 RoR {projected_ror:.1f}°C/min 仍在目標（{target_lo:.0f}～{target_hi:.0f}），'
+                         f'火力不需額外調整')
+        elif fire_delta > 0:
+            fire_comp = (f'同步加火（上調{fire_delta}格）補償散熱；'
+                         f'預估 RoR 回到 {projected_ror + fire_delta * 1.5:.1f}°C/min')
+        else:
+            fire_comp = (f'同步減火（下調{abs(fire_delta)}格）配合風門壓制 RoR；'
+                         f'預估穩定在 {projected_ror + fire_delta * 1.5:.1f}°C/min')
+
+        action = f'{damper_text}；{fire_comp}' if damper_delta != 0 else f'{fire_comp}；{damper_text}'
+        return fire_delta, action
+
+    else:
+        # damper_cur unknown — give target with conditional guidance
+        assumed_cur = 3  # reasonable mid-roast assumption
+        est_delta = damper_target - assumed_cur
+        impact_est = abs(est_delta) * _DAMPER_ROR_PER_NOTCH
+        damper_text = f'風門調至 {damper_target}/5（{damper_reason}）'
+        if est_delta > 0:
+            cond = (f'若目前開度 < {damper_target}/5，RoR 將下降約 {impact_est:.1f}°C/min；'
+                    f'若 RoR 降至 {target_lo:.0f}°C/min 以下，同步加火 1 格補償')
+        elif est_delta < 0:
+            cond = (f'若目前開度 > {damper_target}/5，RoR 將上升約 {impact_est:.1f}°C/min；'
+                    f'若 RoR 升至 {target_hi:.0f}°C/min 以上，同步減火 1 格')
+        else:
+            cond = 'RoR 影響中性，維持現有火力'
+        return fire_delta_base, f'{fire_text_base}；{damper_text}，{cond}'
+
+
+# ---------------------------------------------------------------------------
 # Rule-based real-time advisor (no API call — fires at each auto-trigger)
 # ---------------------------------------------------------------------------
 
@@ -491,7 +594,8 @@ def _compute_rule_advice(bt: float, ror_bt: float,
                           ror_values: 'list[float]|None' = None,
                           dry_end: float = 160.0, fc_start: float = 200.0,
                           bg_bt: 'float|None' = None,
-                          bg_ror: 'float|None' = None) -> str:
+                          bg_ror: 'float|None' = None,
+                          damper_cur: 'int|None' = None) -> str:
     """Generate a deterministic 現況/操作/預期 advice string from roasting rules.
     When bg_bt/bg_ror are provided, advice is relative to the loaded background curve.
     """
@@ -553,21 +657,24 @@ def _compute_rule_advice(bt: float, ror_bt: float,
 
     # --- 脫水結束（DRY END 按鈕）---
     if '脫水結束' in trigger:
-        lo, hi = _ror_range(bt, dry_end, fc_start)  # should be maillard range now
+        lo, hi = _ror_range(bt, dry_end, fc_start)
         ror_eval = _ror_assessment(ror_bt, bt, dry_end, fc_start)
         bg_note = ''
         if bg_bt is not None:
             diff = bt - bg_bt
             bg_note = f'，參考曲線 {bg_bt:.1f}°C（偏差 {diff:+.1f}°C）'
         if lo <= ror_bt <= hi:
-            fire_action = '維持火力'
+            fire_delta_base, fire_text_base = 0, '維持火力'
         elif ror_bt < lo:
-            fire_action = '加火（上調1格），補足梅納期升溫動能'
+            fire_delta_base, fire_text_base = +1, '加火（上調1格），補足梅納期升溫動能'
         else:
-            fire_action = '減火（下調1格），RoR過高會壓縮梅納反應時間'
+            fire_delta_base, fire_text_base = -1, '減火（下調1格），RoR過高會壓縮梅納反應時間'
+        damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
+        _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
+                                             fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
         return (f'現況：脫水期結束，進入梅納期，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
                 f'；豆色應已轉黃，銀皮持續脫落\n'
-                f'操作：{fire_action}；風門調至中段（3/5），持續排出銀皮與水蒸氣，保持焦糖香氣流動\n'
+                f'操作：{action_text}\n'
                 f'預期：梅納褐化反應主導，BT穩步上升，焦糖香漸濃，RoR維持平滑遞減至一爆（約{fc_start:.0f}°C）')
 
     # --- 一爆開始（FC 按鈕）---
@@ -578,29 +685,34 @@ def _compute_rule_advice(bt: float, ror_bt: float,
             diff = bt - bg_bt
             bg_note = f'，參考曲線 {bg_bt:.1f}°C（偏差 {diff:+.1f}°C）'
         if 8 <= ror_bt <= 11:
-            fire_action = '維持火力，密切觀察RoR是否有回升趨勢，如有立即微減火'
+            fire_delta_base, fire_text_base = 0, '維持火力，密切觀察RoR是否有回升趨勢，如有立即微減火'
         elif ror_bt > 11:
-            fire_action = '微減火（下調1格），控制發展節奏'
+            fire_delta_base, fire_text_base = -1, '微減火（下調1格），控制發展節奏'
         else:
-            fire_action = '輕微加火（上調1格），避免RoR過快崩跌'
+            fire_delta_base, fire_text_base = +1, '輕微加火（上調1格），避免RoR過快崩跌'
+        damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
+        _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
+                                             fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
         return (f'現況：⚡ 一爆開始（FC），{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
                 f'；爆裂聲密集，煙量與銀皮量達到最大\n'
-                f'操作：{fire_action}；立即開大風門（4～5/5）——這是本爐最重要的排煙時機，'
-                f'排煙不足會造成煙燻味/土味附著豆表；進入發展期計時\n'
+                f'操作：{action_text}；進入發展期計時\n'
                 f'預期：爆裂聲持續，RoR應緩降至8～10°C/min，煙量排出後豆表風味更乾淨，DTR目標20～25%')
 
     # --- 一爆結束（FC END 按鈕）---
     if '一爆結束' in trigger:
         ror_eval = _ror_assessment(ror_bt, bt, dry_end, fc_start)
         if 6 <= ror_bt <= 10:
-            fire_action = '維持火力，監控RoR勿回升'
+            fire_delta_base, fire_text_base = 0, '維持火力，監控RoR勿回升'
         elif ror_bt < 6:
-            fire_action = '輕微加火（上調1格），防止RoR驟崩'
+            fire_delta_base, fire_text_base = +1, '輕微加火（上調1格），防止RoR驟崩'
         else:
-            fire_action = '微減火（下調1格），控制發展速度'
+            fire_delta_base, fire_text_base = -1, '微減火（下調1格），控制發展速度'
+        damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
+        _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
+                                             fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
         return (f'現況：一爆密集結束（FC END），{mins}:{secs:02d}，BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
                 f'；爆裂聲漸稀，進入安靜發展段\n'
-                f'操作：{fire_action}；風門維持大開（4～5/5），持續排出殘餘煙氣，確保風味乾淨；專注DTR進度\n'
+                f'操作：{action_text}；專注DTR進度\n'
                 f'預期：發展期中段，RoR目標8～10°C/min持續緩降，DTR達20%時開始下豆決策窗口')
 
     # --- 二爆開始（SC 按鈕）---
@@ -614,14 +726,19 @@ def _compute_rule_advice(bt: float, ror_bt: float,
     if '接近梅納窗口' in trigger or '162' in trigger:
         ror_eval = _ror_assessment(ror_bt, bt, dry_end, fc_start)
         if 8 <= ror_bt <= 15:
-            fire_action = '維持火力，準備迎接一爆'
+            fire_delta_base, fire_text_base = 0, '維持火力，準備迎接一爆'
         elif ror_bt < 8:
-            fire_action = '輕微加火（上調1格），確保足夠升溫動能進入一爆'
+            fire_delta_base, fire_text_base = +1, '輕微加火（上調1格），確保足夠升溫動能進入一爆'
         else:
-            fire_action = '微減火（下調1格），避免進入一爆時RoR過高'
+            fire_delta_base, fire_text_base = -1, '微減火（下調1格），避免進入一爆時RoR過高'
+        # Pre-open to 4 before FC arrives; _coordinated_action will check if compensation needed
+        damper_pre_target = min(4, (damper_cur or 3) + 1)  # nudge toward 4 as preparation
+        _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_pre_target,
+                                             '梅納末段預開，一爆到來時立即全開',
+                                             fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
         return (f'現況：梅納期末段（T2），BT {bt:.1f}°C，即將進入一爆前醞釀'
                 f'，RoR {ror_bt:.1f}°C/min（{ror_eval}）；焦糖香濃郁，豆色深棕\n'
-                f'操作：{fire_action}；預先將風門調至偏大（3→4/5），一爆到來時立即全開排煙；注意聽豆聲\n'
+                f'操作：{action_text}；注意聽豆聲\n'
                 f'預期：再升5～10°C即可能出現一爆，一爆聲響立即按FC記錄，並同步全開風門排出煙氣')
 
     # --- 正常烘焙階段 ---
@@ -656,8 +773,11 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         situation_parts.append(pace_warn.replace('⚠️ ', '').rstrip('。'))
     situation = '，'.join(situation_parts)
 
-    fire_delta, action_text = _fire_recommendation(ror_bt, bt, pace_warn, time_since_charge,
-                                                    dry_end, fc_start, bg_ror)
+    fire_delta_base, fire_text_base = _fire_recommendation(ror_bt, bt, pace_warn, time_since_charge,
+                                                            dry_end, fc_start, bg_ror)
+    damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
+    fire_delta, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
+                                                   fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
     expected = _expected_outcome(fire_delta, ror_bt, bt, time_since_charge, bg_bt, bg_ror)
 
     return f'現況：{situation}\n操作：{action_text}\n預期：{expected}'
@@ -850,10 +970,12 @@ class AIAdvisor:
                        temp2B: 'list|None' = None, delta2B: 'list|None' = None,
                        ror_values: 'list[float]|None' = None,
                        force_trigger: str = '',
-                       phases: 'list|None' = None) -> None:
+                       phases: 'list|None' = None,
+                       damper: 'int|None' = None) -> None:
         """Call from the sampling thread. Non-blocking.
         force_trigger: if non-empty, bypasses the interval check (used for key events).
         ror_values: per-sample RoR buffer from canvas for trend analysis.
+        damper: current damper position (1-5), or None if not available.
         """
         if not self.enabled:
             return
@@ -972,7 +1094,8 @@ class AIAdvisor:
                     advice_text = _compute_rule_advice(bt, ror_bt, time_since_charge,
                                                        force_trigger, ror_values,
                                                        dry_end, fc_start,
-                                                       bg_bt=bg_bt, bg_ror=bg_ror)
+                                                       bg_bt=bg_bt, bg_ror=bg_ror,
+                                                       damper_cur=damper)
                 t = threading.Thread(target=self._deliver_rule_advice,
                                      args=(advice_text,), daemon=True)
                 t.start()
@@ -982,7 +1105,8 @@ class AIAdvisor:
             rule_hint = _compute_rule_advice(bt, ror_bt, time_since_charge,
                                              force_trigger, ror_values,
                                              dry_end, fc_start,
-                                             bg_bt=bg_bt, bg_ror=bg_ror)
+                                             bg_bt=bg_bt, bg_ror=bg_ror,
+                                             damper_cur=damper)
             recent = [text for _, text in list(self.history)[-2:]]
             user_msg = _build_user_message(bt, et, ror_bt, ror_et, stage,
                                             time_since_charge, mode,
