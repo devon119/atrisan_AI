@@ -234,6 +234,25 @@ def _calc_ror_trend(ror_values: 'list[float]') -> str:
     return f'大致穩定（變化 {delta:+.1f}°C/min）'
 
 
+def _predict_ror_30s(ror_values: 'list[float]', sample_interval: float = 2.0) -> 'float|None':
+    """Linear extrapolation of RoR 30 seconds into the future.
+    Assumes samples are ~sample_interval seconds apart (canvas _ai_ror_buffer ≈ 2 s)."""
+    recent = (ror_values or [])[-8:]
+    if len(recent) < 4:
+        return None
+    n = len(recent)
+    x_mean = (n - 1) / 2.0
+    y_mean = sum(recent) / n
+    num = sum((i - x_mean) * (recent[i] - y_mean) for i in range(n))
+    den = sum((i - x_mean) ** 2 for i in range(n))
+    if den == 0:
+        return round(recent[-1], 1)
+    slope_per_sample = num / den
+    steps_ahead = 30.0 / sample_interval
+    predicted = recent[-1] + slope_per_sample * steps_ahead
+    return round(max(0.0, predicted), 1)
+
+
 def _ror_assessment(ror: float, bt: float,
                      dry_end: float = 160.0, fc_start: float = 200.0) -> str:
     """Return a plain-language assessment of RoR vs stage target."""
@@ -598,9 +617,13 @@ def _compute_rule_advice(bt: float, ror_bt: float,
                           dry_end: float = 160.0, fc_start: float = 200.0,
                           bg_bt: 'float|None' = None,
                           bg_ror: 'float|None' = None,
-                          damper_cur: 'int|None' = None) -> str:
+                          damper_cur: 'int|None' = None,
+                          dtr_pct: float = 0.0,
+                          bg_event_note: str = '') -> str:
     """Generate a deterministic 現況/操作/預期 advice string from roasting rules.
     When bg_bt/bg_ror are provided, advice is relative to the loaded background curve.
+    dtr_pct: running DTR% (0 if not in development phase).
+    bg_event_note: background curve timing comparison note for key events.
     """
     mins, secs = divmod(int(time_since_charge), 60)
     ror_vals = ror_values or []
@@ -675,7 +698,8 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
         _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
                                              fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
-        return (f'現況：脫水期過了，進梅納期了，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
+        bg_event_str = f'；{bg_event_note}' if bg_event_note else ''
+        return (f'現況：脫水期過了，進梅納期了，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}{bg_event_str}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
                 f'；豆色應該已經轉黃，銀皮陸續在脫\n'
                 f'操作：{action_text}\n'
                 f'預期：接下來是梅納反應的天下，BT穩步往上，焦糖香會越來越明顯，RoR緩緩往下走到一爆')
@@ -696,7 +720,8 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         damper_target, damper_reason = _damper_stage_target(bt, trigger, dry_end, fc_start)
         _, action_text = _coordinated_action(ror_bt, bt, damper_cur, damper_target, damper_reason,
                                              fire_delta_base, fire_text_base, dry_end, fc_start, bg_ror)
-        return (f'現況：一爆來了，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
+        bg_event_str = f'；{bg_event_note}' if bg_event_note else ''
+        return (f'現況：一爆來了，{mins}:{secs:02d}，BT {bt:.1f}°C{bg_note}{bg_event_str}，RoR {ror_bt:.1f}°C/min（{ror_eval}）'
                 f'；爆裂聲密集，煙跟銀皮現在最多\n'
                 f'操作：{action_text}；計時開始\n'
                 f'預期：爆裂聲會持續一陣子，RoR慢慢往下；煙排掉了豆表風味會乾淨很多，目標DTR 20～25%')
@@ -791,11 +816,14 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         situation_parts.append(f'【{milestone_ctx}】')
     situation_parts.append(f'RoR {ror_bt:.1f}°C/min（{ror_status}）')
 
-    # Second line: trend + pace + sensory cues
+    # Second line: trend + pace + DTR (dev phase) + sensory cues
     trend_parts = [f'趨勢：{trend}']
     if pace_warn:
         trend_parts.append(pace_warn.replace('⚠️ ', '').rstrip('。'))
     if bt >= fc_start:
+        if dtr_pct > 0:
+            dtr_color = '⚠️ 偏高' if dtr_pct > 25 else ('接近目標' if dtr_pct >= 18 else '尚早')
+            trend_parts.append(f'DTR {dtr_pct:.1f}%（{dtr_color}，目標20～25%）')
         trend_parts.append('爆裂聲注意聽，豆色持續加深')
     elif bt >= dry_end:
         trend_parts.append('焦糖香應漸濃，銀皮持續脫落')
@@ -822,6 +850,12 @@ def _compute_rule_advice(bt: float, ror_bt: float,
     if equip_hint:
         expected = f'{expected}；{equip_hint}'
 
+    # RoR 30s momentum forecast (append when meaningful)
+    pred_ror = _predict_ror_30s(ror_vals)
+    if pred_ror is not None and abs(pred_ror - ror_bt) >= 1.0:
+        direction = '↑' if pred_ror > ror_bt else '↓'
+        expected = f'{expected}；30秒後RoR動量預測 {pred_ror:.1f}{direction}'
+
     return f'現況：{situation}\n操作：{action_text}\n預期：{expected}'
 
 
@@ -834,6 +868,7 @@ def _clean_for_tts(advice: str) -> str:
     import re
     text = advice
     text = re.sub(r'[✅⬆⬇⚠️📊🔴🟡🟢🔥💨⚡☑️]', '', text)
+    text = text.replace('↑', '上升').replace('↓', '下降')
     text = text.replace('【', '').replace('】', '')
     text = text.replace('°C/min', '度每分鐘')
     text = text.replace('°C', '度')
@@ -850,6 +885,7 @@ def _action_for_tts(advice: str) -> str:
         if re.match(r'^操作[：:]', line):
             action = re.sub(r'^操作[：:]', '', line).strip()
             action = re.sub(r'[✅⬆⬇⚠️📊🔴🟡🟢🔥💨⚡☑️]', '', action)
+            action = action.replace('↑', '上升').replace('↓', '下降')
             action = action.replace('°C/min', '度每分鐘').replace('°C', '度')
             action = re.sub(r'（\s*）', '', action)
             return action.strip()
@@ -939,6 +975,8 @@ class AIAdvisor:
         self._tp_fired: bool = False            # turning point advice already sent
         self._dtr_warned: set = set()           # DTR thresholds already advised ('18','20','22','25')
         self._last_anomaly_time: float = 0.0    # time.time() of last anomaly alert (60s cooldown)
+        self._flick_count: int = 0              # RoR 翻揚次數 (this roast)
+        self._crash_count: int = 0              # RoR 驟降次數 (this roast)
 
         # TTS
         self.tts_enabled: bool = False
@@ -952,6 +990,8 @@ class AIAdvisor:
 
         self.on_advice: Optional[Callable[[str], None]] = None
         self.on_query_start: Optional[Callable[[], None]] = None
+        self.on_tts_start: Optional[Callable[[], None]] = None  # called before TTS plays
+        self.on_tts_end: Optional[Callable[[], None]] = None    # called after TTS ends
 
     # ------------------------------------------------------------------
     # Public API
@@ -966,6 +1006,8 @@ class AIAdvisor:
         self._tp_fired = False
         self._dtr_warned.clear()
         self._last_anomaly_time = 0.0
+        self._flick_count = 0
+        self._crash_count = 0
 
     def export_advice_log(self, filepath: str) -> None:
         """Write all advice history to a plain-text file."""
@@ -1104,6 +1146,10 @@ class AIAdvisor:
                 self._last_time_segment = int(time_since_charge // 30)
             if _detected_anomaly is not None:
                 self._last_anomaly_time = now
+                if _detected_anomaly == 'flick':
+                    self._flick_count += 1
+                elif _detected_anomaly == 'crash':
+                    self._crash_count += 1
 
         if self.on_query_start:
             self.on_query_start()
@@ -1113,15 +1159,48 @@ class AIAdvisor:
 
             bg_bt: float | None = None
             bg_ror: float | None = None
+            bg_event_note: str = ''
             if timeB and timeindexB and temp2B:
                 bg_bt, bg_ror = _interp_background(
                     time_since_charge, timeB, timeindexB, temp2B, delta2B or [])
+                # Background event timing comparison for key events
+                if force_trigger and timeindexB[0] >= 0:
+                    try:
+                        bg_charge_t = timeB[timeindexB[0]]
+                        if '脫水結束' in force_trigger and timeindexB[1] > 0:
+                            bg_dry_s = timeB[timeindexB[1]] - bg_charge_t
+                            diff_s = int(time_since_charge - bg_dry_s)
+                            sign = '早' if diff_s < 0 else '晚'
+                            if abs(diff_s) >= 15:
+                                bg_event_note = f'參考曲線DE在{int(bg_dry_s//60)}:{int(bg_dry_s%60):02d}，本爐{sign}了{abs(diff_s)}秒'
+                        elif '一爆開始' in force_trigger and timeindexB[2] > 0:
+                            bg_fc_s = timeB[timeindexB[2]] - bg_charge_t
+                            diff_s = int(time_since_charge - bg_fc_s)
+                            sign = '早' if diff_s < 0 else '晚'
+                            if abs(diff_s) >= 15:
+                                bg_event_note = f'參考曲線FC在{int(bg_fc_s//60)}:{int(bg_fc_s%60):02d}，本爐{sign}了{abs(diff_s)}秒'
+                    except (IndexError, TypeError):
+                        pass
 
             try:
                 dry_end = float(phases[1]) if phases and len(phases) > 1 and phases[1] is not None else 160.0
                 fc_start = float(phases[2]) if phases and len(phases) > 2 and phases[2] is not None else 200.0
             except (TypeError, ValueError):
                 dry_end, fc_start = 160.0, 200.0
+
+            # Running DTR% (only meaningful in development phase, after FC)
+            dtr_pct = 0.0
+            if (timeindex[2] > 0 and timeindex[0] >= 0
+                    and len(timex) > timeindex[2] and len(timex) > timeindex[0]):
+                try:
+                    fc_t = timex[timeindex[2]]
+                    ch_t = timex[timeindex[0]]
+                    now_t = timex[-1]
+                    total_s = now_t - ch_t
+                    if total_s > 0:
+                        dtr_pct = (now_t - fc_t) / total_s * 100.0
+                except (IndexError, ZeroDivisionError):
+                    pass
 
             # Auto-triggers: rule engine only (instant, no API needed)
             # Key canvas events (CHARGE/FC/near_T1) also go through rule engine, not AI
@@ -1138,7 +1217,9 @@ class AIAdvisor:
                                                        force_trigger, ror_values,
                                                        dry_end, fc_start,
                                                        bg_bt=bg_bt, bg_ror=bg_ror,
-                                                       damper_cur=damper)
+                                                       damper_cur=damper,
+                                                       dtr_pct=dtr_pct,
+                                                       bg_event_note=bg_event_note)
                 t = threading.Thread(target=self._deliver_rule_advice,
                                      args=(advice_text,), daemon=True)
                 t.start()
@@ -1149,7 +1230,9 @@ class AIAdvisor:
                                              force_trigger, ror_values,
                                              dry_end, fc_start,
                                              bg_bt=bg_bt, bg_ror=bg_ror,
-                                             damper_cur=damper)
+                                             damper_cur=damper,
+                                             dtr_pct=dtr_pct,
+                                             bg_event_note=bg_event_note)
             recent = [text for _, text in list(self.history)[-2:]]
             user_msg = _build_user_message(bt, et, ror_bt, ror_et, stage,
                                             time_since_charge, mode,
@@ -1174,6 +1257,10 @@ class AIAdvisor:
                              args=(summary_data, ROAST_SUMMARY_PROMPT, _SUMMARY_MAX_TOKENS, True),
                              daemon=True)
         t.start()
+
+    def get_session_stats(self) -> dict:
+        """Return anomaly counts for this roast session (used in post-roast summary)."""
+        return {'flick_count': self._flick_count, 'crash_count': self._crash_count}
 
     # ------------------------------------------------------------------
     # Internal
@@ -1211,6 +1298,8 @@ class AIAdvisor:
 
     def _tts_thread(self, text: str) -> None:
         self._tts_busy = True
+        if self.on_tts_start:
+            self.on_tts_start()
         try:
             import platform
             is_mac = platform.system() == 'Darwin'
@@ -1232,6 +1321,8 @@ class AIAdvisor:
                 self._tts_windows(text)
         finally:
             self._tts_busy = False
+            if self.on_tts_end:
+                self.on_tts_end()
 
     # Default Edge TTS voices for Traditional Chinese
     _EDGE_VOICES_ZH_TW: tuple = (

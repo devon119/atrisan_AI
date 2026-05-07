@@ -39,11 +39,19 @@ class AudioRoastRecorder(QObject):
     sessionSaved    = pyqtSignal(str)
     # emitted on error
     errorSignal     = pyqtSignal(str)
+    # emitted when acoustic FC is suspected: float = elapsed seconds since recording start
+    fcSuggested     = pyqtSignal(float)
+
+    # FC detection constants
+    _FC_SPIKE_DB       = 7.0   # dB above rolling baseline to trigger
+    _FC_BASELINE_INIT  = 100   # blocks to build initial baseline (~4.6 s)
+    _FC_MIN_ELAPSED    = 240.0 # don't suggest FC before 4 minutes
 
     def __init__(self, aw: 'ApplicationWindow') -> None:
         super().__init__()
         self.aw = aw
         self._recording  = False
+        self._tts_active = False   # True while TTS is playing — apply speech-band filter
         self._device_idx: Optional[int] = None   # None = system default
         self._session_dir: Optional[str] = None
         self._audio_queue: queue.Queue = queue.Queue()
@@ -55,6 +63,12 @@ class AudioRoastRecorder(QObject):
         self._spectrum_rows: list[list] = []   # [elapsed_sec, *band_energies]
         self._events: list[dict] = []
         self._start_time: float = 0.0
+
+        # acoustic FC detection state
+        self._fc_armed: bool = False
+        self._fc_detected: bool = False
+        self._fc_baseline_db: float = -60.0
+        self._fc_baseline_n: int = 0
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
@@ -77,6 +91,11 @@ class AudioRoastRecorder(QObject):
         self._spectrum_rows = []
         self._events      = []
         self._start_time  = time.time()
+        # Reset FC detection for each new recording session
+        self._fc_armed    = False
+        self._fc_detected = False
+        self._fc_baseline_db = -60.0
+        self._fc_baseline_n  = 0
 
         try:
             self._stream = sd.RawInputStream(
@@ -132,10 +151,29 @@ class AudioRoastRecorder(QObject):
     def is_recording(self) -> bool:
         return self._recording
 
+    def tts_start(self) -> None:
+        """Call before TTS playback begins — activates speech-band suppression filter."""
+        self._tts_active = True
+
+    def tts_stop(self) -> None:
+        """Call after TTS playback ends — deactivates filter."""
+        self._tts_active = False
+
     def elapsed(self) -> float:
         if not self._recording:
             return 0.0
         return time.time() - self._start_time
+
+    def arm_fc_detection(self) -> None:
+        """Enable acoustic first-crack detection (call after DRY END)."""
+        self._fc_armed = True
+        self._fc_detected = False
+        self._fc_baseline_db = -60.0
+        self._fc_baseline_n = 0
+
+    def disarm_fc_detection(self) -> None:
+        """Disable acoustic FC detection (call after FC confirmed)."""
+        self._fc_armed = False
 
     @staticmethod
     def list_devices() -> list[tuple[int, str]]:
@@ -153,20 +191,53 @@ class AudioRoastRecorder(QObject):
     # ── Internal ───────────────────────────────────────────────────────────────
 
     def _audio_callback(self, indata: bytes, frames: int, _time, _status) -> None:
-        self._audio_queue.put(bytes(indata))
+        self._audio_queue.put((bytes(indata), self._tts_active))
+
+    @staticmethod
+    def _apply_speech_filter(samples: np.ndarray) -> np.ndarray:
+        """Bandstop filter 300–3400 Hz (speech range) to suppress TTS contamination.
+        Preserves low-frequency drum/mechanical sounds and high-frequency cracking."""
+        try:
+            from scipy.signal import butter, sosfilt  # type: ignore
+            sos = butter(4, [300 / (SAMPLERATE / 2), 3400 / (SAMPLERATE / 2)],
+                         btype='bandstop', output='sos')
+            return sosfilt(sos, samples).astype(np.float32)
+        except Exception:  # pylint: disable=broad-except
+            return samples  # scipy unavailable — return as-is
 
     def _process_loop(self) -> None:
         while self._recording or not self._audio_queue.empty():
             try:
-                raw = self._audio_queue.get(timeout=0.1)
+                raw, tts_on = self._audio_queue.get(timeout=0.1)
             except queue.Empty:
                 continue
-            self._pcm_frames.append(raw)
             samples = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+            if tts_on:
+                samples = self._apply_speech_filter(samples)
+            pcm_out = (samples * 32768.0).clip(-32768, 32767).astype(np.int16).tobytes()
+            self._pcm_frames.append(pcm_out)
             bands = self._fft_bands(samples)
             elapsed = time.time() - self._start_time
             self._spectrum_rows.append([round(elapsed, 3)] + bands)
             self.spectrumUpdated.emit(bands)
+
+            # Acoustic FC detection: monitor low-freq impact energy (bands 0+1 = 80-600 Hz)
+            if self._fc_armed and not self._fc_detected and elapsed >= self._FC_MIN_ELAPSED:
+                low_db = (bands[0] + bands[1]) / 2.0
+                if self._fc_baseline_n < self._FC_BASELINE_INIT:
+                    # Blend into rolling baseline
+                    alpha = 1.0 / (self._fc_baseline_n + 1)
+                    self._fc_baseline_db = (1 - alpha) * self._fc_baseline_db + alpha * low_db
+                    self._fc_baseline_n += 1
+                else:
+                    # Compare spike against current baseline BEFORE updating it
+                    if low_db >= self._fc_baseline_db + self._FC_SPIKE_DB:
+                        self._fc_detected = True
+                        self._fc_armed = False
+                        self.fcSuggested.emit(elapsed)
+                    else:
+                        # Only update baseline when no spike (don't let cracks drift the baseline up)
+                        self._fc_baseline_db = 0.99 * self._fc_baseline_db + 0.01 * low_db
 
     def _fft_bands(self, samples: np.ndarray) -> list[float]:
         """Compute energy (dB) in each frequency band."""

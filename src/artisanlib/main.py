@@ -4391,6 +4391,7 @@ class ApplicationWindow(QMainWindow):
         self.ai_advisor.on_query_start = self.aiQuerySignal.emit
 
         # Audio Roast Recorder
+        # TTS callbacks wired after recorder is created (see below)
         from artisanlib.audio_roast import AudioRoastRecorder
         from artisanlib.audio_spectrum_window import AudioSpectrumWindow
         self.audioRoastRecorder: AudioRoastRecorder = AudioRoastRecorder(self)
@@ -4398,7 +4399,11 @@ class ApplicationWindow(QMainWindow):
         self.audioRoastRecorder.spectrumUpdated.connect(self.audioSpectrumWindow.on_spectrum)
         self.audioRoastRecorder.errorSignal.connect(
             lambda msg: self.sendmessage(f'音訊錄音錯誤: {msg}'))
+        self.audioRoastRecorder.fcSuggested.connect(self._on_acoustic_fc_suggested)
         self._refreshAudioDeviceMenu()
+        # Wire TTS ↔ recorder so speech band is filtered during playback
+        self.ai_advisor.on_tts_start = self.audioRoastRecorder.tts_start
+        self.ai_advisor.on_tts_end   = self.audioRoastRecorder.tts_stop
 
 #        if sys.platform.startswith('darwin') and QVersionNumber.fromString(qVersion())[0] < QVersionNumber(6,5,0):
 #            # only on macOS we install the eventFilter to catch the signal on switching between light and dark modes
@@ -25221,7 +25226,7 @@ class ApplicationWindow(QMainWindow):
             for part in parts:
                 if any(kw in part for kw in _alert_kw):
                     alerts.append(
-                        f'<span style="color:#ff5555;font-size:11pt;font-weight:bold;">'
+                        f'<span style="color:#ff5555;font-size:14pt;font-weight:bold;">'
                         f'⚠ {part}</span>'
                     )
                 else:
@@ -25292,6 +25297,12 @@ class ApplicationWindow(QMainWindow):
     def _selectAudioDevice(self, device_idx) -> None:
         self.audioRoastRecorder.set_device(device_idx)
         self._refreshAudioDeviceMenu()
+
+    def _on_acoustic_fc_suggested(self, elapsed: float) -> None:
+        """Called when AudioRoastRecorder detects a possible first-crack sound."""
+        mins = int(elapsed // 60)
+        secs = int(elapsed % 60)
+        self.sendmessage(f'🎙 聲音偵測：疑似一爆聲（{mins}:{secs:02d}），請確認並按 FC 鍵記錄')
 
     def _ensure_holographic_events(self) -> None:
         """Add T0/T1/大理石紋 extra event buttons if not already present, and sync colors from holographic_phases."""

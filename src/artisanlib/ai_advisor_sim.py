@@ -397,7 +397,9 @@ class AIAdvisorSimDialog(ArtisanDialog):
             from artisanlib.canvas import _build_roast_summary
             summary = _build_roast_summary(
                 self._timeindex, self._timex, self._temp2, 'C',
-                False, None, None, None)
+                False, None, None, None,
+                delta2=None,
+                session_stats=self.aw.ai_advisor.get_session_stats())
             self.aw.ai_advisor.request_summary(summary)
 
     # ── Physics ───────────────────────────────────────────────────────────────

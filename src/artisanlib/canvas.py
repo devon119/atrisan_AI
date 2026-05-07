@@ -201,8 +201,13 @@ class MplCanvas(FigureCanvas):
 def _build_roast_summary(timeindex: list, timex: list, temp2: list, mode: str,
                           has_background: bool,
                           timeindexB: 'list|None', timeB: 'list|None',
-                          temp2B: 'list|None') -> str:
-    """Build a post-roast summary string for the AI summary prompt."""
+                          temp2B: 'list|None',
+                          delta2: 'list|None' = None,
+                          session_stats: 'dict|None' = None) -> str:
+    """Build a post-roast summary string for the AI summary prompt.
+    delta2: per-sample BT RoR array (same length as timex).
+    session_stats: dict with flick_count / crash_count from AIAdvisor.get_session_stats().
+    """
     unit = '°C' if mode == 'C' else '°F'
     ti = timeindex
 
@@ -212,13 +217,19 @@ def _build_roast_summary(timeindex: list, timex: list, temp2: list, mode: str,
         s = timex[idx] - timex[ti[0]]
         return f'{int(s // 60)}:{int(s % 60):02d}'
 
+    def _elapsed_s(idx: int) -> float:
+        if idx <= 0 or ti[0] < 0 or idx >= len(timex):
+            return 0.0
+        return timex[idx] - timex[ti[0]]
+
     def _bt(idx: int) -> str:
-        if idx <= 0 or idx >= len(temp2):
+        if idx < 0 or idx >= len(temp2):
             return '—'
         return f'{temp2[idx]:.1f}{unit}'
 
     lines = ['這爐烘焙剛完成出豆，請給出整爐評估：\n']
 
+    total_s = 0.0
     if ti[0] >= 0 and ti[6] > 0 and ti[0] < len(timex) and ti[6] < len(timex):
         total_s = timex[ti[6]] - timex[ti[0]]
         lines.append(f'總烘焙時間：{int(total_s // 60)}:{int(total_s % 60):02d}')
@@ -236,14 +247,68 @@ def _build_roast_summary(timeindex: list, timex: list, temp2: list, mode: str,
     if ti[6] > 0:
         lines.append(f'- 出豆 DROP：{_elapsed(ti[6])}，BT {_bt(ti[6])}')
 
+    # Phase durations
+    phase_lines: list[str] = []
+    if ti[0] >= 0 and ti[1] > 0:
+        dry_s = _elapsed_s(ti[1])
+        phase_lines.append(f'乾燥期（CHARGE→DE）：{int(dry_s // 60)}:{int(dry_s % 60):02d}')
+    if ti[1] > 0 and ti[2] > 0 and ti[0] >= 0:
+        try:
+            mail_s = timex[ti[2]] - timex[ti[1]]
+            phase_lines.append(f'梅納期（DE→FC）：{int(mail_s // 60)}:{int(mail_s % 60):02d}')
+        except IndexError:
+            pass
     if ti[2] > 0 and ti[6] > 0 and ti[0] >= 0:
         try:
             dev_s = timex[ti[6]] - timex[ti[2]]
-            total_s = timex[ti[6]] - timex[ti[0]]
             dtr = dev_s / total_s * 100 if total_s > 0 else 0
-            lines.append(f'\n發展時間比（DTR）：{dtr:.1f}%（建議 15～25%）')
+            phase_lines.append(f'發展期（FC→DROP）：{int(dev_s // 60)}:{int(dev_s % 60):02d}，DTR {dtr:.1f}%（建議20～25%）')
         except (IndexError, ZeroDivisionError):
             pass
+    if phase_lines:
+        lines.append('\n各階段時長：')
+        for pl in phase_lines:
+            lines.append(f'- {pl}')
+    elif ti[2] > 0 and ti[6] > 0 and ti[0] >= 0:
+        try:
+            dev_s = timex[ti[6]] - timex[ti[2]]
+            dtr = dev_s / total_s * 100 if total_s > 0 else 0
+            lines.append(f'\n發展時間比（DTR）：{dtr:.1f}%（建議 20～25%）')
+        except (IndexError, ZeroDivisionError):
+            pass
+
+    # RoR statistics from delta2
+    if delta2 and ti[0] >= 0 and ti[6] > 0:
+        try:
+            ror_stats_lines: list[str] = []
+            # Overall valid RoR values (after TP, before drop)
+            if ti[2] > 0:  # dev phase RoR
+                dev_rors = [delta2[i] for i in range(ti[2], min(ti[6] + 1, len(delta2)))
+                            if delta2[i] is not None and delta2[i] > 0]
+                if dev_rors:
+                    avg_dev = sum(dev_rors) / len(dev_rors)
+                    ror_stats_lines.append(f'發展期平均RoR：{avg_dev:.1f}°C/min（建議8～10緩降）')
+            # Peak RoR (positive only, to skip the initial BT-dropping segment)
+            if ti[0] >= 0:
+                tp_idx = ti[0]
+                pos_rors = [delta2[i] for i in range(tp_idx, min(ti[6] + 1, len(delta2)))
+                            if delta2[i] is not None and delta2[i] > 0]
+                if pos_rors:
+                    peak = max(pos_rors)
+                    ror_stats_lines.append(f'整爐RoR峰值：{peak:.1f}°C/min')
+            if ror_stats_lines:
+                lines.append('\nRoR統計：')
+                for rs in ror_stats_lines:
+                    lines.append(f'- {rs}')
+        except (IndexError, TypeError):
+            pass
+
+    # Anomaly counts from AIAdvisor session stats
+    if session_stats:
+        flick = session_stats.get('flick_count', 0)
+        crash = session_stats.get('crash_count', 0)
+        if flick > 0 or crash > 0:
+            lines.append(f'\nAI偵測異常：翻揚（flick）{flick}次，驟降（crash）{crash}次')
 
     if has_background and timeindexB and timeB and temp2B:
         try:
@@ -5195,11 +5260,17 @@ class tgraphcanvas(QObject):
                             elif _cur_dry_end > 0 and not self._ai_event_flags['dry_end']:
                                 self._ai_event_flags['dry_end'] = True
                                 _force_trigger = '脫水結束（DRY END）'
+                                # Arm acoustic FC detection after dry end
+                                if hasattr(self.aw, 'audioRoastRecorder'):
+                                    self.aw.audioRoastRecorder.arm_fc_detection()
 
                             # FC start button pressed
                             elif _cur_fc > 0 and not self._ai_event_flags['fc']:
                                 self._ai_event_flags['fc'] = True
                                 _force_trigger = '一爆開始（FC）'
+                                # FC confirmed manually — disarm acoustic detection
+                                if hasattr(self.aw, 'audioRoastRecorder'):
+                                    self.aw.audioRoastRecorder.disarm_fc_detection()
 
                             # FC END button pressed
                             elif _cur_fc_end > 0 and not self._ai_event_flags['fc_end']:
@@ -5220,6 +5291,8 @@ class tgraphcanvas(QObject):
                                         self.temp2, self.mode,
                                         self.backgroundprofile,
                                         self.timeindexB, self.timeB, self.temp2B,
+                                        delta2=self.delta2,
+                                        session_stats=self.aw.ai_advisor.get_session_stats(),
                                     )
                                     self.aw.ai_advisor.request_summary(_summary)
 
