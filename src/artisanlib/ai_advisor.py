@@ -320,20 +320,22 @@ def _dtr_rule_advice(dtr_pct: float, bt: float, ror_bt: float) -> str:
     """Generate DTR milestone advice for the development phase."""
     if dtr_pct >= 25.0:
         return (f'現況：發展期，DTR {dtr_pct:.1f}%，已達建議上限（25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-                f'操作：立即準備下豆，繼續等待會造成過度發展、苦味加重\n'
-                f'預期：下豆後BT回落，記錄本次發展時間作為下一爐參考')
+                f'操作：立即下豆——確認出豆槽就位、冷卻盤風扇已開；繼續等待會造成過度發展、苦味加重\n'
+                f'預期：下豆後BT回落，記錄本次發展時間與豆色作為下一爐參考')
     if dtr_pct >= 22.0:
         return (f'現況：發展期，DTR {dtr_pct:.1f}%，發展良好（目標20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-                f'操作：維持現況，密切觀察RoR，若RoR低於6°C/min可考慮下豆\n'
-                f'預期：再1～3%後達到25%上限，依豆種風味目標把握下豆時機')
+                f'操作：用取樣棒確認豆色與香氣（應已轉深棕、烘焙香穩定）；'
+                f'{"RoR已低於6°C/min，隨時可下豆" if ror_bt < 6 else "RoR仍正常，依豆種風味目標決定下豆時機"}\n'
+                f'預期：再1～3%後達到25%上限；淺烘可在此出豆，中深烘繼續觀察')
     if dtr_pct >= 20.0:
-        return (f'現況：發展期，DTR {dtr_pct:.1f}%，進入建議範圍（20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-                f'操作：維持現況，依豆種決定下豆時機（淺烘20%、中烘22%、深烘25%）\n'
-                f'預期：每30秒DTR約增加0.5～1%，保持專注觀察豆色與聲音')
+        return (f'現況：發展期，DTR {dtr_pct:.1f}%，進入下豆決策窗口（目標20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
+                f'操作：用取樣棒確認豆色；確認冷卻盤風扇已開、出豆槽就位；'
+                f'依豆種選擇下豆點（淺烘20%、中烘22%、深烘25%）\n'
+                f'預期：每30秒DTR約增加0.5～1%，保持專注觀察豆色、香氣與RoR')
     # 18%
-    return (f'現況：發展期，DTR {dtr_pct:.1f}%，接近建議範圍（目標20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
-            f'操作：維持現況，準備進入下豆決策窗口，此時勿再加火\n'
-            f'預期：約1～2分鐘後DTR達到20%，開始評估豆色與RoR決定下豆')
+    return (f'現況：發展期，DTR {dtr_pct:.1f}%，即將進入下豆窗口（目標20～25%），BT {bt:.1f}°C，RoR {ror_bt:.1f}°C/min\n'
+            f'操作：現在開啟冷卻盤風扇備用；此時勿再加火，準備進入下豆決策\n'
+            f'預期：約1～2分鐘後DTR達到20%，開始用取樣棒確認豆色與香氣')
 
 
 # ---------------------------------------------------------------------------
@@ -498,6 +500,9 @@ def _fire_recommendation(ror_bt: float, bt: float,
         notch = 2 if deficit > 4 else 1
         return +notch, (f'RoR 偏低（目標 {lo:.0f}～{hi:.0f}，現 {ror_bt:.1f}°C/min），'
                         f'加火（上調{notch}格），40～60秒後RoR將止跌回升')
+    if ror_bt < 6.0 and bt >= fc_start:
+        return 0, (f'RoR {ror_bt:.1f}°C/min 偏低，接近下豆時機——'
+                   f'確認冷卻盤風扇已開、出豆槽就位，用取樣棒確認豆色後準備下豆')
     if ror_bt > hi * 1.3:
         return -2, (f'RoR 嚴重過高（目標 {lo:.0f}～{hi:.0f}，現 {ror_bt:.1f}°C/min），'
                     f'立即減火（下調2格）並稍開大風門，避免豆表焦化')
