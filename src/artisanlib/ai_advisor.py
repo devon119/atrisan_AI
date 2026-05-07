@@ -770,19 +770,20 @@ def _compute_rule_advice(bt: float, ror_bt: float,
         situation_parts.append('【參考曲線：' + '，'.join(bg_parts) + '】')
     if milestone_ctx:
         situation_parts.append(f'【{milestone_ctx}】')
-    situation_parts.append(f'RoR {ror_bt:.1f}°C/min（{ror_status}），趨勢：{trend}')
+    situation_parts.append(f'RoR {ror_bt:.1f}°C/min（{ror_status}）')
+
+    # Second line: trend + pace + sensory cues
+    trend_parts = [f'趨勢：{trend}']
     if pace_warn:
-        situation_parts.append(pace_warn.replace('⚠️ ', '').rstrip('。'))
-
-    # Sensory cues by stage
+        trend_parts.append(pace_warn.replace('⚠️ ', '').rstrip('。'))
     if bt >= fc_start:
-        situation_parts.append('爆裂聲注意聽，豆色持續加深')
+        trend_parts.append('爆裂聲注意聽，豆色持續加深')
     elif bt >= dry_end:
-        situation_parts.append('焦糖香應漸濃，銀皮持續脫落')
+        trend_parts.append('焦糖香應漸濃，銀皮持續脫落')
     elif bt >= 145:
-        situation_parts.append('豆表開始起皺，草香轉甜香')
+        trend_parts.append('豆表開始起皺，草香轉甜香')
 
-    situation = '，'.join(situation_parts)
+    situation = '，'.join(situation_parts) + '\n' + '，'.join(trend_parts)
 
     fire_delta_base, fire_text_base = _fire_recommendation(ror_bt, bt, pace_warn, time_since_charge,
                                                             dry_end, fc_start, bg_ror)
