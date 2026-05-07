@@ -41,6 +41,7 @@ _KEY_EVENT_TRIGGERS: Final[frozenset] = frozenset({
     '一爆開始（FC）',
     '一爆結束（FC END）',
     '二爆開始（SC）',
+    'DROP（下豆）',
 })
 
 # DTR thresholds (%) that each fire one piece of advice during development phase
@@ -723,6 +724,14 @@ def _compute_rule_advice(bt: float, ror_bt: float,
                 f'；豆油開始滲出，煙量又大起來\n'
                 f'操作：現在要判斷要不要出豆；如果還要繼續，風門全開排油煙，每10秒看一次豆色跟煙量\n'
                 f'預期：過了二爆碳化速度很快，最多再撐20～30秒；油煙一變濃就出豆，不要猶豫')
+
+    # --- 下豆（DROP 按鈕）---
+    if 'DROP' in trigger or '下豆' in trigger:
+        return (f'現況：出豆了，{mins}:{secs:02d}，BT {bt:.1f}°C——這爐結束\n'
+                f'操作：冷卻盤風扇全開；豆子均勻攤開散熱，別讓它悶在一起；'
+                f'聞一下香氣——發展夠的話焦糖甜香明顯，不夠會有青草味或酸感偏重\n'
+                f'預期：2分鐘內豆溫降到接近室溫；AI完整評估報告一下子就來——'
+                f'記下這爐的豆色跟香氣感受，跟報告對照，下一爐調整用')
 
     # --- 接近梅納窗口結束（BT 自動偵測）---
     if '接近梅納窗口' in trigger or '162' in trigger:

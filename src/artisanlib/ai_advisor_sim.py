@@ -393,6 +393,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
         drop_min = (self._sim_time - self._charge_at) / 60.0 if self._charge_at else 0.0
         self._add_chart_marker('DROP', drop_min, '#90ee90')
         if hasattr(self.aw, 'ai_advisor') and self.aw.ai_advisor.enabled:
+            self._fire_advice('DROP（下豆）')
             from artisanlib.canvas import _build_roast_summary
             summary = _build_roast_summary(
                 self._timeindex, self._timex, self._temp2, 'C',
