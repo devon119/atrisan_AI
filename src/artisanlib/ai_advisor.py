@@ -69,7 +69,7 @@ ROAST_SYSTEM_PROMPT = """你是擁有20年經驗的咖啡烘焙師兼指導員�
 
 範例C（RoR翻揚，風門與火力互動）：
 現況：梅納期末，BT 172°C，RoR在翻揚（14°C/min），這條線不能讓它繼續往上。
-操作：火減一下；如果風門開得比較大，也可以先縮小風門看看效果——兩件事不要同時做，一步一步來。
+操作：火減一下；如果風門還有開大空間，也可以稍開一點輔助降RoR——減火跟開風門擇一先試，不要同時動，一步一步來。
 預期：40～60秒後RoR應該止揚回落，恢復緩降節奏；動完之後盯著看，再決定下一步。
 
 ---
@@ -302,7 +302,7 @@ def _detect_ror_anomaly(ror_values: 'list[float]') -> 'tuple[str|None, str]':
     if prev_slope < -0.3 and last_slope > 0.3 and reversal >= 1.5:
         return ('flick',
                 f'現況：⚠️ RoR在翻揚！剛才還在往下，現在反彈了 {reversal:.1f}°C/min，這條線不能讓它繼續往上\n'
-                f'操作：火要減——如果風門也偏大的話可以先縮一點看看，不要兩件事同時動\n'
+                f'操作：火先減——如果風門還有開大空間，可以稍開一點輔助降RoR，但擇一先試，不要同時動\n'
                 f'預期：40～60秒後RoR應該會止揚回落；動完之後盯著，沒效果再調')
     # Crash: sharp drop from recent peak
     recent_max = max(ror_values[-8:])
@@ -312,7 +312,7 @@ def _detect_ror_anomaly(ror_values: 'list[float]') -> 'tuple[str|None, str]':
         return ('crash',
                 f'現況：⚠️ RoR在驟降！從 {recent_max:.1f} 掉到 {current:.1f}°C/min，跌了 {drop:.1f}，不正常\n'
                 f'操作：補火；同時看一下風門是不是開太大了，或者環境突然降溫\n'
-                f'預期：及時補火的話40秒後應該會止跌；還沒止住的話再補，同時縮小風門')
+                f'預期：及時補火的話40秒後應該會止跌；還沒止住的話，擇一再試：補火或縮小風門')
     return None, ''
 
 
@@ -387,23 +387,37 @@ def _coordinated_action(ror_bt: float, bt: float,
     damper_delta = damper_target - damper_cur_eff
 
     if need_heat_urgently and damper_delta > 0:
-        # Opening damper would make RoR worse — flip to "hold or close slightly"
+        # Opening damper lowers RoR — hold or close instead
         damper_reminder = '風門先別動甚至可稍縮小，別讓熱能再散失，先把RoR拉回來再說'
     elif need_heat_urgently and damper_delta == 0:
         damper_reminder = '風門維持現況，專注把火補上去'
+    elif need_heat_urgently and damper_delta < 0:
+        # Closing damper raises RoR — consistent with urgent heat, reinforce
+        damper_reminder = f'可縮小風門（{damper_reason}），縮小後RoR會回升，配合補火效果更快'
     elif need_cool_urgently and damper_delta > 0:
-        # Opening damper helps cool — reinforce it
-        damper_reminder = f'風門也可以開大一點（{damper_reason}），幫忙把RoR壓下來'
+        # Both reduce RoR — but pick one first to avoid overcorrection
+        damper_reminder = f'開風門同樣能降RoR（{damper_reason}），但減火跟開風門擇一先試，效果出來再評估'
+    elif need_cool_urgently and damper_delta < 0:
+        # Closing damper raises RoR — contradicts urgent cooling
+        damper_reminder = f'此時不建議縮小風門（{damper_reason}），維持或稍開配合減火，雙向把RoR壓下來'
     elif fire_delta_base == +1 and damper_delta > 0:
-        # Mild heat needed + damper wants to open: compensate fire first, open damper conservatively
+        # Mild heat + damper open: fire first, open conservatively
         damper_reminder = f'補火優先（{damper_reason}）；如要排煙稍開一點就好，別開太大，RoR本來就偏低'
+    elif fire_delta_base == +1 and damper_delta < 0:
+        # Mild heat + damper close: closing helps, say so clearly
+        damper_reminder = f'可縮小風門（{damper_reason}），縮小後RoR回升，配合補火一起把節奏拉回來'
     elif fire_delta_base == -1 and damper_delta > 0:
-        # Mild cool needed + damper wants to open: both lower RoR, pick one first
+        # Mild cool + damper open: both lower RoR, pick one
         damper_reminder = f'開風門和減火效果相近（{damper_reason}），擇一先試，觀察效果再決定下一步'
+    elif fire_delta_base == -1 and damper_delta < 0:
+        # Mild cool + damper close: closing raises RoR — contradicts cooling
+        damper_reminder = f'此時縮小風門反而讓RoR升（{damper_reason}），建議維持風門，靠減火控制就好'
     elif damper_delta > 0:
-        damper_reminder = f'注意排煙（{damper_reason}）；開大風門後RoR會下降，視情況同步補火'
+        # fire == 0, damper open: fine, just warn about RoR drop
+        damper_reminder = f'注意排煙（{damper_reason}）；開大風門後RoR會微降，幅度不大時不必補火'
     elif damper_delta < 0:
-        damper_reminder = f'可縮小風門（{damper_reason}）；縮小後RoR會上升，視情況同步減火'
+        # fire == 0, damper close: warn about RoR rise
+        damper_reminder = f'可縮小風門（{damper_reason}）；縮小後RoR會微升，留意節奏別跑過頭'
     else:
         damper_reminder = f'風門維持現況（{damper_reason}）'
 
@@ -479,7 +493,7 @@ def _fire_recommendation(ror_bt: float, bt: float,
                         f'火要補，而且要快——熱慣性40秒才反映，現在就動')
         if ror_bt > hi * 1.4:
             return -2, (f'RoR {ror_bt:.1f} 跑太高了（參考 {bg_ror:.1f}），'
-                        f'減火或開風門擇一先試，不要同時動，容易過頭')
+                        f'火要趕快減，現在就動')
         if diff < -4:
             return +2, (f'RoR 落後參考曲線 {-diff:.1f}°C/min（現 {ror_bt:.1f}，目標 {bg_ror:.1f}），'
                         f'積極補火，別等，40秒後才看得到效果')
@@ -514,11 +528,9 @@ def _fire_recommendation(ror_bt: float, bt: float,
         return 0, (f'RoR 只剩 {ror_bt:.1f} 了，快到出豆時機——'
                    f'冷卻盤風扇開了沒？出豆槽就位了嗎？取樣棒確認一下豆色')
     if ror_bt > hi * 1.3:
-        return -2, (f'RoR {ror_bt:.1f} 跑太高，要趕快壓——'
-                    f'減火或開風門擇一先試，不要同時動，容易矯枉過正')
+        return -2, f'RoR {ror_bt:.1f} 跑太高，火要趕快減，別猶豫'
     if ror_bt > hi:
-        return -1, (f'RoR {ror_bt:.1f} 稍微偏高，減火或稍開風門選一個先試，'
-                    f'觀察效果再決定下一步')
+        return -1, f'RoR {ror_bt:.1f} 稍微偏高，火微減一下，觀察效果再決定下一步'
     if two_min_warn:
         return +1, (f'投豆兩分鐘了，RoR 才 {ror_bt:.1f}——'
                     f'入豆溫或初始火力可能偏低，補火')
