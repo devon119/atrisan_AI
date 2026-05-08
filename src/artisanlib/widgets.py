@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 from qtpy.QtCore import (Qt, Signal, Slot, QLine, QEvent,
     QByteArray, QPropertyAnimation, QEasingCurve, QLocale)
-from qtpy.QtCore import pyqtProperty # type:ignore[attr-defined]
+from qtpy.QtCore import Property # type:ignore[attr-defined]
 from qtpy.QtWidgets import (QApplication, QSplitter, QSplitterHandle, QLabel, QComboBox, QLineEdit, QTextEdit, QDoubleSpinBox, QPushButton,
     QTableWidget, QTableWidgetItem, QSizePolicy, QLCDNumber, QGroupBox, QFrame, QSlider, QStyle, QStyleOptionSlider)
 from qtpy.QtGui import QPen, QPainter, QFontMetrics, QColor, QCursor, QEnterEvent, QPaintEvent
@@ -543,7 +543,7 @@ class AnimatedMajorEventPushButton(MajorEventPushButton):
     def setBackColor(self, color:QColor) -> None:
         self.setStyleSheet(f'QPushButton:!flat:!pressed{{background-color:{color.name()};}}')
 
-    zcolor = pyqtProperty(QColor, getBackColor, setBackColor)
+    zcolor = Property(QColor, getBackColor, setBackColor)
 
 class MinorEventPushButton(EventPushButton): # pylint: disable=too-few-public-methods
     def __init__(self, text:str, parent:'QWidget|None' = None, background_color:str = '#4c97c3') -> None:
