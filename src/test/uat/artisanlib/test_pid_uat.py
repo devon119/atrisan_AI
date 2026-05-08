@@ -169,6 +169,10 @@ mock_modules = {
     'PyQt6.QtWidgets': Mock(),
     'PyQt6.QtGui': Mock(),
     'PyQt6.sip': Mock(),
+    'qtpy': Mock(),
+    'qtpy.QtCore': Mock(),
+    'qtpy.QtWidgets': Mock(),
+    'qtpy.QtGui': Mock(),
     # Mock scipy and numpy to prevent reload warnings
     'scipy': Mock(),
     'scipy.signal': Mock(),
@@ -178,6 +182,7 @@ mock_modules = {
 
 # Configure Qt mocks with proper classes
 mock_modules['PyQt6.QtCore'].QSemaphore = MockQSemaphore
+mock_modules['qtpy.QtCore'].QSemaphore = MockQSemaphore
 # Mock scipy.signal.iirfilter to return proper SOS format for LiveSosFilter
 mock_modules['scipy.signal'].iirfilter = Mock(
     return_value=np.array([[1.0, 0.0, 0.0, 1.0, 0.0, 0.0]])
