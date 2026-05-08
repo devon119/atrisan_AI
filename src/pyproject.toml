@@ -278,10 +278,25 @@ no_implicit_optional = true
 module = ["libusb_package.*"]
 ignore_missing_imports = true
 
-
 [[tool.mypy.overrides]]
 module = "uic.*"
 follow_imports = 'skip'
+
+# qtpy wraps PyQt5/PyQt6 but doesn't ship mypy stubs; disable decorator typing
+# checks for all modules that use @Slot decorators via qtpy
+[[tool.mypy.overrides]]
+module = ["artisanlib.*", "plus.*"]
+disallow_untyped_decorators = false
+
+# qtpy itself has no stubs
+[[tool.mypy.overrides]]
+module = ["qtpy.*"]
+ignore_missing_imports = true
+
+# test files had type: ignore for pyqtSlot which is now Slot (typed via qtpy)
+[[tool.mypy.overrides]]
+module = ["test.*"]
+warn_unused_ignores = false
 
 
 ## ruff conf
