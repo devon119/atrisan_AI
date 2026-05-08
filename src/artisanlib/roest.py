@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 from qtpy.QtWidgets import (QApplication, QGroupBox, QHBoxLayout,
     QVBoxLayout, QLabel, QLineEdit, QToolButton, QDialogButtonBox, QComboBox)
-from qtpy.QtCore import Qt, pyqtSlot
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QKeySequence, QAction, QIcon
 
 from artisanlib.util import encodeLocalStrict, getResourcePath
@@ -523,12 +523,12 @@ class ROESTdialog(ArtisanDialog):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(5)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def textChanged(self, _:str) -> None:
         credentials_available:bool = self.textClientId.text() != '' and self.textClientSecret.text() != ''
         self.buttonUpdate.setEnabled(credentials_available)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def trigger_machine_update(self, _:bool = False) -> None:
         self.machines = getMachines(self.textClientId.text(), self.textClientSecret.text())
         self.machinesCombo.clear()
@@ -541,7 +541,7 @@ class ROESTdialog(ArtisanDialog):
         self.machinesCombo.addItems([(f"{m['name']} ({m['machine_image']})" if 'machine_image' in m else m['name']) for m in self.machines])
 
 
-    @pyqtSlot()
+    @Slot()
     def setCredentials(self) -> None:
         self.client_id = self.textClientId.text()
         self.client_secret = self.textClientSecret.text()

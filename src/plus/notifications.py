@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from qtpy.QtCore import QSemaphore, QTimer, pyqtSlot
+from qtpy.QtCore import QSemaphore, QTimer, Slot
 
 from typing import Final, Any
 
@@ -56,7 +56,7 @@ def updateNotifications(notifications: int, machines:list[str]) -> None:
 
 # fetches new notifications and forward them to the Artisan notification system
 # sidecondition: at this point all pending notifications are delivered and the "notification" count on the server can be assumed to be 0
-@pyqtSlot()
+@Slot()
 def retrieveNotifications() -> None:
     gotlock = get_notifications_semaphore.tryAcquire(1,0)
     # we try to catch a lock if available but we do not wait, if we fail we just skip this sampling round (prevents stacking of waiting calls)

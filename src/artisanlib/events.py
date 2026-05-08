@@ -34,7 +34,7 @@ from artisanlib.widgets import MyQComboBox, MyQDoubleSpinBox
 from uic import SliderCalculatorDialog # pyright: ignore[attr-defined] # pylint: disable=no-name-in-module
 
 
-from qtpy.QtCore import (Qt, pyqtSlot, QSettings, QTimer)
+from qtpy.QtCore import (Qt, Slot, QSettings, QTimer)
 from qtpy.QtGui import (QColor, QFont, QIntValidator)
 from qtpy.QtWidgets import (QApplication, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QSpinBox, QWidget, QTabWidget, QDialogButtonBox,
@@ -1817,16 +1817,16 @@ class EventsDlg(ArtisanResizeablDialog):
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(50, self.setActiveTab)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def slider1_visibility_changed(self, _:int) -> None:
         self.slider_visiblity_changed(0)
-    @pyqtSlot(int)
+    @Slot(int)
     def slider2_visibility_changed(self, _:int) -> None:
         self.slider_visiblity_changed(1)
-    @pyqtSlot(int)
+    @Slot(int)
     def slider3_visibility_changed(self, _:int) -> None:
         self.slider_visiblity_changed(2)
-    @pyqtSlot(int)
+    @Slot(int)
     def slider4_visibility_changed(self, _:int) -> None:
         self.slider_visiblity_changed(3)
 
@@ -1892,7 +1892,7 @@ class EventsDlg(ArtisanResizeablDialog):
                     ]:
                 widget.setEnabled(self.E4visibility.isChecked())
 
-    @pyqtSlot()
+    @Slot()
     def quantifier_toggle(self) -> None:
         sender = cast(QCheckBox, self.sender())
         ticked:bool = sender.isChecked()
@@ -1925,7 +1925,7 @@ class EventsDlg(ArtisanResizeablDialog):
             self.E4min.setEnabled(ticked)
             self.E4max.setEnabled(ticked)
 
-    @pyqtSlot()
+    @Slot()
     def setActiveTab(self) -> None:
         self.TabWidget.setCurrentIndex(self.activeTab)
 
@@ -1938,16 +1938,16 @@ class EventsDlg(ArtisanResizeablDialog):
             return 1
         return 0
 
-    @pyqtSlot(str)
+    @Slot(str)
     def changeSpecialeventEdit1(self, _:str) -> None:
         self.specialeventEditchanged(1)
-    @pyqtSlot(str)
+    @Slot(str)
     def changeSpecialeventEdit2(self, _:str) -> None:
         self.specialeventEditchanged(2)
-    @pyqtSlot(str)
+    @Slot(str)
     def changeSpecialeventEdit3(self, _:str) -> None:
         self.specialeventEditchanged(3)
-    @pyqtSlot(str)
+    @Slot(str)
     def changeSpecialeventEdit4(self, _:str) -> None:
         self.specialeventEditchanged(4)
 
@@ -1969,12 +1969,12 @@ class EventsDlg(ArtisanResizeablDialog):
             self.E4Preview2.setText(self.aw.qmc.parseSpecialeventannotation(self.E4Edit.text(),eventnum=0,applyto='preview',postFCs=True))
             self.aw.qmc.specialeventannotations[3] = self.E4Edit.text()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def backuppaletteeventbuttonsSlot(self, _:bool = False) -> None:
         self.aw.backuppaletteeventbuttons(self.aw.buttonpalette,self.aw.buttonpalettemaxlen)
         self.transferpalettecombobox.setCurrentIndex(-1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def restorepaletteeventbuttons(self, _:bool = False) -> None:
         filename = self.aw.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Palettes'), ext='*.apal')
         if filename:
@@ -1991,7 +1991,7 @@ class EventsDlg(ArtisanResizeablDialog):
     def moveItem(l:list[Any], source:int, target:int) -> None:
         l.insert(target, l.pop(source))
 
-    @pyqtSlot(int,int,int)
+    @Slot(int,int,int)
     def sectionMoved(self, logicalIndex:int, _oldVisualIndex:int, newVisualIndex:int) -> None:
         max_rows:int = len(self.extraeventstypes)
 
@@ -2019,7 +2019,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.createEventbuttonTable()
 
 
-    @pyqtSlot()
+    @Slot()
     def selectionChanged(self) -> None:
         selected = self.eventbuttontable.selectedRanges()
         if selected and len(selected) > 0:
@@ -2027,28 +2027,28 @@ class EventsDlg(ArtisanResizeablDialog):
         else:
             self.insertButton.setEnabled(False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeShowMet(self, _:int) -> None:
         self.aw.qmc.showmet = not self.aw.qmc.showmet
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def SAMPLINGbuttonActionTypeChanged(self, index:int) -> None:
         self.SAMPLINGbuttonActionInterval.setEnabled(bool(index))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def autoChargeStateChanged(self, state:int) -> None:
         self.autoChargeModeComboBox.setEnabled(bool(state))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def autoDropStateChanged(self, state:int) -> None:
         self.autoDropModeComboBox.setEnabled(bool(state))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeShowTimeguide(self, _:int) -> None:
         self.aw.qmc.showtimeguide = not self.aw.qmc.showtimeguide
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def applyQuantifiers(self, _:bool = False) -> None:
         self.saveQuantifierSettings()
         # recompute the 4 event quantifier linspaces
@@ -2097,7 +2097,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.aw.qmc.etypes[2] = self.etype2.text()
         self.aw.qmc.etypes[3] = self.etype3.text()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tabSwitched(self, i:int) -> None:
         if self.aw.ui_mode is UI_MODE.EXPERT:
             self.closeHelp()
@@ -2339,16 +2339,16 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E3Annovisibility.setChecked(bool(self.aw.qmc.specialeventannovisibilities[2]))
         self.E4Annovisibility.setChecked(bool(self.aw.qmc.specialeventannovisibilities[3]))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setElinethickness0(self, _:int) -> None:
         self.setElinethickness(0)
-    @pyqtSlot(int)
+    @Slot(int)
     def setElinethickness1(self, _:int) -> None:
         self.setElinethickness(1)
-    @pyqtSlot(int)
+    @Slot(int)
     def setElinethickness2(self, _:int) -> None:
         self.setElinethickness(2)
-    @pyqtSlot(int)
+    @Slot(int)
     def setElinethickness3(self, _:int) -> None:
         self.setElinethickness(3)
 
@@ -2371,16 +2371,16 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E4thicknessSpinBox.setDisabled(False)
         self.aw.qmc.redraw()
 
-    @pyqtSlot()
+    @Slot()
     def setEmarkersize0(self) -> None:
         self.setEmarkersize(0)
-    @pyqtSlot()
+    @Slot()
     def setEmarkersize1(self) -> None:
         self.setEmarkersize(1)
-    @pyqtSlot()
+    @Slot()
     def setEmarkersize2(self) -> None:
         self.setEmarkersize(2)
-    @pyqtSlot()
+    @Slot()
     def setEmarkersize3(self) -> None:
         self.setEmarkersize(3)
 
@@ -2403,16 +2403,16 @@ class EventsDlg(ArtisanResizeablDialog):
 #        self.E4sizeSpinBox.setDisabled(False)
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(float)
+    @Slot(float)
     def setElinealpha0(self, _:float) -> None:
         self.setElinealpha(0)
-    @pyqtSlot(float)
+    @Slot(float)
     def setElinealpha1(self,_:float) -> None:
         self.setElinealpha(1)
-    @pyqtSlot(float)
+    @Slot(float)
     def setElinealpha2(self,_:float) -> None:
         self.setElinealpha(2)
-    @pyqtSlot(float)
+    @Slot(float)
     def setElinealpha3(self,_:float) -> None:
         self.setElinealpha(3)
 
@@ -2435,7 +2435,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.E4alphaSpinBox.setDisabled(False)
         self.aw.qmc.redraw()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def transferbuttonstoSlot(self, _:bool = False) -> None:
         self.transferbuttonsto()
 
@@ -2605,7 +2605,7 @@ class EventsDlg(ArtisanResizeablDialog):
                 return 1  #success
         return 0  #failed
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setbuttonsfrom(self, _:bool = False) -> None:
         pindex = self.transferpalettecombobox.currentIndex()
         if 0 <= pindex < 10:
@@ -2628,7 +2628,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.transferpalettecombobox.setCurrentIndex(-1)
 
     #applies a pattern of colors
-    @pyqtSlot(int)
+    @Slot(int)
     def colorizebuttons(self, pattern:int = 0) -> None:
         if self.changingcolorflag:
             n = self.colorSpinBox.value()
@@ -2670,16 +2670,16 @@ class EventsDlg(ArtisanResizeablDialog):
         self.changingcolorflag = False
         self.createEventbuttonTable()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def seteventmarker0(self, _:int) -> None:
         self.seteventmarker(0)
-    @pyqtSlot(int)
+    @Slot(int)
     def seteventmarker1(self,_:int) -> None:
         self.seteventmarker(1)
-    @pyqtSlot(int)
+    @Slot(int)
     def seteventmarker2(self,_:int) -> None:
         self.seteventmarker(2)
-    @pyqtSlot(int)
+    @Slot(int)
     def seteventmarker3(self,_:int) -> None:
         self.seteventmarker(3)
 
@@ -2694,16 +2694,16 @@ class EventsDlg(ArtisanResizeablDialog):
             self.aw.qmc.EvalueMarker[m] = str(self.markervals[self.marker4typeComboBox.currentIndex()])
         self.aw.qmc.redraw()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventline0(self, _:bool = False) -> None:
         self.setcoloreventline(0)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventline1(self,_:bool = False) -> None:
         self.setcoloreventline(1)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventline2(self,_:bool = False) -> None:
         self.setcoloreventline(2)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventline3(self,_:bool = False) -> None:
         self.setcoloreventline(3)
 
@@ -2716,16 +2716,16 @@ class EventsDlg(ArtisanResizeablDialog):
             self.updateStyleTab()
             self.aw.qmc.redraw()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventtext0(self, _:bool = False) -> None:
         self.setcoloreventtext(0)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventtext1(self,_:bool = False) -> None:
         self.setcoloreventtext(1)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventtext2(self,_:bool = False) -> None:
         self.setcoloreventtext(2)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setcoloreventtext3(self,_:bool = False) -> None:
         self.setcoloreventtext(3)
 
@@ -2738,7 +2738,7 @@ class EventsDlg(ArtisanResizeablDialog):
             self.updateStyleTab()
             self.aw.qmc.redraw()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setbuttonlistmaxlen(self, _:int) -> None:
         self.aw.buttonlistmaxlen = self.nbuttonsSpinBox.value()
 
@@ -2902,7 +2902,7 @@ class EventsDlg(ArtisanResizeablDialog):
             except Exception: # pylint: disable=broad-except
                 pass
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def copyEventButtonTabletoClipboard(self, _:bool=False) -> None:
         import prettytable
         nrows = self.eventbuttontable.rowCount()
@@ -3036,7 +3036,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.aw.realignbuttons()
         self.aw.settooltip() # has to be done after realignbuttons() to have set the aw.buttonlist correctly!
 
-    @pyqtSlot()
+    @Slot()
     def setlabeleventbutton(self) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),0)
         if i is not None:
@@ -3052,7 +3052,7 @@ class EventsDlg(ArtisanResizeablDialog):
             colorTextButton = cast(QPushButton, self.eventbuttontable.cellWidget(i,8))
             colorTextButton.setText(label)
 
-    @pyqtSlot()
+    @Slot()
     def setdescriptioneventbutton(self) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),1)
         if i is not None:
@@ -3060,7 +3060,7 @@ class EventsDlg(ArtisanResizeablDialog):
             if i < len(self.extraeventsdescriptions):
                 self.extraeventsdescriptions[i] = descriptionedit.text()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def settypeeventbutton(self, _:int) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),2)
         if i is not None:
@@ -3086,7 +3086,7 @@ class EventsDlg(ArtisanResizeablDialog):
             colorTextButton = cast(QPushButton, self.eventbuttontable.cellWidget(i,8))
             colorTextButton.setText(label)
 
-    @pyqtSlot()
+    @Slot()
     def setvalueeventbutton(self) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),3)
         if i is not None:
@@ -3106,7 +3106,7 @@ class EventsDlg(ArtisanResizeablDialog):
                 colorTextButton.setText(label)
 
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setactioneventbutton(self, _:int) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),4)
         if i is not None:
@@ -3116,7 +3116,7 @@ class EventsDlg(ArtisanResizeablDialog):
                 if self.extraeventsactions[i] > 6: # increase action type as 7=CallProgramWithArg is not available for buttons
                     self.extraeventsactions[i] = self.extraeventsactions[i] + 1
 
-    @pyqtSlot()
+    @Slot()
     def setactiondescriptioneventbutton(self) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),5)
         if i is not None:
@@ -3124,7 +3124,7 @@ class EventsDlg(ArtisanResizeablDialog):
             if i < len(self.extraeventsactionstrings):
                 self.extraeventsactionstrings[i] = actiondescriptionedit.text()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setvisibilitytyeventbutton(self, _:int) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),6)
         if i is not None:
@@ -3132,7 +3132,7 @@ class EventsDlg(ArtisanResizeablDialog):
             if i < len(self.extraeventsvisibility):
                 self.extraeventsvisibility[i] = visibilityComboBox.currentIndex()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setbuttoncolor(self, _:bool = False) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),7)
         if i is not None and i < len(self.extraeventbuttoncolor):
@@ -3151,7 +3151,7 @@ class EventsDlg(ArtisanResizeablDialog):
                     widget8.setStyleSheet(style)
                 self.aw.checkColors([(QApplication.translate('Label','Event button')+' '+ label, backColor, ' '+QApplication.translate('Label','its text'), textColor)])
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setbuttontextcolor(self, _:bool = False) -> None:
         i = self.aw.findWidgetsRow(self.eventbuttontable,self.sender(),8)
         if i is not None and i < len(self.extraeventbuttontextcolor):
@@ -3203,7 +3203,7 @@ class EventsDlg(ArtisanResizeablDialog):
             except Exception: # pylint: disable=broad-except
                 pass
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def delextraeventbutton(self, _:bool = False) -> None:
         bindex = len(self.extraeventstypes)-1
         selected = self.eventbuttontable.selectedRanges()
@@ -3225,11 +3225,11 @@ class EventsDlg(ArtisanResizeablDialog):
 
             self.createEventbuttonTable()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def addextraeventbuttonSlot(self, _:bool = False) -> None:
         self.insertextraeventbutton()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def insertextraeventbuttonSlot(self, _:bool = False) -> None:
         self.insertextraeventbutton(True)
 
@@ -3288,7 +3288,7 @@ class EventsDlg(ArtisanResizeablDialog):
 
             self.createEventbuttonTable()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def eventsbuttonflagChanged(self, _:int) -> None:
         if self.eventsbuttonflag.isChecked():
             self.aw.buttonEVENT.setVisible(True)
@@ -3297,7 +3297,7 @@ class EventsDlg(ArtisanResizeablDialog):
             self.aw.buttonEVENT.setVisible(False)
             self.aw.eventsbuttonflag = 0
 
-    @pyqtSlot(int)
+    @Slot(int)
     def eventsclampflagChanged(self, _:int) -> None:
         if self.eventsclampflag.isChecked():
             self.aw.qmc.clampEvents = True
@@ -3305,7 +3305,7 @@ class EventsDlg(ArtisanResizeablDialog):
             self.aw.qmc.clampEvents = False
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def chargeTimerStateChanged(self, _:int) -> None:
         if self.chargeTimer.isChecked():
             self.chargeTimerSpinner.setEnabled(True)
@@ -3313,7 +3313,7 @@ class EventsDlg(ArtisanResizeablDialog):
             self.chargeTimerSpinner.setEnabled(False)
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def eventslabelsflagChanged(self, _:int) -> None:
         if self.eventslabelsflag.isChecked():
             self.aw.qmc.renderEventsDescr = True
@@ -3323,7 +3323,7 @@ class EventsDlg(ArtisanResizeablDialog):
             self.eventslabelscharsSpinner.setEnabled(False)
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def annotationsflagChanged(self, _:int) -> None:
         if self.annotationsflagbox.isChecked():
             self.aw.qmc.annotationsflag = 1
@@ -3333,7 +3333,7 @@ class EventsDlg(ArtisanResizeablDialog):
             self.aw.qmc.l_annotations_dict = {}
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def showeventsonbtChanged(self, _:int) -> None:
         if self.showeventsonbtbox.isChecked():
             self.aw.qmc.showeventsonbt = True
@@ -3342,19 +3342,19 @@ class EventsDlg(ArtisanResizeablDialog):
         self.aw.qmc.l_event_flags_dict = {} # clear the custom event flag position cache
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeShowEtypes0(self, _:int) -> None:
         self.changeShowEtypes(0)
-    @pyqtSlot(int)
+    @Slot(int)
     def changeShowEtypes1(self, _:int) -> None:
         self.changeShowEtypes(1)
-    @pyqtSlot(int)
+    @Slot(int)
     def changeShowEtypes2(self, _:int) -> None:
         self.changeShowEtypes(2)
-    @pyqtSlot(int)
+    @Slot(int)
     def changeShowEtypes3(self, _:int) -> None:
         self.changeShowEtypes(3)
-    @pyqtSlot(int)
+    @Slot(int)
     def changeShowEtypes4(self, _:int) -> None:
         self.changeShowEtypes(4)
 
@@ -3362,7 +3362,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.aw.qmc.showEtypes[etype] = not self.aw.qmc.showEtypes[etype]
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def eventsGraphTypeflagChanged(self, _:int) -> None:
         self.aw.qmc.eventsGraphflag = self.bartypeComboBox.currentIndex() - 1
         if self.aw.qmc.eventsGraphflag > 1:
@@ -3559,7 +3559,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.specialeventannotations = self.aw.qmc.specialeventannotations[:]
 
     #called from Cancel button
-    @pyqtSlot()
+    @Slot()
     def restoreState(self) -> None:
         # event configurations
         self.aw.eventsbuttonflag = self.eventsbuttonflagstored
@@ -3627,7 +3627,7 @@ class EventsDlg(ArtisanResizeablDialog):
         self.close()
 
     #called from OK button
-    @pyqtSlot()
+    @Slot()
     def updatetypes(self) -> None:
         try:
             self.closeHelp()
@@ -3771,7 +3771,7 @@ class EventsDlg(ArtisanResizeablDialog):
             _, _, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' updatetypes(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -3781,7 +3781,7 @@ class EventsDlg(ArtisanResizeablDialog):
         settings.setValue('EventsGeometry',self.saveGeometry())
         self.aw.EventsDlg_activeTab = self.TabWidget.currentIndex()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showEventbuttonhelp(self, _:bool = False) -> None:
         from help import eventbuttons_help # pyright: ignore [attr-defined] # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -3790,7 +3790,7 @@ class EventsDlg(ArtisanResizeablDialog):
                 QApplication.translate('Form Caption','Event Custom Buttons Help'),
                 eventbuttons_help.content())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showSliderHelp(self, _:bool = False) -> None:
         from help import eventsliders_help # pyright: ignore [attr-defined] # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -3799,7 +3799,7 @@ class EventsDlg(ArtisanResizeablDialog):
                 QApplication.translate('Form Caption','Event Custom Sliders Help'),
                 eventsliders_help.content())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showEventannotationhelp(self, _:bool = False) -> None:
         from help import eventannotations_help # pyright: ignore [attr-defined] # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -3808,26 +3808,26 @@ class EventsDlg(ArtisanResizeablDialog):
                 QApplication.translate('Form Caption','Event Annotations Help'),
                 eventannotations_help.content())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def slider1ToolButton_triggered(self, _:bool = False) -> None:
         self.openSliderCalculator(self.E1_min.value(), self.E1_max.value(), self.E1factor, self.E1offset)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def slider2ToolButton_triggered(self, _:bool = False) -> None:
         self.openSliderCalculator(self.E2_min.value(), self.E2_max.value(), self.E2factor, self.E2offset)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def slider3ToolButton_triggered(self, _:bool = False) -> None:
         self.openSliderCalculator(self.E3_min.value(), self.E3_max.value(), self.E3factor, self.E3offset)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def slider4ToolButton_triggered(self, _:bool = False) -> None:
         self.openSliderCalculator(self.E4_min.value(), self.E4_max.value(), self.E4factor, self.E4offset)
 
     def closeHelp(self) -> None:
         self.aw.closeHelpDialog(self.helpdialog)
 
-    @pyqtSlot()
+    @Slot()
     def calcSliderFactorOffset(self) -> None:
         sender = cast(QWidget, self.sender())
         dialog = cast(SliderCalculator, sender.window())
@@ -3915,7 +3915,7 @@ class SliderCalculator(ArtisanDialog):
             self.ui.buttonBox.removeButton(applyButton)
             self.applyButton = self.ui.buttonBox.addButton(applyButton.text(), QDialogButtonBox.ButtonRole.AcceptRole)
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         factor_text = self.ui.lineEdit_Factor.text()

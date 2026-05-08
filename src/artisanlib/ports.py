@@ -32,7 +32,7 @@ from artisanlib.dialogs import ArtisanDialog, ArtisanResizeablDialog, PortComboB
 from artisanlib.comm import serialport
 
 
-from qtpy.QtCore import (Qt, pyqtSlot, QSettings)
+from qtpy.QtCore import (Qt, Slot, QSettings)
 from qtpy.QtGui import QIntValidator, QStandardItemModel
 from qtpy.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,QSizePolicy,
@@ -135,7 +135,7 @@ class scanModbusDlg(ArtisanDialog):
             if key != 0:
                 self.stop = True
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def start_pressed(self, _:bool = False) -> None:
         try:
             # set MODBUS serial, type, host, port settings from dialog
@@ -197,21 +197,21 @@ class scanModbusDlg(ArtisanDialog):
         self.aw.modbus.host = self.mhost_aw
         self.aw.modbus.port = self.mport_aw
 
-    @pyqtSlot(int)
+    @Slot(int)
     def checkbox3Changed(self, _:int) -> None:
         if self.checkbox3.isChecked():
             self.code3 = True
         else:
             self.code3 = False
 
-    @pyqtSlot(int)
+    @Slot(int)
     def checkbox4Changed(self, _:int) -> None:
         if self.checkbox4.isChecked():
             self.code4 = True
         else:
             self.code4 = False
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -308,7 +308,7 @@ class scanS7Dlg(ArtisanDialog):
             if key != 0:
                 self.stop = True
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def start_pressed(self, _:bool = False) -> None:
         try:
             # set S7 host, port and other settings from dialog
@@ -357,7 +357,7 @@ class scanS7Dlg(ArtisanDialog):
         self.aw.s7.rack = self.srack_aw
         self.aw.s7.slot = self.sslot_aw
 
-    @pyqtSlot(int)
+    @Slot(int)
     def checkbox3Changed(self, _:int) -> None:
         if self.checkbox3.isChecked():
             self.typeInt = True
@@ -366,7 +366,7 @@ class scanS7Dlg(ArtisanDialog):
             self.typeInt = False
             self.checkbox4.setChecked(not self.typeInt)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def checkbox4Changed(self, _:int) -> None:
         if self.checkbox4.isChecked():
             self.typeFloat = True
@@ -375,7 +375,7 @@ class scanS7Dlg(ArtisanDialog):
             self.typeFloat = False
             self.checkbox3.setChecked(not self.typeFloat)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -1779,25 +1779,25 @@ class comportDlg(ArtisanResizeablDialog):
         if settings.contains('PortsGeometry'):
             self.restoreGeometry(settings.value('PortsGeometry'))
 
-    @pyqtSlot(str)
+    @Slot(str)
     def mqtt_user_changed(self, s:str) -> None:
         self.mqtt_password_Edit.setEnabled(s.strip() != '')
 
-    @pyqtSlot(int)
+    @Slot(int)
     def s7_optimize_toggle(self, i:int) -> None:
         if i:
             self.s7_full_block.setEnabled(True)
         else:
             self.s7_full_block.setEnabled(False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def modbus_optimize_toggle(self, i:int) -> None:
         if i:
             self.modbus_full_block.setEnabled(True)
         else:
             self.modbus_full_block.setEnabled(False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def scanS7(self, _:bool = False) -> None:
         scan_S7_dlg = scanS7Dlg(self,self.aw)
         scan_S7_dlg.shost = str(self.s7_hostEdit.text())
@@ -1806,7 +1806,7 @@ class comportDlg(ArtisanResizeablDialog):
         scan_S7_dlg.sslot = toInt(str(self.s7_slotEdit.text()))
         scan_S7_dlg.show()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def scanModbus(self, _:bool = False) -> None:
         scan_modbuds_dlg = scanModbusDlg(self,self.aw)
         scan_modbuds_dlg.port = str(self.modbus_comportEdit.getSelection())
@@ -1820,7 +1820,7 @@ class comportDlg(ArtisanResizeablDialog):
         scan_modbuds_dlg.mport = toInt(str(self.modbus_portEdit.text()))
         scan_modbuds_dlg.show()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def portComboBoxIndexChanged(self, i:int) -> None:
         sender = cast(PortComboBox, self.sender())
         sender.setSelection(i)
@@ -1937,7 +1937,7 @@ class comportDlg(ArtisanResizeablDialog):
             _, _, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' saveserialtable(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showButtonhelp(self, _:bool = False) -> None:
         if self.TabWidget.currentIndex() == 2:
             from help import modbus_help # pyright: ignore[attr-defined] # pylint: disable=no-name-in-module
@@ -1964,11 +1964,11 @@ class comportDlg(ArtisanResizeablDialog):
     def closeHelp(self) -> None:
         self.aw.closeHelpDialog(self.helpdialog)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tabSwitched(self, _:int) -> None:
         self.closeHelp()
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -1977,7 +1977,7 @@ class comportDlg(ArtisanResizeablDialog):
         #save window geometry
         settings.setValue('PortsGeometry',self.saveGeometry())
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         #validate serial parameter against input errors

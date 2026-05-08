@@ -21,7 +21,7 @@ from babel.units import get_unit_name
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.widgets import MyQDoubleSpinBox
 
-from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtCore import Qt, Slot, QSettings
 from qtpy.QtWidgets import (QMessageBox, QApplication, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout,
                              QDialogButtonBox, QLayout)
 
@@ -99,14 +99,14 @@ class SamplingDlg(ArtisanDialog):
         layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
     #window close box
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
         self.close()
 
     #cancel button
-    @pyqtSlot()
+    @Slot()
     @override
     def close(self) -> bool:
         self.storeSettings()
@@ -119,7 +119,7 @@ class SamplingDlg(ArtisanDialog):
         settings.setValue('SamplingPosition',self.frameGeometry().topLeft())
 
     #ok button
-    @pyqtSlot()
+    @Slot()
     def ok(self) -> None:
         self.aw.qmc.flagKeepON = bool(self.keepOnFlag.isChecked())
         self.aw.qmc.flagOpenCompleted = bool(self.openCompletedFlag.isChecked())

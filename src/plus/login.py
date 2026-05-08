@@ -23,7 +23,7 @@
 
 from qtpy.QtWidgets import (QApplication, QCheckBox, QGroupBox, QHBoxLayout,
     QVBoxLayout, QLabel, QLineEdit, QDialogButtonBox, QWidget)
-from qtpy.QtCore import Qt, pyqtSlot
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QKeySequence, QAction
 
 import logging
@@ -160,13 +160,13 @@ class Login(ArtisanDialog):
                 self.ok_button.setDefault(True)
                 self.ok_button.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     @override
     def reject(self) -> None:
         self.login = self.textName.text()
         super().reject()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def rememberCheckChanged(self, i:int) -> None:
         self.remember = bool(i)
 
@@ -180,7 +180,7 @@ class Login(ArtisanDialog):
             and '.' in login
         )
 
-    @pyqtSlot(str)
+    @Slot(str)
     def textChanged(self, _:str) -> None:
         if self.isInputReasonable():
             if self.cancel_button is not None:
@@ -195,7 +195,7 @@ class Login(ArtisanDialog):
                 self.ok_button.setDefault(False)
                 self.ok_button.setEnabled(False)
 
-    @pyqtSlot()
+    @Slot()
     def setCredentials(self) -> None:
         self.login = self.textName.text()
         self.passwd = self.textPass.text()

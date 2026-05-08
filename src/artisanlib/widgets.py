@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from qtpy.QtGui import QWheelEvent, QMouseEvent, QFocusEvent, QResizeEvent, QKeyEvent # pylint: disable=unused-import
     from qtpy.QtWidgets import QWidget, QTimeEdit, QCheckBox, QComboBox # pylint: disable=unused-import
 
-from qtpy.QtCore import (Qt, pyqtSignal, pyqtSlot, QLine, QEvent,
+from qtpy.QtCore import (Qt, Signal, Slot, QLine, QEvent,
     QByteArray, QPropertyAnimation, QEasingCurve, QLocale)
 from qtpy.QtCore import pyqtProperty # type:ignore[attr-defined]
 from qtpy.QtWidgets import (QApplication, QSplitter, QSplitterHandle, QLabel, QComboBox, QLineEdit, QTextEdit, QDoubleSpinBox, QPushButton,
@@ -198,8 +198,8 @@ class MyTableWidgetItemQComboBox(QTableWidgetItem):
 
 # Slider which does not move if slider widget is clicked, only if slider bar is clicked
 class SliderUnclickable(QSlider):
-    focus_in = pyqtSignal()
-    focus_out = pyqtSignal()
+    focus_in = Signal()
+    focus_out = Signal()
 
     @override
     def mousePressEvent(self, ev:'QMouseEvent|None') -> None:
@@ -272,9 +272,9 @@ class MyQLabel(QLabel):
 
 
 class ClickableQLabel(QLabel):
-    clicked = pyqtSignal()
-    left_clicked = pyqtSignal()
-    right_clicked = pyqtSignal()
+    clicked = Signal()
+    left_clicked = Signal()
+    right_clicked = Signal()
 
     @override
     def mousePressEvent(self, ev:'QMouseEvent|None') -> None:
@@ -287,9 +287,9 @@ class ClickableQLabel(QLabel):
                 self.right_clicked.emit()
 
 class ClickableQGroupBox(QGroupBox):
-    clicked = pyqtSignal()
-    left_clicked = pyqtSignal()
-    right_clicked = pyqtSignal()
+    clicked = Signal()
+    left_clicked = Signal()
+    right_clicked = Signal()
 
     @override
     def mousePressEvent(self, event:'QMouseEvent|None') -> None:
@@ -302,10 +302,10 @@ class ClickableQGroupBox(QGroupBox):
                 self.right_clicked.emit()
 
 class MyQLCDNumber(QLCDNumber):
-    clicked = pyqtSignal()
-    left_clicked = pyqtSignal()
-    right_clicked = pyqtSignal()
-    double_clicked = pyqtSignal()
+    clicked = Signal()
+    left_clicked = Signal()
+    right_clicked = Signal()
+    double_clicked = Signal()
 
     @override
     def mousePressEvent(self, a0:'QMouseEvent|None') -> None:
@@ -324,9 +324,9 @@ class MyQLCDNumber(QLCDNumber):
             self.double_clicked.emit()
 
 class ClickableLCDFrame(QFrame):
-    clicked = pyqtSignal()
-    left_clicked = pyqtSignal()
-    right_clicked = pyqtSignal()
+    clicked = Signal()
+    left_clicked = Signal()
+    right_clicked = Signal()
 
     @override
     def mousePressEvent(self, a0:'QMouseEvent|None') -> None:
@@ -341,9 +341,9 @@ class ClickableLCDFrame(QFrame):
 
 # this one emits a clicked event on right-clicks and an editingFinished event when the text was changed and the focus got lost
 class ClickableTextEdit(QTextEdit):
-    clicked = pyqtSignal()
-    editingFinished = pyqtSignal()
-    receivedFocus = pyqtSignal()
+    clicked = Signal()
+    editingFinished = Signal()
+    receivedFocus = Signal()
 
     def __init__(self, parent:'QWidget|None' = None, **kwargs:dict[str,Any]) -> None:
         super().__init__(parent, **kwargs)
@@ -369,7 +369,7 @@ class ClickableTextEdit(QTextEdit):
             self.editingFinished.emit()
         super().focusOutEvent(e)
 
-    @pyqtSlot()
+    @Slot()
     def _handle_text_changed(self) -> None:
         self._changed = True
 
@@ -382,9 +382,9 @@ class ClickableTextEdit(QTextEdit):
 
 # this one emits a clicked event on right-clicks and an editingFinished event when the text was changed and the focus got lost
 class ClickableQLineEdit(QLineEdit):
-    clicked = pyqtSignal()
-    editingFinished = pyqtSignal()
-    receivedFocus = pyqtSignal()
+    clicked = Signal()
+    editingFinished = Signal()
+    receivedFocus = Signal()
 
     def __init__(self, parent:'QWidget|None' = None, **kwargs:dict[str,Any]) -> None:
         super().__init__(parent, **kwargs)
@@ -409,7 +409,7 @@ class ClickableQLineEdit(QLineEdit):
             self.editingFinished.emit()
         super().focusOutEvent(a0)
 
-    @pyqtSlot()
+    @Slot()
     def _handle_text_changed(self) -> None:
         self._changed = True
 

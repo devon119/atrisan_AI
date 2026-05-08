@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
     from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
 
-from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtCore import Qt, Slot, QSettings
 from qtpy.QtWidgets import (QApplication, QLabel, QHBoxLayout, QVBoxLayout, QCheckBox,
                              QDialogButtonBox, QGridLayout, QLineEdit, QSpinBox, QLayout)
 
@@ -109,7 +109,7 @@ class batchDlg(ArtisanDialog):
 
         mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def toggleCounterFlag(self, _:int) -> None:
         if self.batchcheckbox.isChecked():
             self.prefixEdit.setEnabled(True)
@@ -120,7 +120,7 @@ class batchDlg(ArtisanDialog):
             self.counterSpinBox.setEnabled(False)
             self.neverOverwriteCheckbox.setEnabled(False)
 
-    @pyqtSlot()
+    @Slot()
     def batchChanged(self) -> None:
         self.aw.qmc.batchprefix = self.prefixEdit.text()
         if self.batchcheckbox.isChecked():
@@ -132,7 +132,7 @@ class batchDlg(ArtisanDialog):
 #        self.aw.closeEventSettings()
         self.close()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def close(self) -> bool:
         #save window position (only; not size!)

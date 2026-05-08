@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from qtpy.QtCore import QSize, pyqtSlot
+from qtpy.QtCore import QSize, Slot
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QApplication, QStyle
 
@@ -353,13 +353,13 @@ def getLanguage() -> str:
 # processing responses
 
 # if rlimit = -1 or rused = -1 or pu = "", no update information is available and the state is not updated
-@pyqtSlot(float,float,str,int,list)
+@Slot(float,float,str,int,list)
 def updateLimits(rlimit:float, rused:float, pu:str, notifications:int, machines: list[str]) -> None:
     aw = config.app_window
     if aw is not None:
         aw.updateLimits(rlimit, rused, pu, notifications, machines)
 
-@pyqtSlot()
+@Slot()
 def updateSchedule() -> None:
     aw = config.app_window
     if aw is not None:
@@ -393,7 +393,7 @@ def extractAccountState(response: dict[str,Any]) -> tuple[float, float, str, int
         _log.exception(e)
     return rlimit, rused, pu, notifications, machines
 
-@pyqtSlot(dict)
+@Slot(dict)
 def updateLimitsFromResponse(response: dict[str,Any]) -> None:
     rlimit,rused,pu,notifications,machines = extractAccountState(response)
     updateLimits(rlimit,rused,pu,notifications,machines)

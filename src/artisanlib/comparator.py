@@ -45,7 +45,7 @@ from artisanlib.qcheckcombobox import CheckComboBox
 with suppress_stdout_stderr():
     from matplotlib import colormaps # pyrefly:ignore[missing-module-attribute]
 
-from qtpy.QtCore import (Qt, pyqtSignal, pyqtSlot, QSettings, QFile, QTextStream, QUrl,
+from qtpy.QtCore import (Qt, Signal, Slot, QSettings, QFile, QTextStream, QUrl,
     QFileInfo, QDate, QTime, QDateTime)
 from qtpy.QtGui import (QColor, QDesktopServices, QStandardItemModel)
 from qtpy.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton,
@@ -921,9 +921,9 @@ class RoastProfile:
 
 
 class CompareTableWidget(QTableWidget):
-    deleteKeyPressed = pyqtSignal()
+    deleteKeyPressed = Signal()
 
-    @pyqtSlot('QKeyEvent')
+    @Slot('QKeyEvent')
     @override
     def keyPressEvent(self, e: 'QKeyEvent|None' = None) -> None:
         if e is not None and e.key() in [Qt.Key.Key_Delete,Qt.Key.Key_Backspace]:
@@ -1100,7 +1100,7 @@ class roastCompareDlg(ArtisanDialog):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus) # make keyPressEvent below work
         self.setFocus(Qt.FocusReason.MouseFocusReason)
 
-    @pyqtSlot('QKeyEvent')
+    @Slot('QKeyEvent')
     @override
     def keyPressEvent(self, a0: 'QKeyEvent|None') -> None:
         try:
@@ -1113,7 +1113,7 @@ class roastCompareDlg(ArtisanDialog):
         except Exception: # pylint: disable=broad-except
             pass
 
-    @pyqtSlot('QDragEnterEvent')
+    @Slot('QDragEnterEvent')
     @override
     def dragEnterEvent(self, a0: 'QDragEnterEvent|None') -> None: # pylint: disable=no-self-use # overloaded method
         if a0 is not None:
@@ -1123,7 +1123,7 @@ class roastCompareDlg(ArtisanDialog):
             else:
                 a0.ignore()
 
-    @pyqtSlot('QDropEvent')
+    @Slot('QDropEvent')
     @override
     def dropEvent(self, a0: 'QDropEvent|None' = None) -> None:
         if a0 is not None:
@@ -1599,7 +1599,7 @@ class roastCompareDlg(ArtisanDialog):
 
     ### SLOTS
 
-    @pyqtSlot(int)
+    @Slot(int)
     def columnHeaderClicked(self, i:int) -> None:
         if i == 1: # flag header clicked
             new_state = not all(p.visible for p in self.profiles)
@@ -1631,7 +1631,7 @@ class roastCompareDlg(ArtisanDialog):
                 # select all
                 self.profileTable.selectAll()
 
-    @pyqtSlot(int,int,int)
+    @Slot(int,int,int)
     def sectionMoved(self, _logicalIndex:int, _oldVisualIndex:int, _newVisualIndex:int) -> None:
         self.updateMenus()
         self.realign()
@@ -1640,7 +1640,7 @@ class roastCompareDlg(ArtisanDialog):
         if self.aw.qpc is not None:
             self.aw.qpc.update_phases(self.getPhasesData())
 
-    @pyqtSlot(int)
+    @Slot(int)
     def visibilityChanged(self, state:int) -> None:
         i = self.aw.findWidgetsRow(self.profileTable,self.sender(),1)
         if i is not None:
@@ -1653,7 +1653,7 @@ class roastCompareDlg(ArtisanDialog):
                 self.aw.qpc.update_phases(self.getPhasesData())
 
 
-    @pyqtSlot(int,bool)
+    @Slot(int,bool)
     def flagChanged(self, i:int, b:bool) -> None:
         if i == 0:
             self.aw.qmc.compareET = b
@@ -1678,7 +1678,7 @@ class roastCompareDlg(ArtisanDialog):
         self.updateVisibilities()
         self.redrawOnDeltaAxisVisibilityChanged()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeModeidx(self, i:int) -> None:
         if int(not self.aw.qmc.compareRoast) + int(self.aw.qmc.compareBBP) != i:
             if i == 1: # BBP+Roast
@@ -1700,7 +1700,7 @@ class roastCompareDlg(ArtisanDialog):
                 self.alignComboBox.setEnabled(True)
             self.redraw()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeAlignEventidx(self, i:int) -> None:
         if self.aw.qmc.compareAlignEvent != i:
             self.aw.qmc.compareAlignEvent = i
@@ -1709,13 +1709,13 @@ class roastCompareDlg(ArtisanDialog):
             if self.aw.qpc is not None:
                 self.aw.qpc.update_phases(self.getPhasesData())
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeEventsidx(self, i:int) -> None:
         self.aw.qmc.compareEvents = i
         self.updateVisibilities()
         self.repaintDlg()
 
-    @pyqtSlot()
+    @Slot()
     def selectionChanged(self) -> None:
         selected = [self.aw.findWidgetsRow(self.profileTable,si,2) for si in self.profileTable.selectedItems()]
 #        selected = self.profileTable.getselectedRowsFast() # does return [1],[2],[1],.. on repeated clicks on the row header of the first entry insteadd of [1],[0],[1],..
@@ -1727,7 +1727,7 @@ class roastCompareDlg(ArtisanDialog):
         self.updateProfileTableColors()
         self.repaintDlg()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tableSectionClicked(self, i:int) -> None:
         fileURL = QUrl.fromLocalFile(self.profiles[i].filepath)
         if platform.system() == 'Windows' and not self.aw.app.artisanviewerMode:
@@ -1735,17 +1735,17 @@ class roastCompareDlg(ArtisanDialog):
         else:
             QDesktopServices.openUrl(fileURL)
 
-    @pyqtSlot()
+    @Slot()
     def deleteSelected(self) -> None:
         self.deleteProfiles(self.profileTable.getselectedRowsFast())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def add(self,_:bool = False) -> None:
         filenames = self.aw.reportFiles()
         if filenames:
             self.addProfiles(filenames)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def delete(self,_:bool = False) -> None:
         self.deleteProfiles(self.profileTable.getselectedRowsFast())
 
@@ -2138,7 +2138,7 @@ class roastCompareDlg(ArtisanDialog):
                 max_timex += 1/10*time_period
                 self.aw.qmc.xaxistosm(min_time=min_timex, max_time=max_timex)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0

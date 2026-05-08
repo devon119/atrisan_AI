@@ -11,7 +11,7 @@ import math
 import urllib.request
 from typing import TYPE_CHECKING, Any, Optional
 
-from qtpy.QtCore import QSettings, QThread, Qt, pyqtSignal, pyqtSlot
+from qtpy.QtCore import QSettings, QThread, Qt, Signal, Slot
 from qtpy.QtWidgets import (
     QComboBox, QDialog, QDoubleSpinBox, QFrame, QGridLayout, QGroupBox,
     QHBoxLayout, QLabel, QPushButton, QScrollArea, QSizePolicy,
@@ -319,8 +319,8 @@ def rp_default_moisture(ctx: dict) -> float:
 # ── 室溫自動抓取（QThread）────────────────────────────────────────────────────
 
 class AmbientFetchThread(QThread):
-    result_ready = pyqtSignal(float)
-    error        = pyqtSignal(str)
+    result_ready = Signal(float)
+    error        = Signal(str)
 
     def run(self) -> None:
         try:
@@ -344,7 +344,7 @@ class AmbientFetchThread(QThread):
 
 class AnchorWidget(QFrame):
     """Compact anchor: title + 2×2 grid (time|temp / fire|damper)."""
-    changed = pyqtSignal()
+    changed = Signal()
 
     def __init__(self, label: str,
                  t: float, temp: float, fire: float, damper: float,
@@ -427,8 +427,8 @@ class AnchorWidget(QFrame):
 # ── 自訂中間調整點 Widget ──────────────────────────────────────────────────────
 
 class CustomEventWidget(QFrame):
-    removed  = pyqtSignal(object)   # emits self
-    changed  = pyqtSignal()
+    removed  = Signal(object)   # emits self
+    changed  = Signal()
 
     def __init__(self, t: float, fire: float, damper: float, t_max: float,
                  parent: Optional[QWidget] = None) -> None:
@@ -852,11 +852,11 @@ class RoastPlanDlg(ArtisanDialog):
 
     # ── 事件處理 ──────────────────────────────────────────────────────────────
 
-    @pyqtSlot()
+    @Slot()
     def _on_config_changed(self) -> None:
         self._recompute()
 
-    @pyqtSlot()
+    @Slot()
     def _on_measure_changed(self) -> None:
         # batch: highlight if empty
         if self._sp_batch.value() > 0:
@@ -869,7 +869,7 @@ class RoastPlanDlg(ArtisanDialog):
             QSettings().setValue(f'{SETTINGS_KEY}/machineKg', kg)
         self._recompute()
 
-    @pyqtSlot()
+    @Slot()
     def _on_anchor_changed(self) -> None:
         self._update_chart_and_stats()
 
@@ -1331,13 +1331,13 @@ class RoastPlanDlg(ArtisanDialog):
         self._ambient_thread = thread
         thread.start()
 
-    @pyqtSlot(float)
+    @Slot(float)
     def _on_ambient_result(self, t: float) -> None:
         self._sp_ambient.setValue(t)
         self._btn_geo.setText(f'✓ {t}°C')
         self._btn_geo.setEnabled(True)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _on_ambient_error(self, _msg: str) -> None:
         self._btn_geo.setText('取得失敗')
         self._btn_geo.setEnabled(True)

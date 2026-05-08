@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from qtpy.QtCore import QSemaphore, QTimer, Qt, pyqtSlot
+from qtpy.QtCore import QSemaphore, QTimer, Qt, Slot
 from qtpy.QtWidgets import QApplication, QMessageBox
 
 import platform
@@ -126,7 +126,7 @@ def toggle(app_window:'ApplicationWindow') -> None:
 
 # if clear_on_failure is set, credentials are removed if connect fails
 # NOTE: authentify might be called from outside the GUI thread (interactive must be False in this case!)
-@pyqtSlot()
+@Slot()
 def connect(clear_on_failure: bool =False, interactive: bool = True) -> None:
     if not is_connected():
         _log.debug(

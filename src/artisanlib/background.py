@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from qtpy.QtGui import QCloseEvent, QKeyEvent # pylint: disable=unused-import
 
-from qtpy.QtCore import (Qt, pyqtSlot, QSettings, QTimer)
+from qtpy.QtCore import (Qt, Slot, QSettings, QTimer)
 from qtpy.QtGui import QColor, QKeySequence
 from qtpy.QtWidgets import (QApplication, QCheckBox, QGridLayout, QHBoxLayout, QVBoxLayout,
                              QLabel, QLineEdit,QPushButton, QComboBox, QDialogButtonBox, QHeaderView,
@@ -539,18 +539,18 @@ class backgroundDlg(ArtisanResizeablDialog):
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(50, self.setActiveTab)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def lookahead_changed(self, i:int) -> None:
         self.aw.qmc.ramp_lookahead = i
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tabSwitched(self, i:int) -> None:
         if i == 1:
             self.createEventTable()
         elif i == 2:
             self.createDataTable()
 
-    @pyqtSlot()
+    @Slot()
     def setActiveTab(self) -> None:
         if self.activeTab == 1:
             self.createEventTable()
@@ -558,7 +558,7 @@ class backgroundDlg(ArtisanResizeablDialog):
             self.createDataTable()
         self.TabWidget.setCurrentIndex(self.activeTab)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def timealign(self, _:bool = False) -> None:
         self.aw.qmc.timealign()
         self.aw.autoAdjustAxis()
@@ -573,7 +573,7 @@ class backgroundDlg(ArtisanResizeablDialog):
         else:
             super().keyPressEvent(a0)
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.aw.qmc.backgroundmovespeed = self.speedSpinBox.value()
@@ -583,7 +583,7 @@ class backgroundDlg(ArtisanResizeablDialog):
             self.aw.qmc.turn_playback_event_ON()
         self.close()
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -602,7 +602,7 @@ class backgroundDlg(ArtisanResizeablDialog):
 #            except Exception:  # pylint: disable=broad-except
 #                return 0
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setplaybackevent(self, _:int) -> None:
         s = None
         if self.backgroundPlaybackEvents.isChecked():
@@ -631,7 +631,7 @@ class backgroundDlg(ArtisanResizeablDialog):
                 ]):
             widget.setEnabled(self.aw.qmc.backgroundPlaybackEvents and self.aw.qmc.specialeventplayback[i])
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setplaybackaideventtypeenabled(self, _:int) -> None:
         for i, widget in enumerate([
                 self.backgroundPlaybackAid0,
@@ -640,7 +640,7 @@ class backgroundDlg(ArtisanResizeablDialog):
                 self.backgroundPlaybackAid3]):
             self.aw.qmc.specialeventplaybackaid[i] = widget.isChecked()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setplaybackeventtypeenabled(self, _:int) -> None:
         for i, widget in enumerate([
                 self.backgroundPlaybackEvent0,
@@ -656,7 +656,7 @@ class backgroundDlg(ArtisanResizeablDialog):
                 ]):
             widget.setEnabled(self.aw.qmc.backgroundPlaybackEvents and self.aw.qmc.specialeventplayback[i])
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setplaybackeventrampenabled(self, _:int) -> None:
         for i, widget in enumerate([
                 self.backgroundPlaybackRampEvent0,
@@ -666,7 +666,7 @@ class backgroundDlg(ArtisanResizeablDialog):
             self.aw.qmc.specialeventplaybackramp[i] = widget.isChecked()
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setplaybackdrop(self, _:int) -> None:
         s = None
         if self.backgroundPlaybackDROP.isChecked():
@@ -679,14 +679,14 @@ class backgroundDlg(ArtisanResizeablDialog):
         self.replayDropComboBox.setEnabled(self.aw.qmc.backgroundPlaybackDROP)
         self.aw.sendmessage(msg, style=s)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setreproduceBeep(self, _:int) -> None:
         if self.backgroundReproduceBeep.isChecked():
             self.aw.qmc.backgroundReproduceBeep = True
         else:
             self.aw.qmc.backgroundReproduceBeep = False
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setreproduce(self, _:int) -> None:
         self.aw.qmc.detectBackgroundEventTime = self.etimeSpinBox.value()
         s = None
@@ -714,21 +714,21 @@ class backgroundDlg(ArtisanResizeablDialog):
         self.etimelabel.setEnabled(self.aw.qmc.backgroundReproduce)
         self.etimeunit.setEnabled(self.aw.qmc.backgroundReproduce)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def optsetBatchSizeFromBackground(self, _:int) -> None:
         if self.setBatchSizeFromBackground.isChecked():
             self.aw.qmc.setBatchSizeFromBackground = True
         else:
             self.aw.qmc.setBatchSizeFromBackground = False
 
-    @pyqtSlot(int)
+    @Slot(int)
     def optclearbgbeforeprofileload(self, _:int) -> None:
         if self.clearBgbeforeprofileload.isChecked():
             self.aw.qmc.clearBgbeforeprofileload = True
         else:
             self.aw.qmc.clearBgbeforeprofileload = False
 
-    @pyqtSlot(int)
+    @Slot(int)
     def opthideBgafterprofileload(self, _:int) -> None:
         if self.hideBgafterprofileload.isChecked():
             self.aw.qmc.hideBgafterprofileload = True
@@ -779,7 +779,7 @@ class backgroundDlg(ArtisanResizeablDialog):
 #
 #        self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def delete(self, _:bool = False) -> None:
         self.pathedit.setText('')
 # we should not overwrite the users app settings here, right:
@@ -794,22 +794,22 @@ class backgroundDlg(ArtisanResizeablDialog):
         self.xtcurveComboBox.blockSignals(False)
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def moveUp(self, _:bool = False) -> None:
         self.upButton.setDisabled(True)
         self.move_background('up')
         self.upButton.setDisabled(False)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def moveDown(self,_:bool = False) -> None:
         self.downButton.setDisabled(True)
         self.move_background('down')
         self.downButton.setDisabled(False)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def moveLeft(self,_:bool = False) -> None:
         self.leftButton.setDisabled(True)
         self.move_background('left')
         self.leftButton.setDisabled(False)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def moveRight(self,_:bool = False) -> None:
         self.rightButton.setDisabled(True)
         self.move_background('right')
@@ -833,29 +833,29 @@ class backgroundDlg(ArtisanResizeablDialog):
         self.aw.qmc.l_annotations_dict = {}
         self.aw.qmc.redraw_keep_view(recomputeAllDeltas=True)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeAlignEventidx(self, i:int) -> None:
         self.aw.qmc.alignEvent = i
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeReplayTypeidx(self, i:int) -> None:
         self.aw.qmc.replayType = i
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeReplayDropTypeidx(self, i:int) -> None:
         self.aw.qmc.replayDropType = i
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeXTcurveidx(self, i:int) -> None:
         self.aw.qmc.xtcurveidx = i
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeYTcurveidx(self, i:int) -> None:
         self.aw.qmc.ytcurveidx = i
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def load(self, _:bool = False) -> None:
         self.filename = self.aw.ArtisanOpenFileDialog(msg=QApplication.translate('Message','Load Background'),ext='*.alog')
         if len(self.filename) == 0:
@@ -1125,14 +1125,14 @@ class backgroundDlg(ArtisanResizeablDialog):
             if self.aw.qmc.profileDataSemaphore.available() < 1:
                 self.aw.qmc.profileDataSemaphore.release(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def copyDataTabletoClipboard(self, _:bool = False) -> None:
         self.datatable.selectAll()
         self.aw.copy_cells_to_clipboard(self.datatable,adjustment=7)
         self.datatable.clearSelection()
         self.aw.sendmessage(QApplication.translate('Message','Data table copied to clipboard'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def copyEventTabletoClipboard(self, _:bool = False) -> None:
         self.aw.copy_cells_to_clipboard(self.eventtable,adjustment=0)
         self.aw.sendmessage(QApplication.translate('Message','Event table copied to clipboard'))

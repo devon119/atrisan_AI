@@ -20,7 +20,7 @@ from typing import override, TYPE_CHECKING
 from artisanlib.util import fromCtoF, fromFtoC, stringfromseconds, stringtoseconds, comma2dot, weight_units, convertWeight, convertVolume
 from artisanlib.dialogs import ArtisanDialog
 
-from qtpy.QtCore import pyqtSlot, QSettings, QRegularExpression
+from qtpy.QtCore import Slot, QSettings, QRegularExpression
 from qtpy.QtGui import QRegularExpressionValidator
 from qtpy.QtWidgets import (QApplication, QLabel, QGridLayout, QGroupBox, QLineEdit,
     QComboBox, QHBoxLayout, QVBoxLayout)
@@ -207,7 +207,7 @@ class calculatorDlg(ArtisanDialog):
         self.setLayout(mainlayout)
         self.setFixedHeight(self.sizeHint().height())
 
-    @pyqtSlot(int)
+    @Slot(int)
     def calcEventRC(self, _:int) -> None:
         nevents = len(self.aw.qmc.specialevents)
         Aevent = int(self.eventAComboBox.currentIndex())
@@ -222,7 +222,7 @@ class calculatorDlg(ArtisanDialog):
             self.calculateRC()
 
     #calculate rate of change
-    @pyqtSlot()
+    @Slot()
     def calculateRC(self) -> None:
         if len(self.aw.qmc.timex)>2:
             if not self.startEdit.text() or not self.endEdit.text():
@@ -260,11 +260,11 @@ class calculatorDlg(ArtisanDialog):
             self.result1.setText(QApplication.translate('Label', 'No profile found'))
             self.result2.setText('')
 
-    @pyqtSlot()
+    @Slot()
     def convertTempFtoC(self) -> None:
         self.convertTempLocal('FtoC')
 
-    @pyqtSlot()
+    @Slot()
     def convertTempCtoF(self) -> None:
         self.convertTempLocal('CtoF')
 
@@ -280,35 +280,35 @@ class calculatorDlg(ArtisanDialog):
             result = f'{newF:.2f}'
             self.faEdit.setText(result)
 
-    @pyqtSlot()
+    @Slot()
     def convertWeightItoO(self) -> None:
         self.WinEdit.setText(comma2dot(str(self.WinEdit.text())))
         inx = float(str(self.WinEdit.text()))
         outx = convertWeight(inx,self.WinComboBox.currentIndex(),self.WoutComboBox.currentIndex())
         self.WoutEdit.setText(f'{outx:.2f}')
 
-    @pyqtSlot()
+    @Slot()
     def convertWeightOtoI(self) -> None:
         self.WoutEdit.setText(comma2dot(str(self.WoutEdit.text())))
         outx = float(str(self.WoutEdit.text()))
         inx = convertWeight(outx,self.WoutComboBox.currentIndex(),self.WinComboBox.currentIndex())
         self.WinEdit.setText(f'{inx:.2f}')
 
-    @pyqtSlot()
+    @Slot()
     def convertVolumeItoO(self) -> None:
         self.VinEdit.setText(comma2dot(str(self.VinEdit.text())))
         inx = float(str(self.VinEdit.text()))
         outx = convertVolume(inx,self.VinComboBox.currentIndex(),self.VoutComboBox.currentIndex())
         self.VoutEdit.setText(f'{outx:.3f}')
 
-    @pyqtSlot()
+    @Slot()
     def convertVolumeOtoI(self) -> None:
         self.VoutEdit.setText(comma2dot(str(self.VoutEdit.text())))
         outx = float(str(self.VoutEdit.text()))
         inx = convertVolume(outx,self.VoutComboBox.currentIndex(),self.VinComboBox.currentIndex())
         self.VinEdit.setText(f'{inx:.3f}')
 
-    @pyqtSlot()
+    @Slot()
     def calculateYield(self) -> None:
         self.groundsEdit.setText(comma2dot(str(self.groundsEdit.text())))
         self.tdsEdit.setText(comma2dot(str(self.tdsEdit.text())))
@@ -324,7 +324,7 @@ class calculatorDlg(ArtisanDialog):
         cyield = coffee * tds / grounds
         self.yieldEdit.setText(f'{cyield:.1f}')
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0

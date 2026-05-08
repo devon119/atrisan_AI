@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from qtpy.QtCore import QSemaphore, QTimer, pyqtSlot
+from qtpy.QtCore import QSemaphore, QTimer, Slot
 from qtpy.QtWidgets import QApplication
 
 from pathlib import Path
@@ -915,7 +915,7 @@ def getUpdate(uuid: str|None, file: str|None = None) -> None:
                 _log.exception(e)
 
 # Sync Action as issued on profile load and turning plus on
-@pyqtSlot()
+@Slot()
 def sync() -> None:
     try:
         _log.debug('sync()')

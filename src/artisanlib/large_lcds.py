@@ -20,7 +20,7 @@ from artisanlib.dialogs import ArtisanDialog
 from artisanlib.widgets import MyQLabel, MyQLCDNumber, ClickableLCDFrame
 from artisanlib.util import rgba_colorname2argb_colorname
 
-from qtpy.QtCore import (Qt, QSettings, pyqtSlot, QPoint)
+from qtpy.QtCore import (Qt, QSettings, Slot, QPoint)
 from qtpy.QtWidgets import (QApplication, QFrame, QWidget, QLCDNumber, QHBoxLayout, QVBoxLayout)
 
 from typing import override, Final, TYPE_CHECKING
@@ -494,7 +494,7 @@ class LargeMainLCDs(LargeLCDs):
         else:
             self.reLayout(2)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -550,7 +550,7 @@ class LargeDeltaLCDs(LargeLCDs):
         self.swaplcds = self.aw.qmc.swapdeltalcds
         super().reLayout(n)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -597,7 +597,7 @@ class LargePIDLCDs(LargeLCDs):
     def updateVisiblitiesPID(self) -> None:
         self.updateVisibilities([True],[True])
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -619,7 +619,7 @@ class LargeExtraLCDs(LargeLCDs):
         self.chooseLayout(self.width(),self.height())
         self.setWindowTitle(QApplication.translate('Menu', 'Extra LCDs'))
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def setTare_slot(self,_:QPoint) -> None:
         sender = self.sender()
         try:
@@ -635,7 +635,7 @@ class LargeExtraLCDs(LargeLCDs):
         except Exception: # pylint: disable=broad-except
             pass
 
-    @pyqtSlot()
+    @Slot()
     def toggleExtraCurve1(self) -> None:
         try:
             sender = self.sender()
@@ -644,7 +644,7 @@ class LargeExtraLCDs(LargeLCDs):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
+    @Slot()
     def toggleExtraCurve2(self) -> None:
         try:
             sender = self.sender()
@@ -713,7 +713,7 @@ class LargeExtraLCDs(LargeLCDs):
             except Exception: # pylint: disable=broad-except
                 pass
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -822,7 +822,7 @@ class LargePhasesLCDs(LargeLCDs):
     def updateAUCstyle(self, style:str) -> None:
         self.lcds2[1].setStyleSheet(style)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -903,7 +903,7 @@ class LargeScaleLCDs(LargeLCDs):
                 if lcd.value() == 0:
                     lcd.display('')
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0

@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-from qtpy.QtCore import QObject, pyqtSignal
+from qtpy.QtCore import QObject, Signal
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow
@@ -34,13 +34,13 @@ class AudioRoastRecorder(QObject):
     """Background audio recorder + FFT analyser for holographic roasting."""
 
     # emitted every ~BLOCKSIZE samples: list[float] of FFT band energies (dB, length FFT_BANDS)
-    spectrumUpdated = pyqtSignal(list)
+    spectrumUpdated = Signal(list)
     # emitted when a roast session is fully saved: str path to session folder
-    sessionSaved    = pyqtSignal(str)
+    sessionSaved    = Signal(str)
     # emitted on error
-    errorSignal     = pyqtSignal(str)
+    errorSignal     = Signal(str)
     # emitted when acoustic FC is suspected: float = elapsed seconds since recording start
-    fcSuggested     = pyqtSignal(float)
+    fcSuggested     = Signal(float)
 
     # FC detection constants
     _FC_SPIKE_DB       = 7.0   # dB above rolling baseline to trigger

@@ -20,7 +20,7 @@ from typing import override, cast, Literal, TYPE_CHECKING
 from artisanlib.util import stringfromseconds, stringtoseconds
 from artisanlib.dialogs import ArtisanDialog
 
-from qtpy.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings
+from qtpy.QtCore import Qt, Slot, QRegularExpression, QSettings
 from qtpy.QtGui import QIntValidator, QRegularExpressionValidator
 from qtpy.QtWidgets import (QApplication, QLabel,
         QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QDialogButtonBox, QGridLayout,
@@ -308,7 +308,7 @@ class designerconfigDlg(ArtisanDialog):
 
         mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def redrawcurviness(self, _:int) -> None:
         try:
             ETcurviness = int(str(self.ETsplineComboBox.currentText()))
@@ -335,7 +335,7 @@ class designerconfigDlg(ArtisanDialog):
             QMessageBox.information(self,QApplication.translate('Message','Designer Config'),ms)
         self.aw.qmc.redrawdesigner()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def settimes(self, _:bool = False) -> None:
         #check input
         strings = [QApplication.translate('Label','CHARGE'),
@@ -548,7 +548,7 @@ class designerconfigDlg(ArtisanDialog):
 #        self.close()
 #        self.aw.qmc.convert_designer()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         #save window position (only; not size!)
@@ -557,7 +557,7 @@ class designerconfigDlg(ArtisanDialog):
         super().accept()
 
     #reset
-    @pyqtSlot(bool)
+    @Slot(bool)
     def reset(self, _:bool = False) -> None:
         self.dryend.setChecked(True)
         self.fcs.setChecked(True)
@@ -598,7 +598,7 @@ class designerconfigDlg(ArtisanDialog):
         self.sce.setChecked(bool(self.aw.qmc.timeindex[5]))
 
     #adds deletes landmarks
-    @pyqtSlot(bool)
+    @Slot(bool)
     def changeflags(self, _:bool = False) -> None:
         sender = self.sender()
         if sender == self.dryend:
@@ -743,7 +743,7 @@ class pointDlg(ArtisanDialog):
         if ok_button is not None:
             ok_button.setFocus()
 
-    @pyqtSlot()
+    @Slot()
     def return_values(self) -> None:
         self.values[0] = stringtoseconds(str(self.timeEdit.text()))
         self.values[1] = float(self.tempEdit.text())

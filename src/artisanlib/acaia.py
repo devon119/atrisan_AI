@@ -24,7 +24,7 @@ from typing import override, Final, TYPE_CHECKING
 if TYPE_CHECKING:
     from bleak.backends.characteristic import BleakGATTCharacteristic  # pylint: disable=unused-import
 
-from qtpy.QtCore import pyqtSignal, pyqtSlot
+from qtpy.QtCore import Signal, Slot
 
 from artisanlib.ble_port import ClientBLE
 from artisanlib.async_comm import AsyncIterable, IteratorReader
@@ -205,11 +205,11 @@ ACAIA_SCALE_NAMES = [
 
 class AcaiaBLE(ClientBLE): # pyright: ignore [reportGeneralTypeIssues] # Argument to class must be a base class
 
-    weight_changed_signal = pyqtSignal(float, bool) # delivers new weight in g with decimals for accurate conversion, and flag indicaating stable readings
-    battery_changed_signal = pyqtSignal(int)  # delivers new batter level in %
-    tare_pressed_signal = pyqtSignal()   # issued on pressing the physical tare button
-    connected_signal = pyqtSignal()     # issued on connect
-    disconnected_signal = pyqtSignal()  # issued on disconnect
+    weight_changed_signal = Signal(float, bool) # delivers new weight in g with decimals for accurate conversion, and flag indicaating stable readings
+    battery_changed_signal = Signal(int)  # delivers new batter level in %
+    tare_pressed_signal = Signal()   # issued on pressing the physical tare button
+    connected_signal = Signal()     # issued on connect
+    disconnected_signal = Signal()  # issued on disconnect
 
     # Acaia message constants
     HEADER1:Final[bytes]      = b'\xef'
@@ -1012,23 +1012,23 @@ class Acaia(Scale): # pyright: ignore [reportGeneralTypeIssues] # Argument to cl
         self.acaia.stop()
         self.on_disconnect() # not called automatically by disconnecting via acaia.stop(), only called automatically if the scale itself disconnects
 
-    @pyqtSlot(float, bool)
+    @Slot(float, bool)
     def weight_changed(self, new_value:float, stable:bool) -> None:
         self.weight_changed_signal.emit(new_value, stable)
 
-    @pyqtSlot()
+    @Slot()
     def tare_pressed(self) -> None:
         self.tare_pressed_signal.emit()
 
     def battery_changed(self, new_value:int) -> None:
         self.battery_changed_signal.emit(new_value)
 
-    @pyqtSlot()
+    @Slot()
     def on_connect(self) -> None:
         self.scale_connected = True
         self.connected_signal.emit()
 
-    @pyqtSlot()
+    @Slot()
     def on_disconnect(self) -> None:
         self.scale_connected = False
         self.disconnected_signal.emit()

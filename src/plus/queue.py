@@ -22,7 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from qtpy.QtCore import QCoreApplication, QObject, QThread, pyqtSlot, pyqtSignal, QSemaphore
+from qtpy.QtCore import QCoreApplication, QObject, QThread, Slot, Signal, QSemaphore
 from qtpy.QtWidgets import QApplication
 
 from artisanlib.util import getDirectory
@@ -60,8 +60,8 @@ queueWorkerSemaphore = QSemaphore(1) # ensure that only one worker thread is run
 
 
 class Worker(QObject): # pyright: ignore [reportGeneralTypeIssues]
-    startSignal = pyqtSignal()
-    replySignal = pyqtSignal(float, float, str, int, list) # rlimit:float, rused:float, pu:str, notifications:int, machines:list[str]
+    startSignal = Signal()
+    replySignal = Signal(float, float, str, int, list) # rlimit:float, rused:float, pu:str, notifications:int, machines:list[str]
 
     __slots__ = [ '_paused', '_state' ]
 
@@ -83,7 +83,7 @@ class Worker(QObject): # pyright: ignore [reportGeneralTypeIssues]
             if aw is not None:
                 aw.updatePlusStatusSignal.emit()  # @UndefinedVariable
 
-    @pyqtSlot()
+    @Slot()
     def task(self) -> None:
         if queue is not None:
             from requests.exceptions import ConnectionError as RequestsConnectionError

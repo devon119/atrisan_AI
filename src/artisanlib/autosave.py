@@ -18,7 +18,7 @@
 from typing import override, cast, TYPE_CHECKING
 from artisanlib.dialogs import ArtisanDialog
 
-from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtCore import Qt, Slot, QSettings
 from qtpy.QtWidgets import (QApplication, QMessageBox, QLabel, QPushButton, QDialogButtonBox, QFrame,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QLineEdit, QSpacerItem)
 from qtpy.QtGui import QStandardItemModel
@@ -154,7 +154,7 @@ class autosaveDlg(ArtisanDialog):
             okButton.setFocus()
         self.setFixedHeight(self.sizeHint().height())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showautosavehelp(self,_:bool = False) -> None:
         from help import autosave_help # pyright:ignore [attr-defined] # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -166,7 +166,7 @@ class autosaveDlg(ArtisanDialog):
     def closeHelp(self) -> None:
         self.aw.closeHelpDialog(self.helpdialog)
 
-    @pyqtSlot()
+    @Slot()
     def prefixChanged(self) -> None:
         autosaveprefix:str = self.prefixEdit.text()
         prefix = ''
@@ -186,17 +186,17 @@ class autosaveDlg(ArtisanDialog):
             self.prefixpreviewrecordingLabel.setText(QApplication.translate('Label', 'While recording:'))
             self.prefixPreviewrecording.setText(previewrecording)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getpath(self,_:bool) -> None:
         filename = self.aw.ArtisanExistingDirectoryDialog(msg=QApplication.translate('Form Caption','AutoSave Path'))
         self.pathEdit.setText(filename)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getalsopath(self,_:bool) -> None:
         filename = self.aw.ArtisanExistingDirectoryDialog(msg=QApplication.translate('Form Caption','AutoSave Save Also Path'))
         self.pathAlsoEdit.setText(filename)
 
-    @pyqtSlot()
+    @Slot()
     def autoChanged(self) -> None:
         self.aw.qmc.autosavepath = self.pathEdit.text()
         self.aw.qmc.autosavealsopath = self.pathAlsoEdit.text()
@@ -215,7 +215,7 @@ class autosaveDlg(ArtisanDialog):
         self.aw.qmc.autosaveaddtorecentfilesflag = self.addtorecentfiles.isChecked()
         self.close()
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0

@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
-from qtpy.QtCore import Qt, QTimer, pyqtSlot
+from qtpy.QtCore import Qt, QTimer, Slot
 from qtpy.QtGui import QColor, QFont, QPalette
 from qtpy.QtWidgets import (QApplication, QWidget, QLabel, QPushButton,
     QSizePolicy, QHBoxLayout, QVBoxLayout, QDialogButtonBox, QGridLayout, QGroupBox,
@@ -628,22 +628,22 @@ class graphColorDlg(ArtisanDialog):
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(50, self.setActiveTab)
 
-    @pyqtSlot()
+    @Slot()
     def setActiveTab(self) -> None:
         self.TabWidget.setCurrentIndex(self.activeTab)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
         self.aw.graphColorDlg_activeTab = self.TabWidget.currentIndex()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setLCD_bw(self, _:bool) -> None:
         self.aw.setLCDsBW()
         self.setColorButtons()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def paintlcdsSlot(self, _:bool) -> None:
         lcdButton = self.sender()
         if lcdButton in [self.lcd1LEDButton,self.lcd1backButton]:
@@ -802,12 +802,12 @@ class graphColorDlg(ArtisanDialog):
         button.setStyleSheet('QPushButton {background: ' + rgba_colorname2argb_colorname(c) + '; color: ' + tc + ';' + self.commonstyle + '}')
 
     # adds a new event to the Dlg
-    @pyqtSlot(bool)
+    @Slot(bool)
     def recolor1(self, _:bool) -> None:
         self.aw.qmc.changeGColor(1)
         self.setColorButtons()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def recolor2(self, _:bool) -> None:
         self.aw.qmc.changeGColor(2)
         self.setColorButtons()
@@ -820,7 +820,7 @@ class graphColorDlg(ArtisanDialog):
         #reactivate button
 #        spinbox.setDisabled(False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def adjustOpaqenesssSlot(self, _:int) -> None:
         widget = self.sender()
         if widget == self.legendbgSpinBox:
@@ -830,7 +830,7 @@ class graphColorDlg(ArtisanDialog):
         if widget == self.statsanalysisbkgndSpinBox:
             self.adjustOpaqenesss(self.statsanalysisbkgndSpinBox,'statsanalysisbkgnd')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setbgColorSlot(self, _:bool) -> None:
         widget = self.sender()
         if widget == self.bgmetButton:
@@ -884,7 +884,7 @@ class graphColorDlg(ArtisanDialog):
             else:
                 palette[select] = nc
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setColorSlot(self, _:bool) -> None:
         widget = self.sender()
         if widget == self.metButton:
@@ -998,7 +998,7 @@ class graphColorDlg(ArtisanDialog):
                     self.aw.extraeventbuttoncolor[idx] = self.aw.qmc.palette[key]
         self.aw.realignbuttons()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def adjustintensity(self, _:int) -> None:
         #block button
         self.opaqbgSpinBox.setDisabled(True)

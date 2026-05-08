@@ -83,7 +83,7 @@ from qtpy.QtWidgets import (QApplication, QWidget, QMessageBox,
 from qtpy.QtGui import (QAction, QImage,
                             QColor, QDesktopServices,
                             QCursor)
-from qtpy.QtCore import (QLocale, pyqtSignal, pyqtSlot,
+from qtpy.QtCore import (QLocale, Signal, Slot,
                           QTimer, QSettings,
                           QUrl, QDir, Qt, QDateTime, QThread, QSemaphore, QObject)
 from qtpy import sip
@@ -149,7 +149,7 @@ type Interp1dKind = Literal['linear', 'nearest', 'nearest-up', 'zero', 'slinear'
 #######################################################################################
 
 class AmbientWorker(QObject):
-    finished = pyqtSignal()
+    finished = Signal()
 
     def __init__(self, aw:'ApplicationWindow') -> None:
         super().__init__()
@@ -179,7 +179,7 @@ class MplCanvas(FigureCanvas):
         self.lazyredraw_on_resize_timer.timeout.connect(self.lazyredraw_on_resize)
         self.lazyredraw_on_resize_timer.setSingleShot(True)
 
-    @pyqtSlot()
+    @Slot()
     def lazyredraw_on_resize(self) -> None:
         try:
             # self.aw.qmc might not be established yet
@@ -329,40 +329,40 @@ def _build_roast_summary(timeindex: list, timex: list, temp2: list, mode: str,
 # NOTE: to have pylint to verify proper __slot__ definitions using pylint one has to remove the super class FigureCanvas here temporarily
 #   as this does not has __slot__ definitions and thus __dict__ is contained which suppresses the warnings
 class tgraphcanvas(QObject):
-    updategraphicsSignal = pyqtSignal()
-    updateLargeLCDsTimeSignal = pyqtSignal(str)
-    updateLargeLCDsReadingsSignal = pyqtSignal(str,str)
-    updateLargeLCDsSignal = pyqtSignal(str,str,str)
-    setTimerLargeLCDcolorSignal = pyqtSignal(str,str)
-    showAlarmPopupSignal = pyqtSignal(str,int)
-    fileDirtySignal = pyqtSignal()
-    fileCleanSignal = pyqtSignal()
-    markChargeDelaySignal = pyqtSignal(int)
-    markChargeSignal = pyqtSignal(bool)
-    markTPSignal = pyqtSignal()
-    markDRYSignal = pyqtSignal(bool)
-    markFCsSignal = pyqtSignal(bool)
-    markFCeSignal = pyqtSignal(bool)
-    markSCsSignal = pyqtSignal(bool)
-    markSCeSignal = pyqtSignal(bool)
-    markDropSignal = pyqtSignal(bool)
-    markCoolSignal = pyqtSignal(bool)
-    onMonitorSignal = pyqtSignal()
-    toggleMonitorSignal = pyqtSignal()
-    toggleRecorderSignal = pyqtSignal()
-    processAlarmSignal = pyqtSignal(int, bool, int, str)
-    alarmsetSignal = pyqtSignal(int)
-    moveBackgroundSignal = pyqtSignal(str, int)
-    eventRecordSignal = pyqtSignal(int)
-    eventRecordOverwriteValueSignal = pyqtSignal(int,int)
-    eventRecordActionSignal = pyqtSignal(int,float,str,bool)
-    showCurveSignal = pyqtSignal(str, bool)
-    showExtraCurveSignal = pyqtSignal(int, str, bool)
-    showEventsSignal = pyqtSignal(int, bool)
-    showBackgroundEventsSignal = pyqtSignal(bool)
-    redrawSignal = pyqtSignal(bool,bool,bool,bool,bool)
-    redrawKeepViewSignal = pyqtSignal(bool,bool,bool,bool,bool)
-    monitorClosedDown = pyqtSignal()
+    updategraphicsSignal = Signal()
+    updateLargeLCDsTimeSignal = Signal(str)
+    updateLargeLCDsReadingsSignal = Signal(str,str)
+    updateLargeLCDsSignal = Signal(str,str,str)
+    setTimerLargeLCDcolorSignal = Signal(str,str)
+    showAlarmPopupSignal = Signal(str,int)
+    fileDirtySignal = Signal()
+    fileCleanSignal = Signal()
+    markChargeDelaySignal = Signal(int)
+    markChargeSignal = Signal(bool)
+    markTPSignal = Signal()
+    markDRYSignal = Signal(bool)
+    markFCsSignal = Signal(bool)
+    markFCeSignal = Signal(bool)
+    markSCsSignal = Signal(bool)
+    markSCeSignal = Signal(bool)
+    markDropSignal = Signal(bool)
+    markCoolSignal = Signal(bool)
+    onMonitorSignal = Signal()
+    toggleMonitorSignal = Signal()
+    toggleRecorderSignal = Signal()
+    processAlarmSignal = Signal(int, bool, int, str)
+    alarmsetSignal = Signal(int)
+    moveBackgroundSignal = Signal(str, int)
+    eventRecordSignal = Signal(int)
+    eventRecordOverwriteValueSignal = Signal(int,int)
+    eventRecordActionSignal = Signal(int,float,str,bool)
+    showCurveSignal = Signal(str, bool)
+    showExtraCurveSignal = Signal(int, str, bool)
+    showEventsSignal = Signal(int, bool)
+    showBackgroundEventsSignal = Signal(bool)
+    redrawSignal = Signal(bool,bool,bool,bool,bool)
+    redrawKeepViewSignal = Signal(bool,bool,bool,bool,bool)
+    monitorClosedDown = Signal()
 
     umlaute_dict : Final[dict[str, str]] = {
        uchr(228): 'ae',  # U+00E4   \xc3\xa4
@@ -2790,7 +2790,7 @@ class tgraphcanvas(QObject):
         self.aw.ntb.update_message()
         self.aw.sendmessage(QApplication.translate('Message', 'set y-coordinate to {}').format(s))
 
-    @pyqtSlot(str, bool)
+    @Slot(str, bool)
     def showCurve(self, name: str, state: bool) -> None:
         changed:bool = False
         if name == 'ET' and self.ETcurve != state:
@@ -2814,7 +2814,7 @@ class tgraphcanvas(QObject):
         if changed:
             self.redraw(recomputeAllDeltas=False,re_smooth_foreground=False)
 
-    @pyqtSlot(int, str, bool)
+    @Slot(int, str, bool)
     def showExtraCurve(self, extra_device: int, curve: str, state: bool) -> None:
         assert self.aw is not None
         if curve.strip() == 'T1' and len(self.aw.extraCurveVisibility1) > extra_device and self.aw.extraCurveVisibility1[extra_device] != state:
@@ -2824,14 +2824,14 @@ class tgraphcanvas(QObject):
             self.aw.extraCurveVisibility2[extra_device] = state
             self.redraw(recomputeAllDeltas=False,re_smooth_foreground=False)
 
-    @pyqtSlot(int, bool)
+    @Slot(int, bool)
     def showEvents(self, event_type: int, state: bool) -> None:
         event_type -= 1
         if len(self.showEtypes) > event_type >= 0 and self.showEtypes[event_type] != state:
             self.showEtypes[event_type] = state
             self.redraw(recomputeAllDeltas=False,re_smooth_foreground=False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showBackgroundEvents(self, state: bool) -> None:
         if state != self.backgroundeventsflag:
             self.backgroundeventsflag = state
@@ -2912,12 +2912,12 @@ class tgraphcanvas(QObject):
         self.coolingenergies = self.coolingenergies_setup[:]
         self.betweenbatch_after_preheat = self.betweenbatch_after_preheat_setup
 
-    @pyqtSlot()
+    @Slot()
     def fileDirty(self) -> None:
         self.safesaveflag = True
         self.aw.updateWindowTitle()
 
-    @pyqtSlot()
+    @Slot()
     def fileClean(self) -> None:
         self.safesaveflag = False
         self.aw.updateWindowTitle()
@@ -2935,7 +2935,7 @@ class tgraphcanvas(QObject):
         self.deltaBTsamples = max(1,int(round(self.deltaBTspan / interval)))
         self.deltaETsamples = max(1,int(round(self.deltaETspan / interval)))
 
-    @pyqtSlot()
+    @Slot()
     def updateBackground(self) -> None:
         if not self.block_update and self.ax is not None:
             try:
@@ -3245,7 +3245,7 @@ class tgraphcanvas(QObject):
         # we trigger a re-fit of the titles to fit to the resized MPL canvas
         self.fit_titles()
 
-    @pyqtSlot()
+    @Slot()
     def sendeventmessage(self) -> None:
         self.eventmessagetimer = None
         if len(self.backgroundeventmessage) != 0:
@@ -4361,7 +4361,7 @@ class tgraphcanvas(QObject):
                 _, _, exc_tb = sys.exc_info()
                 self.adderror((QApplication.translate('Error Message','Exception:') + ' onclick() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot('QAction*')
+    @Slot('QAction*')
     def event_popup_action(self, action:QAction) -> None:
         if action.key[0] >= 0:  # type: ignore[attr-defined] # "QAction" has no attribute "key"
             # we check if this is the first DROP mark on this roast
@@ -4512,7 +4512,7 @@ class tgraphcanvas(QObject):
                 _log.exception(e)
 
     # note that partial values might be given here (time might update, but not the values)
-    @pyqtSlot(str,str,str)
+    @Slot(str,str,str)
     def updateLargeLCDs(self, bt:str, et:str, time:str) -> None: # pylint: disable=no-self-use # used as slot
         try:
             if self.aw.largeLCDs_dialog is not None:
@@ -4521,7 +4521,7 @@ class tgraphcanvas(QObject):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot(str,str)
+    @Slot(str,str)
     # pylint: disable=no-self-use # used as slot
     def setTimerLargeLCDcolor(self, fc:str, bc:str) -> None:
         try:
@@ -4530,7 +4530,7 @@ class tgraphcanvas(QObject):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot(str,int)
+    @Slot(str,int)
     def showAlarmPopup(self, message:str, timeout:int) -> None: # pylint: disable=no-self-use # used as slot
         # alarm popup message with <self.alarm_popup_timout>sec timeout
         amb = ArtisanMessageBox(self.aw, QApplication.translate('Message', 'Alarm notice'),message,timeout=timeout,modal=True) # modal=False prevent rendering as native message box on macOS
@@ -4539,7 +4539,7 @@ class tgraphcanvas(QObject):
         if self.aw.WebLCDs and self.aw.WebLCDsAlerts:
             self.updateWebLCDs(alertText=message,alertTimeout=timeout)
 
-    @pyqtSlot(str,str)
+    @Slot(str,str)
     def updateLargeLCDsReadings(self, bt:str, et:str) -> None: # pylint: disable=no-self-use # used as slot
         try:
             if self.aw.largeLCDs_dialog is not None:
@@ -4547,7 +4547,7 @@ class tgraphcanvas(QObject):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def updateLargeLCDsTime(self, time:str) -> None: # pylint: disable=no-self-use # used as slot
         try:
             if self.aw.largeLCDs_dialog is not None:
@@ -5816,7 +5816,7 @@ class tgraphcanvas(QObject):
     # runs from GUI thread.
     # this function is called by a signal at the end of the thread sample() from sample_processing()
     # during sample, updates to GUI widgets or anything GUI must be done here (never from thread)
-    @pyqtSlot()
+    @Slot()
     def updategraphics(self) -> None:
 #        QApplication.processEvents() # without this we see some flickers (canvas redraws) on using multiple button event actions on macOS!?
         gotlock = self.updateGraphicsSemaphore.tryAcquire(1,300) # we try to catch a lock if available but we do not wait, if we fail we just skip this redraw round (prevents stacking of waiting calls); we maximally wait 300ms which should be enough on modern machines
@@ -6101,7 +6101,7 @@ class tgraphcanvas(QObject):
         timestr = stringfromseconds(ts)
         self.setLCDtimestr(timestr)
 
-    @pyqtSlot()
+    @Slot()
     def updateLCDtime(self) -> None:
         if self.flagstart and self.flagon:
             tx = self.timeclock.elapsedMilli()
@@ -6307,7 +6307,7 @@ class tgraphcanvas(QObject):
                     else:
                         break
 
-    @pyqtSlot(int)
+    @Slot(int)
     def getAlarmSet(self, n:int) -> 'AlarmSet|None':
         try:
             self.alarmSemaphore.acquire(1)
@@ -6326,7 +6326,7 @@ class tgraphcanvas(QObject):
             if self.alarmSemaphore.available() < 1:
                 self.alarmSemaphore.release(1)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def selectAlarmSet(self, n:int) -> None:
         alarmset:AlarmSet|None = self.getAlarmSet(n)
         if alarmset is not None:
@@ -6351,7 +6351,7 @@ class tgraphcanvas(QObject):
                 if self.alarmSemaphore.available() < 1:
                     self.alarmSemaphore.release(1)
 
-    @pyqtSlot(str,int)
+    @Slot(str,int)
     def moveBackgroundAndRedraw(self, direction:str, step:int) -> None:
         self.movebackground(direction, step) # direction in {'left', 'right', 'up', 'down'}
         self.redraw_keep_view(recomputeAllDeltas=False,
@@ -6403,7 +6403,7 @@ class tgraphcanvas(QObject):
             aset['sources'], aset['conditions'], aset['temperatures'], aset['actions'], aset['beeps'], aset['alarmstrings']]
 
     # number is alarmnumber+1 (the 1-based alarm number the user sees), for alarms triggered from outside the alarmtable (like PID RS alarms) number is 0
-    @pyqtSlot(int,bool,int,str)
+    @Slot(int,bool,int,str)
     def processAlarm(self,number:int, beep:bool, action:int, string:str) -> None:
         if not self.silent_alarms:
             try:
@@ -8177,7 +8177,7 @@ class tgraphcanvas(QObject):
             if self.profileDataSemaphore.available() < 1:
                 self.profileDataSemaphore.release(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def resetButtonAction(self,_:bool=False) -> None:
         self.disconnectProbes() # release serial/S7/MODBUS connections
         modifiers = QApplication.keyboardModifiers()
@@ -9394,7 +9394,7 @@ class tgraphcanvas(QObject):
             self.background_title_width = 0
 
     # if updatebackground is True, the profileDataSemaphore is caught and updatebackground() is called
-    @pyqtSlot(str, bool)
+    @Slot(str, bool)
     def setProfileTitle(self,title:str,updatebackground:bool = False) -> None:
         if ((self.flagon and not self.aw.curFile) or self.flagstart):
             bprefix = self.batchprefix
@@ -9687,7 +9687,7 @@ class tgraphcanvas(QObject):
                     any(self.aw.extraDelta1[:len(self.extratimex)]) or
                     any(self.aw.extraDelta2[:len(self.extratimex)]))
 
-    @pyqtSlot(bool,bool,bool,bool,bool)
+    @Slot(bool,bool,bool,bool,bool)
     def redraw_keep_view(self, *args:bool, **kwargs:bool) -> None:
         xlimit_min: float|None = None
         xlimit: float|None = None
@@ -9738,7 +9738,7 @@ class tgraphcanvas(QObject):
     # NOTE: points for error values represented by None or masked arrays (where values are -1) are not drawn and lines are broken there
     #   see https://matplotlib.org/stable/gallery/lines_bars_and_markers/masked_demo.html
     #   to keep points and lines drawn without those breaks data should be interpolated via util:fill_gaps (controlled by the "Interpolate Drops" filter)
-    @pyqtSlot(bool,bool,bool,bool,bool)
+    @Slot(bool,bool,bool,bool,bool)
     def redraw(self, recomputeAllDeltas:bool = True, re_smooth_foreground:bool = True, takelock:bool = True, forceRenewAxis:bool = False, re_smooth_background:bool = False) -> None: # pyright: ignore [reportGeneralTypeIssues] # Code is too complex to analyze; reduce complexity by refactoring into subroutines or reducing conditional code paths
 #        _log.debug("PRINT redraw(recomputeAllDeltas: %s, re_smooth_foreground: %s, takelock: %s, forceRenewAxis: %s, re_smooth_background: %s)",recomputeAllDeltas, re_smooth_foreground, takelock, forceRenewAxis, re_smooth_background)
         if self.designerflag:
@@ -12880,25 +12880,25 @@ class tgraphcanvas(QObject):
         self.adjustTempSliders()
         self.aw.realignbuttons() # reset button labels as they might refer to the temperature mode via {TEMP}
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fahrenheitModeRedraw(self, _:bool = False) -> None:
         self.fahrenheitMode()
         self.redraw()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def celsiusModeRedraw(self, _:bool = False) -> None:
         self.celsiusMode()
         self.redraw()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertTemperatureF(self, _:bool = False) -> None:
         self.convertTemperature('F')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertTemperatureC(self, _:bool = False) -> None:
         self.convertTemperature('C')
 
@@ -13036,8 +13036,8 @@ class tgraphcanvas(QObject):
             QMessageBox.information(self.aw, QApplication.translate('Message', 'Convert Profile Scale'),
                                           QApplication.translate('Message', 'No profile data found'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def changeGColor3(self, _:bool = False) -> None:
         self.changeGColor(3)
 
@@ -13406,7 +13406,7 @@ class tgraphcanvas(QObject):
             if self.profileDataSemaphore.available() < 1:
                 self.profileDataSemaphore.release(1)
 
-    @pyqtSlot()
+    @Slot()
     def AsyncSamplingActionTrigger(self) -> None:
         if self.extra_event_sampling_delay and self.extrabuttonactions[2]:
             if self.flagon:
@@ -13417,7 +13417,7 @@ class tgraphcanvas(QObject):
             self.aw.AsyncSamplingTimer.setSingleShot(True)
             self.aw.AsyncSamplingTimer.start(int(round(self.extra_event_sampling_delay)))
 
-    @pyqtSlot()
+    @Slot()
     def StartAsyncSamplingAction(self) -> None:
         if self.aw.AsyncSamplingTimer is None and self.flagon and self.extra_event_sampling_delay != 0:
             self.AsyncSamplingActionTrigger()
@@ -13599,7 +13599,7 @@ class tgraphcanvas(QObject):
     # the PhidgetManager needs to run to allow Phidgets to attach
     # the PhidgetManager is only started if self.PhidgetsConfigured() returns True signaling
     # that Phidget modules are configured as main/extra devices, ambient devices, or in button/slider actions
-    @pyqtSlot()
+    @Slot()
     def startPhidgetManager(self) -> None:
         # this is needed to suppress the message on the ignored Exception
         #                            # Phidget that is raised on starting the PhidgetManager without installed
@@ -13661,7 +13661,7 @@ class tgraphcanvas(QObject):
             if self.samplingSemaphore.available() < 1:
                 self.samplingSemaphore.release(1)
 
-    @pyqtSlot()
+    @Slot()
     def OnMonitor(self) -> None:
         try:
             self.generateNoneTempHints()
@@ -13896,7 +13896,7 @@ class tgraphcanvas(QObject):
             self.block_update = False # unblock the updating of the bitblit canvas
 
     # OffMonitorCloseDown is called after the sampling loop stopped
-    @pyqtSlot()
+    @Slot()
     def OffMonitorCloseDownIgnoreAlwaysON(self) -> None:
         self.OffMonitorCloseDown(False)
     def OffMonitorCloseDownRespectAlwaysON(self) -> None:
@@ -14533,7 +14533,7 @@ class tgraphcanvas(QObject):
             _log.exception(e)
 
 
-    @pyqtSlot()
+    @Slot()
     def disconnectProbes(self) -> None:
         _log.debug('disconnectProbes')
         # close ports of main device
@@ -14548,12 +14548,12 @@ class tgraphcanvas(QObject):
         for xs in self.aw.extraser:
             self.disconnectProbesFromSerialDevice(xs)
 
-    @pyqtSlot()
+    @Slot()
     def toggleMonitorTigger(self) -> None:
         self.ToggleMonitor()
 
     #Turns ON/OFF flag self.flagon to read and print values. Called from push buttonONOFF.
-    @pyqtSlot(bool)
+    @Slot(bool)
     def ToggleMonitor(self, _:bool = False) -> None:
         _log.debug('ToggleMonitor')
         #turn ON
@@ -14572,7 +14572,7 @@ class tgraphcanvas(QObject):
                 pass
             self.OffMonitor()
 
-    @pyqtSlot()
+    @Slot()
     def fireChargeTimer(self) -> None:
         #### lock shared resources #####
         try:
@@ -14764,7 +14764,7 @@ class tgraphcanvas(QObject):
             _, _, exc_tb = sys.exc_info()
             self.adderror((QApplication.translate('Error Message', 'Exception:') + ' OffRecorder() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
+    @Slot()
     def toggleRecorderTigger(self) -> None:
         if self.flagstart:
             self.ToggleMonitor()
@@ -14772,7 +14772,7 @@ class tgraphcanvas(QObject):
             self.ToggleRecorder()
 
     #Turns START/STOP flag self.flagon to read and plot. Called from push buttonSTARTSTOP.
-    @pyqtSlot(bool)
+    @Slot(bool)
     def ToggleRecorder(self, _:bool = False) -> None:
         #turn START
         if not self.flagstart:
@@ -14813,20 +14813,20 @@ class tgraphcanvas(QObject):
 
     # trigger to be called by the markChargeDelaySignal
     # if delay is not 0, the markCharge is issues after n milliseconds
-    @pyqtSlot(int)
+    @Slot(int)
     def markChargeDelay(self, delay:int) -> None:
         if delay == 0:
             self.markCharge()
         else:
             QTimer.singleShot(delay,self.markChargeTrigger)
 
-    @pyqtSlot()
+    @Slot()
     def markChargeTrigger(self) -> None:
         self.markCharge()
 
     #Records charge (put beans in) marker. called from push button 'Charge'
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def markCharge(self, noaction:bool = False) -> None:
         zoomed_in: bool = False # True if zoomed in; in that case we prevent xaxistoxm to reset the x-axis limits (set_xlim)
         try:
@@ -14996,7 +14996,7 @@ class tgraphcanvas(QObject):
 
     # called via markTPSignal (queued), triggered by external device
     # does directly call markTP()
-    @pyqtSlot()
+    @Slot()
     def markTPTrigger(self) -> None:
         if self.markTPflag:
             if self.TPalarmtimeindex is None:
@@ -15034,7 +15034,7 @@ class tgraphcanvas(QObject):
             self.aw.kaleido.markTP()
 
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def markDryEnd(self, noaction:bool = False) -> None:
         if len(self.timex) > 1:
             removed = False
@@ -15149,7 +15149,7 @@ class tgraphcanvas(QObject):
 
     #record 1C start markers of BT. called from push buttonFCs of application window
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def mark1Cstart(self, noaction:bool = False) -> None:
         if len(self.timex) > 1:
             removed = False
@@ -15262,7 +15262,7 @@ class tgraphcanvas(QObject):
 
     #record 1C end markers of BT. called from buttonFCe of application window
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def mark1Cend(self, noaction:bool = False) -> None:
         if len(self.timex) > 1:
             removed = False
@@ -15371,7 +15371,7 @@ class tgraphcanvas(QObject):
 
     #record 2C start markers of BT. Called from buttonSCs of application window
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def mark2Cstart(self, noaction:bool = False) -> None:
         if len(self.timex) > 1:
             st1 = ''
@@ -15489,7 +15489,7 @@ class tgraphcanvas(QObject):
 
     #record 2C end markers of BT. Called from buttonSCe of application window
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def mark2Cend(self, noaction:bool = False) -> None:
         if len(self.timex) > 1:
             removed = False
@@ -15602,7 +15602,7 @@ class tgraphcanvas(QObject):
 
     #record end of roast (drop of beans). Called from push button 'Drop'
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def markDrop(self, noaction:bool = False) -> None:
         if len(self.timex) > 1:
             removed = False
@@ -15815,7 +15815,7 @@ class tgraphcanvas(QObject):
                     _log.exception(e)
 
     # if noaction is True, the button event action is not triggered
-    @pyqtSlot(bool)
+    @Slot(bool)
     def markCoolEnd(self, noaction:bool = False) -> None:
         if len(self.timex) > 1:
             removed = False
@@ -16016,19 +16016,19 @@ class tgraphcanvas(QObject):
             self.roastbatchnr = 0
 
     # action of the EVENT button
-    @pyqtSlot(bool)
+    @Slot(bool)
     def EventRecord_action(self,_:bool = False) -> None:
         self.EventRecord()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def EventRecordSlot(self, ee:int) -> None:
         self.EventRecord(ee)
 
-    @pyqtSlot(int,int)
+    @Slot(int,int)
     def EventRecordOverwriteValueSlot(self, ee:int, value:int) -> None:
         self.EventRecord(ee, value=value)
 
-    @pyqtSlot(int,float,str,bool)
+    @Slot(int,float,str,bool)
     def EventRecordActionSlot(self,eventtype:int,eventvalue:float,description:str,doupdategraphics:bool) -> None:
         self.EventRecordAction(extraevent=1,eventtype=eventtype,eventvalue=eventvalue,eventdescription=description,doupdategraphics=doupdategraphics)
 
@@ -18351,8 +18351,8 @@ class tgraphcanvas(QObject):
             self.aw.disableEditMenus(designer=True)
             self.designerinit()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def savepoints(self, _:bool = False) -> None:
         try:
             filename = self.aw.ArtisanSaveFileDialog(msg=QApplication.translate('Message', 'Save Points'),ext='*.adsg')
@@ -18370,8 +18370,8 @@ class tgraphcanvas(QObject):
             _a, _b, exc_tb = sys.exc_info()
             self.adderror((QApplication.translate('Error Message','Exception:') + ' savepoints() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def loadpoints(self, _:bool = False) -> None:
         try:
             filename = self.aw.ArtisanOpenFileDialog(msg=QApplication.translate('Message', 'Load Points'),ext='*.adsg')
@@ -19176,8 +19176,8 @@ class tgraphcanvas(QObject):
             self.disconnect_designer()
             self.connect_designer()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def addpoint_action(self, _:bool = False) -> None:
         self.addpoint()
 
@@ -19274,8 +19274,8 @@ class tgraphcanvas(QObject):
             return None
 
     #removes point
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def removepoint(self, _:bool = False) -> None:
         try:
             #current x, and y is obtained when doing right click in mouse: on_press()
@@ -19446,15 +19446,15 @@ class tgraphcanvas(QObject):
         warnings.simplefilter('default', UserWarning)
 
     #launches designer config Window
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def desconfig(self, _:bool = False) -> None: # pylint: disable=no-self-use # used as slot
         from artisanlib.designer import designerconfigDlg
         dialog = designerconfigDlg(self.aw, self.aw)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def reset_designer(self, _:bool = False) -> None:
         #self.disconnect_designer() # done in reset() !
         self.reset()
@@ -19618,8 +19618,8 @@ class tgraphcanvas(QObject):
             self.aw.loadWheel(filename)
             self.drawWheel()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def addTocuppingnotes(self, _:bool = False) -> None:
         descriptor = str(self.wheelnames[self.wheelx][self.wheelz])
         if self.cuppingnotes == '':
@@ -19629,8 +19629,8 @@ class tgraphcanvas(QObject):
         s = QApplication.translate('Message', ' added to cupping notes')
         self.aw.sendmessage(descriptor + s)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def addToroastingnotes(self, _:bool = False) -> None:
         descriptor =  str(self.wheelnames[self.wheelx][self.wheelz]) + ' '
         if self.roastingnotes == '':
@@ -19687,8 +19687,8 @@ class tgraphcanvas(QObject):
 
             designermenu.exec(QCursor.pos())
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def editmode(self, _:bool = False) -> None:
         self.disconnectWheel()
         if self.aw.wheeldialog is not None:
@@ -20021,8 +20021,8 @@ class tgraphcanvas(QObject):
 ########################################################################################
 
 class SampleThread(QThread):
-    sample_processingSignal = pyqtSignal(bool,list,list,list)
-    terminatingSignal = pyqtSignal()
+    sample_processingSignal = Signal(bool,list,list,list)
+    terminatingSignal = Signal()
 
     def __init__(self, aw:'ApplicationWindow') -> None:
         super().__init__()
@@ -20202,7 +20202,7 @@ class SampleThread(QThread):
 #########################################################################################################
 
 class Athreadserver(QWidget):
-    terminatingSignal = pyqtSignal()
+    terminatingSignal = Signal()
 
     def __init__(self, aw:'ApplicationWindow') -> None:
         super().__init__()
@@ -20219,6 +20219,6 @@ class Athreadserver(QWidget):
             sthread.start(QThread.Priority.TimeCriticalPriority) # TimeCriticalPriority > HighestPriority > HighPriority > NormalPriority > LowPriority
             sthread.wait(300)    #needed in some Win OS
 
-    @pyqtSlot()
+    @Slot()
     def terminating(self) -> None:
         self.terminatingSignal.emit()

@@ -39,7 +39,7 @@ from artisanlib.scale import SUPPORTED_SCALES
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-from qtpy.QtCore import (Qt, pyqtSlot, QSettings, QTimer, QRegularExpression, QSignalBlocker)
+from qtpy.QtCore import (Qt, Slot, QSettings, QTimer, QRegularExpression, QSignalBlocker)
 from qtpy.QtGui import (QStandardItemModel, QStandardItem, QColor, QIntValidator, QRegularExpressionValidator, QPixmap, QIcon)
 from qtpy.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QSpinBox, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,
@@ -2009,27 +2009,27 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(50, self.setActiveTab)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def temperatureDeviceComboBoxIndexChanged(self, i:int) -> None:
         self.ambientTempComboBox.setEnabled(i == 0)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def ambientTempComboBoxIndexChanged(self, i:int) -> None:
         self.aw.qmc.ambientTempSource = i
 
-    @pyqtSlot(int)
+    @Slot(int)
     def humidityDeviceComboBoxIndexChanged(self, i:int) -> None:
         self.ambientHumidityComboBox.setEnabled(i == 0)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def ambientHumidityComboBoxIndexChanged(self, i:int) -> None:
         self.aw.qmc.ambientHumiditySource = i
 
-    @pyqtSlot(int)
+    @Slot(int)
     def pressureDeviceComboBoxIndexChanged(self, i:int) -> None:
         self.ambientPressureComboBox.setEnabled(i == 0)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def ambientPressureComboBoxIndexChanged(self, i:int) -> None:
         self.aw.qmc.ambientPressureSource = i
 
@@ -2079,14 +2079,14 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.ambientPressureComboBox.setCurrentIndex(self.aw.qmc.ambientPressureSource)
         self.ambientPressureComboBox.blockSignals(False)
 
-    @pyqtSlot()
+    @Slot()
     def changeTaskWebDisplayGreenPort(self) -> None:
         try:
             self.aw.taskWebDisplayGreenPort = int(str(self.taskWebDisplayGreenPort.text()))
         except Exception: # pylint: disable=broad-except
             pass
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale1ModelChanged(self, i:int) -> None:
         self.scale1NameComboBox.setEnabled(False)
         self.scale1EditButton.setEnabled(False)
@@ -2100,7 +2100,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.scale1ScanButton.setEnabled(False)
             self.update_scale1_weight(None)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale1NameChanged(self, i:int) -> None:
         if 0 <= i < len(self.scale1_devices) and self.aw.scale1_model is not None:
             self.aw.scale1_name = self.scale1_devices[i][0]
@@ -2113,20 +2113,20 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         else:
             self.aw.scale_manager.set_scale1_signal.emit(-1, '', '')
 
-    @pyqtSlot()
+    @Slot()
     def scale1connected(self) -> None:
         self.scale1Weight.setEnabled(True)
         self.scale1TareButton.setEnabled(True)
         self.scale1EditButton.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     def scale1disconnected(self) -> None:
         self.scale1Weight.setEnabled(False)
         self.scale1TareButton.setEnabled(False)
         self.scale1EditButton.setEnabled(False)
         self.update_scale1_weight(None)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale1_weight_changed(self, w:int) -> None:
         self.update_scale1_weight(w)
 
@@ -2164,7 +2164,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             if keep_selection:
                 self.scale1NameComboBox.setCurrentIndex(idx)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def scanScale1(self, _:bool = False) -> None:
         if self.aw.scale1_model is not None:
             self.scale1ScanButton.setEnabled(False)
@@ -2172,7 +2172,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             QApplication.processEvents()
             self.aw.scale_manager.scan_scale1_signal.emit(self.aw.scale1_model)
 
-    @pyqtSlot(list)
+    @Slot(list)
     def scale1_scanned(self, devices:'ScaleSpecs') -> None:
         try:
             self.updateScale1devices(devices)
@@ -2187,7 +2187,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.scale1ScanButton.setEnabled(True)
         QApplication.restoreOverrideCursor()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def editScale1(self, _:bool = False) -> None:
         if self.aw.scale1_id and self.aw.scale1_name:
             current_name = self.aw.get_custom_scale_name(self.aw.scale1_id)
@@ -2200,11 +2200,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 self.updateScale1devices(self.scale1_devices, keep_selection=True)
                 self.updateScale2devices(self.scale2_devices, keep_selection=True)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def tareScale1(self, _:bool = False) -> None:
         self.aw.scale_manager.tare_scale1_signal.emit()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale2ModelChanged(self, i:int) -> None:
         self.scale2NameComboBox.setEnabled(False)
         self.scale2EditButton.setEnabled(False)
@@ -2218,7 +2218,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.scale2ScanButton.setEnabled(False)
             self.update_scale2_weight(None)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale2NameChanged(self, i:int) -> None:
         if 0 <= i < len(self.scale2_devices) and self.aw.scale2_model is not None:
             self.aw.scale2_name = self.scale2_devices[i][0]
@@ -2230,20 +2230,20 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         else:
             self.aw.scale_manager.set_scale2_signal.emit(-1, '', '')
 
-    @pyqtSlot()
+    @Slot()
     def scale2connected(self) -> None:
         self.scale2Weight.setEnabled(True)
         self.scale2TareButton.setEnabled(True)
         self.scale2EditButton.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     def scale2disconnected(self) -> None:
         self.scale2Weight.setEnabled(False)
         self.scale2TareButton.setEnabled(False)
         self.scale2EditButton.setEnabled(False)
         self.update_scale2_weight(None)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale2_weight_changed(self, w:int) -> None:
         self.update_scale2_weight(w)
 
@@ -2265,7 +2265,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             if keep_selection:
                 self.scale2NameComboBox.setCurrentIndex(idx)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def scanScale2(self, _:bool = False) -> None:
         if self.aw.scale2_model is not None:
             self.scale2ScanButton.setEnabled(False)
@@ -2273,7 +2273,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             QApplication.processEvents()
             self.aw.scale_manager.scan_scale2_signal.emit(self.aw.scale2_model)
 
-    @pyqtSlot(list)
+    @Slot(list)
     def scale2_scanned(self, devices:'ScaleSpecs') -> None:
         try:
             self.updateScale2devices(devices)
@@ -2288,7 +2288,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.scale2ScanButton.setEnabled(True)
         QApplication.restoreOverrideCursor()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def editScale2(self, _:bool = False) -> None:
         if self.aw.scale2_id and self.aw.scale2_name:
             current_name = self.aw.get_custom_scale_name(self.aw.scale2_id)
@@ -2301,7 +2301,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 self.updateScale1devices(self.scale1_devices, keep_selection=True)
                 self.updateScale2devices(self.scale2_devices, keep_selection=True)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def tareScale2(self, _:bool = False) -> None:
         self.aw.scale_manager.tare_scale2_signal.emit()
 
@@ -2309,11 +2309,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
     def container_menu_idx(i:int) -> int: # takes a container idx and returns the index of the corresponding menu item
         return i + 3 # skip <edit>, separator and empty index
 
-    @pyqtSlot()
+    @Slot()
     def updateGreenContainerPopupKeepSelectionSlot(self) -> None:
         self.updateGreenContainerPopup(keep_selection=True)
 
-    @pyqtSlot()
+    @Slot()
     def updateGreenContainerPopupUpdateSelectionSlot(self) -> None:
         self.updateGreenContainerPopup(keep_selection=False)
 
@@ -2342,7 +2342,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 self.containerGreenComboBox.setCurrentIndex(2) # reset to the empty entry
                 self.aw.container1_idx = -1
 
-    @pyqtSlot(int)
+    @Slot(int)
     def greenContainerChanged(self, i:int) -> None:
         if i == 0:
             self.containerGreenComboBox.setCurrentIndex(self.container_menu_idx(self.aw.container1_idx))
@@ -2368,11 +2368,11 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         return self.scale2_weight
 
 
-    @pyqtSlot()
+    @Slot()
     def updateRoastedContainerPopupKeepSelectionSlot(self) -> None:
         self.updateRoastedContainerPopup(keep_selection=True)
 
-    @pyqtSlot()
+    @Slot()
     def updateRoastedContainerPopupUpdateSelectionSlot(self) -> None:
         self.updateRoastedContainerPopup(keep_selection=False)
 
@@ -2400,7 +2400,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 self.containerRoastedComboBox.setCurrentIndex(2) # reset to the empty entry
                 self.aw.container2_idx = -1
 
-    @pyqtSlot(int)
+    @Slot(int)
     def roastedContainerChanged(self, i:int) -> None:
         if i == 0:
             self.containerRoastedComboBox.setCurrentIndex(self.container_menu_idx(self.aw.container2_idx))
@@ -2432,7 +2432,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             return self.scale2_weight
         return self.scale1_weight
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def taskWebDisplayGreen(self, b:bool = False) -> None:
         res = False
         if b:
@@ -2474,14 +2474,14 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         except Exception: # pylint: disable=broad-except
             pass
 
-    @pyqtSlot()
+    @Slot()
     def changeTaskWebDisplayRoastedPort(self) -> None:
         try:
             self.aw.taskWebDisplayRoastedPort = int(str(self.taskWebDisplayRoastedPort.text()))
         except Exception: # pylint: disable=broad-except
             pass
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def taskWebDisplayRoasted(self, b:bool = False) -> None:
         res = False
         if b:
@@ -2536,18 +2536,18 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
 
 
 
-    @pyqtSlot()
+    @Slot()
     def setActiveTab(self) -> None:
         self.TabWidget.setCurrentIndex(self.activeTab)
         # we create the device table here instead of __init__ as otherwise setting the columnWidth to the saved defaults has no effect using Qt 6.2.2
         self.createDeviceTable()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def yoctoBoxRemoteFlagStateChanged(self, _:int) -> None:
         self.aw.qmc.yoctoRemoteFlag = not self.aw.qmc.yoctoRemoteFlag
         self.yoctoServerId.setEnabled(self.aw.qmc.yoctoRemoteFlag)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def phidgetRemoteStateChanged(self, _:int) -> None:
         self.aw.qmc.phidgetRemoteFlag = not self.aw.qmc.phidgetRemoteFlag
         self.phidgetServerId.setEnabled(self.aw.qmc.phidgetRemoteFlag)
@@ -2555,13 +2555,13 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.phidgetPort.setEnabled(self.aw.qmc.phidgetRemoteFlag)
         self.phidgetBoxRemoteOnlyFlag.setEnabled(self.aw.qmc.phidgetRemoteFlag)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def santokerSerialStateChanged(self, i:int) -> None:
         self.aw.santokerSerial = bool(i)
         if self.aw.santokerSerial:
             self.aw.santokerBLE = False
 
-    @pyqtSlot(int)
+    @Slot(int)
     def santokerNetworkStateChanged(self, i:int) -> None:
         self.aw.santokerSerial = not bool(i)
         if not self.aw.santokerSerial:
@@ -2569,27 +2569,27 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         self.santokerHost.setEnabled(not self.aw.santokerSerial)
         self.santokerPort.setEnabled(not self.aw.santokerSerial)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def santokerBLEStateChanged(self, i:int) -> None:
         self.aw.santokerBLE = bool(i)
         if self.aw.santokerBLE:
             self.aw.santokerSerial = False
 
-    @pyqtSlot(int)
+    @Slot(int)
     def kaleidoSerialStateChanged(self, _:int) -> None:
         self.aw.kaleidoSerial = not self.aw.kaleidoSerial
         self.kaleidoHost.setEnabled(not self.aw.kaleidoSerial)
         self.kaleidoPort.setEnabled(not self.aw.kaleidoSerial)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def phidgetHostChanged(self, s:str) -> None:
         self.phidgetPassword.setEnabled(s != '')
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeOutprogramFlag(self,_:int) -> None:
         self.aw.ser.externaloutprogramFlag = not self.aw.ser.externaloutprogramFlag
 
-    @pyqtSlot(int)
+    @Slot(int)
     def asyncFlagStateChanged1048(self, x:int) -> None:
         try:
             sender = cast(QCheckBox, self.sender())
@@ -2603,7 +2603,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def asyncFlagStateChanged1045(self, x:int) -> None:
         if x == 0:
             # disable ChangeTrigger selection
@@ -2612,7 +2612,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             # enable ChangeTrigger selection
             self.changeTriggerCombos1045.setEnabled(True)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def asyncFlagStateChanged1200(self, x:int) -> None:
         if x == 0:
             # disable ChangeTrigger selection
@@ -2621,7 +2621,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             # enable ChangeTrigger selection
             self.changeTriggerCombo1200.setEnabled(True)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def asyncFlagStateChanged1200_2(self, x:int) -> None:
         if x == 0:
             # disable ChangeTrigger selection
@@ -2630,7 +2630,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             # enable ChangeTrigger selection
             self.changeTriggerCombo1200_2.setEnabled(True)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def asyncFlagStateChanged(self, x:int) -> None:
         try:
             sender = cast(QCheckBox, self.sender())
@@ -2652,7 +2652,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             items.append(item)
         return items
 
-    @pyqtSlot(int)
+    @Slot(int)
     def PIDfirmwareToggle(self, i:int) -> None:
         if i:
             self.aw.qmc.PIDbuttonflag = True
@@ -2660,7 +2660,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.aw.qmc.PIDbuttonflag = False
         self.aw.showControlButton()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def showControlbuttonToggle(self, i:int) -> None:
         if i:
             self.aw.qmc.Controlbuttonflag = True
@@ -2893,7 +2893,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' createDeviceTable(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def copyDeviceTabletoClipboard(self, _:bool = False) -> None:
         import prettytable
         nrows = self.devicetable.rowCount()
@@ -3042,7 +3042,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             sys_clip.setText(clipboard)
         self.aw.sendmessage(QApplication.translate('Message','Device table copied to clipboard'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def loadprogramname(self, _:bool) -> None:
         fileName = self.aw.ArtisanOpenFileDialog()
         if fileName:
@@ -3051,7 +3051,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             else:
                 self.programedit.setText(fileName)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def loadoutprogramname(self, _:bool) -> None:
         fileName = self.aw.ArtisanOpenFileDialog()
         if fileName:
@@ -3073,7 +3073,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.recalcButton.setEnabled(False)
 
     #adds extra device
-    @pyqtSlot(bool)
+    @Slot(bool)
     def adddevice(self, _:bool) -> None:
         try:
             self.savedevicetable()
@@ -3087,7 +3087,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' adddevice(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def deldevice(self, _:bool) -> None:
         try:
             self.savedevicetable()
@@ -3102,7 +3102,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' deldevice(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def resetextradevices(self, _:bool) -> None:
         try:
             self.aw.resetExtraDevices()
@@ -3233,7 +3233,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + 'savedevicetable(): {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def updateVirtualdevicesinprofile_clicked(self, _:bool) -> None:
         self.updateVirtualdevicesinprofile(redraw=True)
 
@@ -3246,7 +3246,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + 'updateVirtualdevicesinprofile(): {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def updateETBTinprofile(self, _:bool) -> None:
         try:
             # be sure there is an equation to process
@@ -3293,67 +3293,67 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + 'updateETBTinprofile(): {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updateLCDvisibility1(self, x:int) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),7)
         if r is not None:
             self.aw.extraLCDvisibility1[r] = bool(x)
             self.aw.extraLCDframe1[r].setVisible(bool(x))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updateLCDvisibility2(self, x:int) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),8)
         if r is not None:
             self.aw.extraLCDvisibility2[r] = bool(x)
             self.aw.extraLCDframe2[r].setVisible(bool(x))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updateCurveVisibility1(self, x:int) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),9)
         if r is not None:
             self.aw.extraCurveVisibility1[r] = bool(x)
             self.aw.qmc.resetlinecountcaches()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updateCurveVisibility2(self, x:int) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),10)
         if r is not None:
             self.aw.extraCurveVisibility2[r] = bool(x)
             self.aw.qmc.resetlinecountcaches()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updateDelta1(self, x:int) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),11)
         if r is not None:
             self.aw.extraDelta1[r] = bool(x)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updateDelta2(self, x:int) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),12)
         if r is not None:
             self.aw.extraDelta2[r] = bool(x)
 
-    @pyqtSlot()
+    @Slot()
     def updateFill1(self) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),13)
         if r is not None:
             sender = cast(QSpinBox, self.sender())
             self.aw.extraFill1[r] = sender.value()
 
-    @pyqtSlot()
+    @Slot()
     def updateFill2(self) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(),14)
         if r is not None:
             sender = cast(QSpinBox, self.sender())
             self.aw.extraFill2[r] = sender.value()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setextracolor1(self, _:bool) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(), 1)
         if r is not None:
             self.setextracolor(1, r)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setextracolor2(self, _:bool) -> None:
         r = self.aw.findWidgetsRow(self.devicetable,self.sender(), 2)
         if r is not None:
@@ -3428,7 +3428,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                     _log.error(e)
         return True
 
-    @pyqtSlot()
+    @Slot()
     def cancelEvent(self) -> None:
         self.aw.DeviceAssignmentDlg_activeTab = self.TabWidget.currentIndex()
         self.close()
@@ -3453,7 +3453,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
 
         self.reject()
 
-    @pyqtSlot()
+    @Slot()
     def okEvent(self) -> None: # pyright: ignore [reportGeneralTypeIssues] # Code is too complex to analyze; reduce complexity by refactoring into subroutines or reducing conditional code paths
 
         try:
@@ -4922,13 +4922,13 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
             _t, _e, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' device accept(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def bucket_mode_toggled(self, b:bool = False) -> None:
         self.bucket_button1.setEnabled(not b)
         self.bucket_button2.setEnabled(b)
         self.bucket_button3.setEnabled(b)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showExtradevHelp(self, _checked:bool = False) -> None:
         from help import symbolic_help # type: ignore [attr-defined,unused-ignore]  # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -4937,7 +4937,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 QApplication.translate('Form Caption','Symbolic Formulas Help'),
                 symbolic_help.content())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showSymbolicHelp(self, _checked:bool = False) -> None:
         from help import symbolic_help # type: ignore [attr-defined,unused-ignore]  # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -4946,7 +4946,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
                 QApplication.translate('Form Caption','Symbolic Formulas Help'),
                 symbolic_help.content())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showhelpprogram(self, _checked:bool = False) -> None:
         from help import programs_help # type: ignore [attr-defined,unused-ignore]  # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -4958,7 +4958,7 @@ class DeviceAssignmentDlg(ArtisanResizeablDialog):
     def closeHelp(self) -> None:
         self.aw.closeHelpDialog(self.helpdialog)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tabSwitched(self, idx:int) -> None:
         self.closeHelp()
         if idx == 5: # Ambient Tab

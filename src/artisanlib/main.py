@@ -116,7 +116,7 @@ from qtpy.QtGui import (QScreen, QPageLayout, QAction, QImageReader, QWindow,
                             QPixmap,QColor,QDesktopServices,QIcon,
                             QRegularExpressionValidator, QDoubleValidator, QPainter, QCursor)
 from qtpy.QtPrintSupport import (QPrinter,QPrintDialog)
-from qtpy.QtCore import (QStandardPaths, QLibraryInfo, QTranslator, QLocale, QFileInfo, PYQT_VERSION_STR, pyqtSignal, pyqtSlot, QtMsgType,
+from qtpy.QtCore import (QStandardPaths, QLibraryInfo, QTranslator, QLocale, QFileInfo, PYQT_VERSION_STR, Signal, Slot, QtMsgType,
                           qVersion, QVersionNumber, QTime, QTimer, QFile, QIODevice, QTextStream, QSettings,
                           QRegularExpression, QDate, QUrl, QUrlQuery, QDir, Qt, QPoint, QEvent, QDateTime, QThread, qInstallMessageHandler)
 from qtpy.QtNetwork import QLocalSocket
@@ -243,8 +243,8 @@ viewerAppGuid:Final[str] = '9068bd2fa8e54945a6be1f1a0a589e93'
 
 class Artisan(QtSingleApplication):
 
-    sendmessage2ArtisanInstanceSignal = pyqtSignal(str,str)
-    sendmessage2ArtisanViewerSignal = pyqtSignal(str)
+    sendmessage2ArtisanInstanceSignal = Signal(str,str)
+    sendmessage2ArtisanViewerSignal = Signal(str)
 
     __slots__ = [ 'sentToBackground', 'plus_sync_cache_expiration', 'artisanviewerMode', 'darkmode', 'style_hints' ]
 
@@ -278,7 +278,7 @@ class Artisan(QtSingleApplication):
         self.applicationStateChanged.connect(self.stateChanged)
 
     try:
-        @pyqtSlot('Qt::ColorScheme')
+        @Slot('Qt::ColorScheme')
         def colorSchemeChanged(self, colorScheme:'Qt.ColorScheme') -> None:
             aw:ApplicationWindow|None = self.activationWindow()
             if aw is not None and self.darkmode != bool(colorScheme == Qt.ColorScheme.Dark):
@@ -320,7 +320,7 @@ class Artisan(QtSingleApplication):
 
 # NOTE: drawback of the following: if moving focus from Scheduler window to main window, which has all widgets at NoFocus policy (to make cursor keys work),
 #       the oldfocusWidget is always None and thus an app raise is detected although only the active window changed
-#    @pyqtSlot('QWidget*','QWidget*')
+#    @Slot('QWidget*','QWidget*')
 #    def appRaised(self, oldFocusWidget:QWidget|None, newFocusWidget:QWidget|None) -> None:
 #
 #        try:
@@ -437,7 +437,7 @@ class Artisan(QtSingleApplication):
             msg = url.toString()  #here we don't want a local file, preserve the windows file:///
             self.sendMessage2ArtisanInstance(msg,self._viewer_id)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def receiveMessage(self, msg:str) -> None:
         url = QUrl()
         url.setUrl(msg)
@@ -472,11 +472,11 @@ class Artisan(QtSingleApplication):
         else:
             self.sendmessage2ArtisanInstanceSignal.emit(message,instance_id)
 
-    @pyqtSlot(str, str)
+    @Slot(str, str)
     def _sendMessage2ArtisanInstanceSlot(self, message:str, instance_id:str) -> None:
         self._sendMessage2ArtisanInstance(message, instance_id)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _sendMessage2ArtisanViewerSlot(self, message:str) -> None:
         self._sendMessage2ArtisanInstance(message, self._viewer_id)
 
@@ -1285,8 +1285,8 @@ class VMToolbar(NavigationToolbar): # pylint: disable=abstract-method
                 _log.exception(e)
 
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def my_edit_parameters(self,_:bool=False) -> None:
         try:
             if self.qmc.ax is not None and not self.qmc.designerflag: # deactivate figure_options in designer mode due to all kind of side effects
@@ -1403,55 +1403,55 @@ class UI_MODE(IntEnum):
 #class ApplicationWindow():
 class ApplicationWindow(QMainWindow):
 
-    singleShotPhidgetsPulseOFF = pyqtSignal(int,int,str) # signal to be called from the eventaction thread to realise Phidgets pulse via QTimer in the main thread
-    singleShotPhidgetsPulseOFFSerial = pyqtSignal(int,int,str,str)
-    updatePlusStatusSignal = pyqtSignal() # can be called from another thread or a QTimer to trigger to update the plus icon status
-    setTitleSignal = pyqtSignal(str,bool) # can be called from another thread or a QTimer to set the profile title in the main GUI thread
-    sendmessageSignal = pyqtSignal(str,bool,str)
-    aiAdviceSignal = pyqtSignal(str)   # thread-safe delivery of AI advice to main thread
-    aiQuerySignal  = pyqtSignal()      # fired when a query starts (for status indicator)
-    openPropertiesSignal = pyqtSignal()
-    soundpopSignal = pyqtSignal()
-    setCanvasColorSignal = pyqtSignal(str)
-    resetCanvasColorSignal = pyqtSignal()
-    setbuttonsfromSignal = pyqtSignal(int)
-    setExtraEventButtonStyleSignal = pyqtSignal(int,str)
-    loadBackgroundSignal = pyqtSignal(str)
-    clearBackgroundSignal = pyqtSignal()
-    setTareSignal = pyqtSignal(int)
-    adjustSVSignal = pyqtSignal(float)
-    setSVSignal = pyqtSignal(float)
-    fireslideractionSignal = pyqtSignal(int)
-    fireslideraction_rawSignal = pyqtSignal(int,float)
-    moveButtonSignal = pyqtSignal(str)
-    sendnotificationMessageSignal = pyqtSignal(str,str,NotificationType)
-    updateSubscriptionSignal = pyqtSignal(str)
-    updateLimitsSignal = pyqtSignal(float, float, str, int, list) # rlimit:float, rused:float, pu:str, notifications:int
-    updatePlaybackIndicatorSignal = pyqtSignal()
-    pidOnSignal = pyqtSignal()
-    pidOffSignal = pyqtSignal()
-    pidToggleSignal = pyqtSignal()
-    notificationsSetEnabledSignal = pyqtSignal(bool)
-    santokerSendMessageSignal = pyqtSignal(bytes,int)
-    kaleidoSendMessageSignal = pyqtSignal(str,str)
-    kaleidoSendMessageAwaitSignal = pyqtSignal(str,str,int,int)
-    orbiterSendMessageSignal = pyqtSignal(bytes,bytes,bytes,int)
-    addEventSignal = pyqtSignal(int,int,bool,bool,bool)
-    addRawEventSignal = pyqtSignal(int,float,int,bool,bool,bool)
-    updateMessageLogSignal = pyqtSignal()
-    updateSerialLogSignal = pyqtSignal()
-    updateErrorLogSignal = pyqtSignal()
-    establishQuantifiedEventSignal = pyqtSignal(int,float)
-    updateExtraEventButtonsVisibilitySignal = pyqtSignal()
-    realignButtonsSignal = pyqtSignal()
-    loadAlarmsSignal = pyqtSignal(str)
-    loadFileSignal = pyqtSignal(str)
-    loadPalettesSignal = pyqtSignal(str)
-    importArtisanURLSignal = pyqtSignal(QUrl)
-    comparatorAddProfileURLSignal = pyqtSignal(QUrl)
-    comparatorAddProfileSignal = pyqtSignal(str)
-    updateScheduleSignal = pyqtSignal()
-    disconnectPlusSignal = pyqtSignal()
+    singleShotPhidgetsPulseOFF = Signal(int,int,str) # signal to be called from the eventaction thread to realise Phidgets pulse via QTimer in the main thread
+    singleShotPhidgetsPulseOFFSerial = Signal(int,int,str,str)
+    updatePlusStatusSignal = Signal() # can be called from another thread or a QTimer to trigger to update the plus icon status
+    setTitleSignal = Signal(str,bool) # can be called from another thread or a QTimer to set the profile title in the main GUI thread
+    sendmessageSignal = Signal(str,bool,str)
+    aiAdviceSignal = Signal(str)   # thread-safe delivery of AI advice to main thread
+    aiQuerySignal  = Signal()      # fired when a query starts (for status indicator)
+    openPropertiesSignal = Signal()
+    soundpopSignal = Signal()
+    setCanvasColorSignal = Signal(str)
+    resetCanvasColorSignal = Signal()
+    setbuttonsfromSignal = Signal(int)
+    setExtraEventButtonStyleSignal = Signal(int,str)
+    loadBackgroundSignal = Signal(str)
+    clearBackgroundSignal = Signal()
+    setTareSignal = Signal(int)
+    adjustSVSignal = Signal(float)
+    setSVSignal = Signal(float)
+    fireslideractionSignal = Signal(int)
+    fireslideraction_rawSignal = Signal(int,float)
+    moveButtonSignal = Signal(str)
+    sendnotificationMessageSignal = Signal(str,str,NotificationType)
+    updateSubscriptionSignal = Signal(str)
+    updateLimitsSignal = Signal(float, float, str, int, list) # rlimit:float, rused:float, pu:str, notifications:int
+    updatePlaybackIndicatorSignal = Signal()
+    pidOnSignal = Signal()
+    pidOffSignal = Signal()
+    pidToggleSignal = Signal()
+    notificationsSetEnabledSignal = Signal(bool)
+    santokerSendMessageSignal = Signal(bytes,int)
+    kaleidoSendMessageSignal = Signal(str,str)
+    kaleidoSendMessageAwaitSignal = Signal(str,str,int,int)
+    orbiterSendMessageSignal = Signal(bytes,bytes,bytes,int)
+    addEventSignal = Signal(int,int,bool,bool,bool)
+    addRawEventSignal = Signal(int,float,int,bool,bool,bool)
+    updateMessageLogSignal = Signal()
+    updateSerialLogSignal = Signal()
+    updateErrorLogSignal = Signal()
+    establishQuantifiedEventSignal = Signal(int,float)
+    updateExtraEventButtonsVisibilitySignal = Signal()
+    realignButtonsSignal = Signal()
+    loadAlarmsSignal = Signal(str)
+    loadFileSignal = Signal(str)
+    loadPalettesSignal = Signal(str)
+    importArtisanURLSignal = Signal(QUrl)
+    comparatorAddProfileURLSignal = Signal(QUrl)
+    comparatorAddProfileSignal = Signal(str)
+    updateScheduleSignal = Signal()
+    disconnectPlusSignal = Signal()
 
     __slots__ = [ 'locale_str', 'app', 'superusermode', 'sample_loop_running', 'time_stopped', 'plus_account', 'plus_account_id', 'plus_remember_credentials', 'plus_email', 'plus_language', 'plus_subscription', 'percent_decimals',
         'plus_paidUntil', 'plus_rlimit', 'plus_used', 'plus_readonly', 'plus_user_id', 'appearance', 'mpl_fontproperties', 'full_screen_mode_active', 'processingKeyEvent', 'quickEventShortCut',
@@ -4603,18 +4603,18 @@ class ApplicationWindow(QMainWindow):
             self.ntb.remove_toolbar_lines_configuration()
 
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def setProductionMode(self, _:bool = False) -> None:
         if self.ui_mode is not UI_MODE.PRODUCTION:
             self.set_ui_mode(UI_MODE.PRODUCTION)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def setDefaultMode(self, _:bool = False) -> None:
         if self.ui_mode is not UI_MODE.DEFAULT:
             self.set_ui_mode(UI_MODE.DEFAULT)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def setExpertMode(self, _:bool = False) -> None:
         if self.ui_mode is not UI_MODE.EXPERT:
             self.set_ui_mode(UI_MODE.EXPERT)
@@ -4721,26 +4721,26 @@ class ApplicationWindow(QMainWindow):
         self.qmc.delay = max(self.qmc.min_delay, rate)
         self.sampling_ticks_to_block_quantifiction = self.blockTicks() # we update the quantification block ticks
 
-    @pyqtSlot()
+    @Slot()
     def updateMessageLog(self) -> None:
         if self.message_dlg:
             self.message_dlg.update_log()
-    @pyqtSlot()
+    @Slot()
     def updateSerialLog(self) -> None:
         if self.serial_dlg:
             self.serial_dlg.update_log()
-    @pyqtSlot()
+    @Slot()
     def updateErrorLog(self) -> None:
         if self.error_dlg:
             self.error_dlg.update_log()
 
-    @pyqtSlot()
+    @Slot()
     def pidOn(self) -> None:
         self.pidcontrol.pidOn()
-    @pyqtSlot()
+    @Slot()
     def pidOff(self) -> None:
         self.pidcontrol.pidOff()
-    @pyqtSlot()
+    @Slot()
     def pidToggle(self) -> None:
         self.pidcontrol.togglePID()
 
@@ -4779,7 +4779,7 @@ class ApplicationWindow(QMainWindow):
             self.releaseminieditor()
             self.releaseSliderFocus()
 
-    @pyqtSlot(str)
+    @Slot(str)
     def updateSubscription(self, subscription: str) -> None:
         _log.debug('updateSubscription(%s)', subscription)
         if subscription:
@@ -4807,7 +4807,7 @@ class ApplicationWindow(QMainWindow):
             _log.exception(e)
 
     # if rlimit = -1 or rused = -1 or pu = "", no update information is available and the state is not updated
-    @pyqtSlot(float,float,str,int,list)
+    @Slot(float,float,str,int,list)
     def updateLimits(self, rlimit:float, rused:float, pu:str, notifications:int, machines: list[str]) -> None:
         _log.debug('updateLimits(%s,%s,%s,%s,%s)', rlimit, rused, pu, notifications, machines)
         self.updatePlusLimits(rlimit, rused)
@@ -4816,7 +4816,7 @@ class ApplicationWindow(QMainWindow):
         plus.notifications.updateNotifications(notifications, machines)
 
 
-    @pyqtSlot()
+    @Slot()
     def updateSchedule(self) -> None:
         if self.schedule_window is None:
             # schedule window is closed
@@ -4833,7 +4833,7 @@ class ApplicationWindow(QMainWindow):
             # if schedule window is already open we update its content as well as the app badge
             self.schedule_window.updateScheduleWindow()
 
-    @pyqtSlot(str,str,NotificationType)
+    @Slot(str,str,NotificationType)
     def sendNotificationMessage(self, title:str, message:str, notification_type:NotificationType) -> None:
         if self.notificationManager:
             self.notificationManager.sendNotificationMessage(title.strip(), message.strip(), notification_type)
@@ -4860,7 +4860,7 @@ class ApplicationWindow(QMainWindow):
              self.extraCurveVisibility2) = self.qmc.curveVisibilityCache
             self.updateLabelColors()
 
-    @pyqtSlot()
+    @Slot()
     def toggleBTlcdCurve(self) -> None:
         modifiers = QApplication.keyboardModifiers()
         if self.qmc.swaplcds:
@@ -4873,7 +4873,7 @@ class ApplicationWindow(QMainWindow):
         else:
             self.toggleBTCurve()
 
-    @pyqtSlot()
+    @Slot()
     def toggleETlcdCurve(self) -> None:
         modifiers = QApplication.keyboardModifiers()
         if self.qmc.swaplcds:
@@ -4919,7 +4919,7 @@ class ApplicationWindow(QMainWindow):
             self.qmc.l_annotations_dict = {}
             self.qmc.redraw_keep_view(recomputeAllDeltas=False)
 
-    @pyqtSlot()
+    @Slot()
     def toggleDeltaETlcdCurve(self) -> None:
         modifiers = QApplication.keyboardModifiers()
         if self.qmc.swapdeltalcds:
@@ -4932,7 +4932,7 @@ class ApplicationWindow(QMainWindow):
         else:
             self.toggleDeltaETCurve()
 
-    @pyqtSlot()
+    @Slot()
     def toggleDeltaBTlcdCurve(self) -> None:
         modifiers = QApplication.keyboardModifiers()
         if self.qmc.swapdeltalcds:
@@ -4998,7 +4998,7 @@ class ApplicationWindow(QMainWindow):
         self.setLabelColor(self.label4,self.qmc.palette['deltaet'], self.qmc.DeltaETflag)
         self.setLabelColor(self.label5,self.qmc.palette['deltabt'], self.qmc.DeltaBTflag)
 
-    @pyqtSlot()
+    @Slot()
     def toggleExtraCurve1(self) -> None:
         try:
             sender = self.sender()
@@ -5007,7 +5007,7 @@ class ApplicationWindow(QMainWindow):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
+    @Slot()
     def toggleExtraCurve2(self) -> None:
         try:
             sender = self.sender()
@@ -5134,11 +5134,11 @@ class ApplicationWindow(QMainWindow):
         if settings.status() != QSettings.Status.NoError:
             _log.error('Failed to save lastdonationpopup settings')
 
-    @pyqtSlot()
+    @Slot()
     def logStartupTime(self) -> None: # pylint: disable=no-self-use # used as slot
         _log.info('MODE: startup time: %.2f', libtime.process_time() - startup_time)
 
-    @pyqtSlot()
+    @Slot()
     def donate(self) -> None:
         try:
             everytime = 4*30*24*60*60 # 4 month in seconds
@@ -5172,7 +5172,7 @@ class ApplicationWindow(QMainWindow):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def setCanvasColor(self, c:str) -> None: # pylint: disable=no-self-use # used as slot
         try:
             QColor(c) # test if color is valid
@@ -5184,7 +5184,7 @@ class ApplicationWindow(QMainWindow):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
+    @Slot()
     def resetCanvasColor(self) -> None: # pylint: disable=no-self-use # used as slot
         try:
             if 'canvas_alt' in self.qmc.palette:
@@ -5321,7 +5321,7 @@ class ApplicationWindow(QMainWindow):
                         return c
         return None
 
-    @pyqtSlot()
+    @Slot()
     def redraw_action(self) -> None:
         try:
             self.qmc.redraw(False,False)
@@ -5345,29 +5345,29 @@ class ApplicationWindow(QMainWindow):
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         return validator
 
-#    @pyqtSlot()
+#    @Slot()
 #    def mainButtonPressed(self):
 #        self.sender().setGraphicsEffect(self.makeShadow(strong=True))
 #
-#    @pyqtSlot()
+#    @Slot()
 #    def mainButtonReleased(self):
 #        self.sender().setGraphicsEffect(self.makeShadow())
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def setTareET(self,_:QPoint) -> None:
         if not self.qmc.swaplcds:
             self.setTare(0)
         else:
             self.setTare(1)
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def setTareBT(self,_:QPoint) -> None:
         if not self.qmc.swaplcds:
             self.setTare(1)
         else:
             self.setTare(0)
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def setTare_slot(self,_:QPoint) -> None:
         sender = self.sender()
         try:
@@ -5384,7 +5384,7 @@ class ApplicationWindow(QMainWindow):
             pass
 
     # set the tare values per channel (0: ET, 1:BT, 2:E1c0, 3:E1c1, 4:E1c0, 5:E1c1,...)
-    @pyqtSlot(int)
+    @Slot(int)
     def setTare(self,n:int) -> None:
         if self.qmc.flagon: # we set the tare value
             if n == 0:
@@ -5412,7 +5412,7 @@ class ApplicationWindow(QMainWindow):
             self.channel_tare_values[n] = 0
 
 #PLUS
-    @pyqtSlot()
+    @Slot()
     def updatePlusStatusSlot(self) -> None:
         self.updatePlusStatus()
 
@@ -5496,8 +5496,8 @@ class ApplicationWindow(QMainWindow):
 
 
     # turns channel off after millis
-    @pyqtSlot(int,int,str)
-    @pyqtSlot(int,int,str,str)
+    @Slot(int,int,str)
+    @Slot(int,int,str,str)
     def processSingleShotPhidgetsPulse(self, channel:int, millis:int, fct:str, serial:str|None = None) -> None:
         if fct == 'OUTsetPWM':
             QTimer.singleShot(int(round(millis)),lambda : self.ser.phidgetOUTsetPWM(channel,0,serial))
@@ -5775,7 +5775,7 @@ class ApplicationWindow(QMainWindow):
     def recentRoastLabel(rr:'RecentRoast') -> str:
         return f"{rr['title']} ({rr['weightIn']:g}{rr['weightUnit']})"
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def newRecentRoast(self, _checked:bool = False) -> None:
         action = self.sender()
         if action:
@@ -5913,7 +5913,7 @@ class ApplicationWindow(QMainWindow):
     def populateMachineMenu(self) -> None:
         self.populateListMenu('Machines','.aset',self.openMachineSettings,self.machineMenu, addMenu=False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def openMachineSettings(self, _checked:bool = False) -> None:
         action = self.sender()
         try:
@@ -6223,7 +6223,7 @@ class ApplicationWindow(QMainWindow):
             submenu.addAction(self.loadThemeAction)
             submenu.addAction(self.saveAsThemeAction)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def openThemeSettings(self, _checked:bool = False) -> None:
         action = self.sender()
         if action and isinstance(action, QAction) and hasattr(action,'data') and hasattr(action,'text'):
@@ -6725,7 +6725,7 @@ class ApplicationWindow(QMainWindow):
 
 
     # signalled from the sampling thread via process_active_quantifiers, but runs in the GUI thread (required for this moveslider call!)
-    @pyqtSlot(int,float)
+    @Slot(int,float)
     def establishQuantifiedEventSlot(self, event_type:int, event_value:float) -> None:
         try:
             self.moveslider(event_type, event_value)
@@ -6837,8 +6837,8 @@ class ApplicationWindow(QMainWindow):
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' autoAdjustAxis() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def toggleFullscreen(self, _:bool = False) -> None:
         if self.full_screen_mode_active or self.isFullScreen():
             self.full_screen_mode_active = False
@@ -7094,7 +7094,7 @@ class ApplicationWindow(QMainWindow):
         self.LCD7frame.setVisible(lcds)
 
 
-    @pyqtSlot()
+    @Slot()
     def superusermodeLeftClicked(self) -> None:
         if self.simulator is not None and self.qmc.flagstart:
             try:
@@ -7145,12 +7145,12 @@ class ApplicationWindow(QMainWindow):
                 self.sendmessage(QApplication.translate('Message','super off'))
                 _log.info('Hottop super off')
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def PhaseslcdClicked(self, _:QPoint) -> None: # pylint: disable=no-self-use # used as slot
         self.qmc.phasesLCDmode = (self.qmc.phasesLCDmode + 1)%3
         self.updatePhasesLCDs()
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def AUClcdClicked(self, _:QPoint) -> None:
         self.qmc.AUCLCDmode = (self.qmc.AUCLCDmode + 1)%3
         if self.qmc.AUCLCDmode == 0:
@@ -7183,7 +7183,7 @@ class ApplicationWindow(QMainWindow):
             (QColorDialog.ColorDialogOption.ShowAlphaChannel if alphasupport else
                 QColorDialog.ColorDialogOption(0)))
 
-    @pyqtSlot(float)
+    @Slot(float)
     def adjustPIDsv(self, x:float) -> None:
         if self.qmc.device == 0: # Fuji PID
             self.fujipid.adjustsv(x)
@@ -7191,34 +7191,34 @@ class ApplicationWindow(QMainWindow):
         else: # Arduino TC4, internal Software PID or MODBUS/S7 external PID
             self.pidcontrol.adjustsv(x)
 
-    @pyqtSlot(float)
+    @Slot(float)
     def setPIDsv(self, sv:float) -> None:
         if self.qmc.device == 0 and sv != self.fujipid.sv: # Fuji PID
             self.fujipid.setsv(sv,silent=True)
         elif sv != self.pidcontrol.sv:
             self.pidcontrol.setSV(sv,init=False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def adjustPIDsv5(self, _:bool = False) -> None:
         self.adjustPIDsv(5)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def adjustPIDsv10(self, _:bool = False) -> None:
         self.adjustPIDsv(10)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def adjustPIDsv20(self,_ :bool = False) -> None:
         self.adjustPIDsv(20)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def adjustPIDsv20m(self, _:bool = False) -> None:
         self.adjustPIDsv(-20)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def adjustPIDsv10m(self, _:bool = False) -> None:
         self.adjustPIDsv(-10)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def adjustPIDsv5m(self, _:bool = False) -> None:
         self.adjustPIDsv(-5)
 
@@ -8467,7 +8467,7 @@ class ApplicationWindow(QMainWindow):
         elif n == 4:
             self.setSliderNumber(self.sliderLCDSV,v)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updateSVSliderLCD(self, v:int) -> None:
         v = max(min(v, self.pidcontrol.svSliderMax), self.pidcontrol.svSliderMin)
         self.updateSliderLCD(4,v)
@@ -8478,7 +8478,7 @@ class ApplicationWindow(QMainWindow):
             self.sliderSVreleased()
             self.SVslidermoved = 0
 
-    @pyqtSlot(int)
+    @Slot(int)
     def sliderSVactionTriggered(self, n:int) -> None:
         if n in {
                     1, 2, 3, 4,
@@ -8486,7 +8486,7 @@ class ApplicationWindow(QMainWindow):
             # we set a fake-release-event for keyboard triggered slider moves
             self.SVslidermoved = 1
 
-    @pyqtSlot()
+    @Slot()
     def sliderSVreleased(self) -> None:
         try:
             if self.qmc.device == 0:
@@ -8519,68 +8519,68 @@ class ApplicationWindow(QMainWindow):
     # It is set after a slider move. If it is not set, only value changes above a certain limit (here 3) are accepted.
 
     # the following are only needed with the slider tracking off work around:
-#    @pyqtSlot(int)
+#    @Slot(int)
 #    def slider1Moved(self,v):
 #        self.eventslidermoved[0]=1
 #        self.updateSliderLCD(0,v)
-#    @pyqtSlot(int)
+#    @Slot(int)
 #    def slider2Moved(self,v):
 #        self.eventslidermoved[1]=1
 #        self.updateSliderLCD(1,v)
-#    @pyqtSlot(int)
+#    @Slot(int)
 #    def slider3Moved(self,v):
 #        self.eventslidermoved[2]=1
 #        self.updateSliderLCD(2,v)
-#    @pyqtSlot(int)
+#    @Slot(int)
 #    def slider4Moved(self,v):
 #        self.eventslidermoved[3]=1
 #        self.updateSliderLCD(3,v)
 
-    pyqtSlot()
+    Slot()
     def slider1lcdClicked(self) -> None:
         QTimer.singleShot(0, self.slider1.setFocus)
-    pyqtSlot()
+    Slot()
     def slider2lcdClicked(self) -> None:
         QTimer.singleShot(0, self.slider2.setFocus)
-    pyqtSlot()
+    Slot()
     def slider3lcdClicked(self) -> None:
         QTimer.singleShot(0, self.slider3.setFocus)
-    pyqtSlot()
+    Slot()
     def slider4lcdClicked(self) -> None:
         QTimer.singleShot(0, self.slider4.setFocus)
-    pyqtSlot()
+    Slot()
     def sliderSVlcdClicked(self) -> None:
         QTimer.singleShot(0, self.sliderSV.setFocus)
 
-    pyqtSlot()
+    Slot()
     def slider1lcdDoubleClicked(self) -> None:
         dlg = ArtisanSliderLCDinputDlg(self,self, self.slider1.value(), self.eventslidermin[0], self.eventslidermax[0], self.qmc.etypesf(0))
         if dlg.exec() and dlg.value is not None:
             self.slider1.setValue(dlg.value)
             self.sliderReleased(0,force=True,updateLCD=False)
         QTimer.singleShot(0, self.slider1.setFocus)
-    pyqtSlot()
+    Slot()
     def slider2lcdDoubleClicked(self) -> None:
         dlg = ArtisanSliderLCDinputDlg(self,self, self.slider2.value(), self.eventslidermin[1], self.eventslidermax[1], self.qmc.etypesf(1))
         if dlg.exec() and dlg.value is not None:
             self.slider2.setValue(dlg.value)
             self.sliderReleased(1,force=True,updateLCD=False)
         QTimer.singleShot(0, self.slider2.setFocus)
-    pyqtSlot()
+    Slot()
     def slider3lcdDoubleClicked(self) -> None:
         dlg = ArtisanSliderLCDinputDlg(self,self, self.slider3.value(), self.eventslidermin[2], self.eventslidermax[2], self.qmc.etypesf(2))
         if dlg.exec() and dlg.value is not None:
             self.slider3.setValue(dlg.value)
             self.sliderReleased(2,force=True,updateLCD=False)
         QTimer.singleShot(0, self.slider3.setFocus)
-    pyqtSlot()
+    Slot()
     def slider4lcdDoubleClicked(self) -> None:
         dlg = ArtisanSliderLCDinputDlg(self,self, self.slider4.value(), self.eventslidermin[3], self.eventslidermax[3], self.qmc.etypesf(3))
         if dlg.exec() and dlg.value is not None:
             self.slider4.setValue(dlg.value)
             self.sliderReleased(3,force=True,updateLCD=False)
         QTimer.singleShot(0, self.slider4.setFocus)
-    pyqtSlot()
+    Slot()
     def sliderSVlcdDoubleClicked(self) -> None:
         dlg = ArtisanSliderLCDinputDlg(self,self, self.sliderSV.value(), self.pidcontrol.svSliderMin, self.pidcontrol.svSliderMax, QApplication.translate('Label','SV'))
         if dlg.exec() and dlg.value is not None:
@@ -8589,16 +8589,16 @@ class ApplicationWindow(QMainWindow):
         QTimer.singleShot(0, self.sliderSV.setFocus)
 
 # required for the default tracking sliders
-    @pyqtSlot()
+    @Slot()
     def slider1released(self) -> None:
         self.sliderReleased(0,force=True,updateLCD=False)
-    @pyqtSlot()
+    @Slot()
     def slider2released(self) -> None:
         self.sliderReleased(1,force=True,updateLCD=False)
-    @pyqtSlot()
+    @Slot()
     def slider3released(self) -> None:
         self.sliderReleased(2,force=True,updateLCD=False)
-    @pyqtSlot()
+    @Slot()
     def slider4released(self) -> None:
         self.sliderReleased(3,force=True,updateLCD=False)
 
@@ -8628,7 +8628,7 @@ class ApplicationWindow(QMainWindow):
         return v
 
 # required for the default tracking sliders
-    @pyqtSlot(int)
+    @Slot(int)
     def updateSlider1LCD(self, v:int) -> None:
         self.updateSliderLCD(0, self.applySliderStepSize(0,v))
         if self.eventslidermoved[0]:
@@ -8637,7 +8637,7 @@ class ApplicationWindow(QMainWindow):
                 self.slider1.setValue(self.sliderLCD1.intValue())
             self.slider1released()
             self.eventslidermoved[0] = 0
-    @pyqtSlot(int)
+    @Slot(int)
     def updateSlider2LCD(self,v:int) -> None:
         self.updateSliderLCD(1, self.applySliderStepSize(1,v))
         if self.eventslidermoved[1]:
@@ -8646,7 +8646,7 @@ class ApplicationWindow(QMainWindow):
                 self.slider2.setValue(self.sliderLCD2.intValue())
             self.slider2released()
             self.eventslidermoved[1] = 0
-    @pyqtSlot(int)
+    @Slot(int)
     def updateSlider3LCD(self,v:int) -> None:
         self.updateSliderLCD(2, self.applySliderStepSize(2,v))
         if self.eventslidermoved[2]:
@@ -8655,7 +8655,7 @@ class ApplicationWindow(QMainWindow):
                 self.slider3.setValue(self.sliderLCD3.intValue())
             self.slider3released()
             self.eventslidermoved[2] = 0
-    @pyqtSlot(int)
+    @Slot(int)
     def updateSlider4LCD(self,v:int) -> None:
         self.updateSliderLCD(3, self.applySliderStepSize(3,v))
         if self.eventslidermoved[3]:
@@ -8671,7 +8671,7 @@ class ApplicationWindow(QMainWindow):
             v = [self.slider1,self.slider2,self.slider3,self.slider4,self.sliderSV][n].value()
             self.updateSliderLCD(n, v)
 
-    pyqtSlot()
+    Slot()
     def sliderfocusIn(self) -> None:
         sender = self.sender()
         if not self.qmc.designerflag and self.comparator is None and sender is not None and isinstance(sender, SliderUnclickable):
@@ -8681,7 +8681,7 @@ class ApplicationWindow(QMainWindow):
             except Exception: # pylint: disable=broad-except
                 pass
 
-    pyqtSlot()
+    Slot()
     def sliderfocusOut(self) -> None:
         if self.quickEventShortCut is not None:
             eventNr = self.quickEventShortCut[0]
@@ -8694,19 +8694,19 @@ class ApplicationWindow(QMainWindow):
             self.clearMessageLine()
             self.quickEventShortCut = None
 
-    @pyqtSlot(int)
+    @Slot(int)
     def slider1actionTriggered(self, n:int) -> None:
         self.sliderNactionTriggered(n, 0)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def slider2actionTriggered(self, n:int) -> None:
         self.sliderNactionTriggered(n, 1)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def slider3actionTriggered(self, n:int) -> None:
         self.sliderNactionTriggered(n, 2)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def slider4actionTriggered(self, n:int) -> None:
         self.sliderNactionTriggered(n, 3)
 
@@ -8758,10 +8758,10 @@ class ApplicationWindow(QMainWindow):
         return False
 
     # n=0 : slider1; n=1 : slider2; n=2 : slider3; n=3 : slider4
-    @pyqtSlot(int)
+    @Slot(int)
     def fireslideraction(self, n:int) -> None:
         self.fireslideraction_internal(n)
-    @pyqtSlot(int,float)
+    @Slot(int,float)
     def fireslideraction_raw(self, n:int, v:float) -> None:
         self.fireslideraction_internal(n,v)
 
@@ -8994,7 +8994,7 @@ class ApplicationWindow(QMainWindow):
                         self.qmc.eventactionsemaphore.release(1)
                 eventActionThread.start()
 
-    @pyqtSlot()
+    @Slot()
     def eventactionThreadDone_slot(self) -> None:
         try:
             self.qmc.eventactionsemaphore.acquire(1)
@@ -11568,14 +11568,14 @@ class ApplicationWindow(QMainWindow):
         return f'{plain_style}{hover_style}{pressed_style}'
 
     # style is one of 'pressed' or 'normal'
-    @pyqtSlot(int,str)
+    @Slot(int,str)
     def setExtraEventButtonStyle(self, tee:int, style:str) -> None:
         if len(self.extraeventstypes)>tee and len(self.buttonlist)>tee:
             button_style = self.extraEventButtonStyle(tee, style)
             self.buttonlist[tee].setStyleSheet(button_style)
             self.buttonlist[tee].setText(self.substButtonLabel(tee, self.extraeventslabels[tee], self.extraeventstypes[tee], self.extraeventsvalues[tee]))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def recordextraevent_slot(self, _:bool) -> None:
         try:
             sender = self.sender()
@@ -11699,8 +11699,8 @@ class ApplicationWindow(QMainWindow):
             else:
                 self.eventaction(self.extraeventsactions[ee],cmd,parallel=parallel)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resetApplication(self, _:bool = False) -> None:
         if self.app.artisanviewerMode:
             string = QApplication.translate('Message','Do you want to reset all settings?<br> ArtisanViewer has to be restarted!')
@@ -11732,8 +11732,8 @@ class ApplicationWindow(QMainWindow):
 #        elif reply == QMessageBox.StandardButton.Cancel:
 #            return
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def on_actionCut_triggered(self, _:bool = False) -> None: # pylint: disable=no-self-use # used as slot
         try:
             active_window: QWidget|None = self.app.activeWindow()
@@ -11744,8 +11744,8 @@ class ApplicationWindow(QMainWindow):
         except Exception: # pylint: disable=broad-except
             pass # not every QWidget has a cut method
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def on_actionCopy_triggered(self, _:bool = False) -> None: # pylint: disable=no-self-use # used as slot
         try:
             active_window: QWidget|None = self.app.activeWindow()
@@ -11756,8 +11756,8 @@ class ApplicationWindow(QMainWindow):
         except Exception: # pylint: disable=broad-except
             pass # not every QWidget has a copy method
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def on_actionPaste_triggered(self, _:bool = False) -> None: # pylint: disable=no-self-use # used as slot
         try:
             active_window: QWidget|None = self.app.activeWindow()
@@ -11773,7 +11773,7 @@ class ApplicationWindow(QMainWindow):
         self.sendmessage('',append=False,style=style)
 
     # this should only be called from within the main GUI thread (and never from the sampling thread!)
-    @pyqtSlot(str,bool,str)
+    @Slot(str,bool,str)
     def sendmessage(self, message:str, append:bool = True, style:str|None = None) -> None:
         if isinstance(threading.current_thread(), threading._MainThread): # type: ignore[attr-defined] # pylint: disable=protected-access
             # we are running in the main thread thus we can call sendmessage_internal via a QTimer to avoid redraw issues
@@ -11869,8 +11869,8 @@ class ApplicationWindow(QMainWindow):
                 else:
                     self.extraeventsbuttonsflags[0] = 1
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def toggleExtraButtons(self, _:bool = False) -> None:
         if self.extrabuttondialogs.isVisible():
             self.hideExtraButtons()
@@ -11951,8 +11951,8 @@ class ApplicationWindow(QMainWindow):
                 else:
                     self.eventslidersflags[0] = 1
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def toggleSliders(self,_:bool = False) -> None:
         if self.sliderDock.isVisible():
             self.hideSliders()
@@ -11984,8 +11984,8 @@ class ApplicationWindow(QMainWindow):
     def controlsVisible(self) -> bool:
         return self.level1frame.isVisible()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def toggleControls(self, _:bool = False) -> None:
         if self.controlsVisible():
             self.hideControls()
@@ -12008,8 +12008,8 @@ class ApplicationWindow(QMainWindow):
         else:
             self.hideControls(False)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def toggleReadings(self,_:bool = False) -> None:
         if self.lcdsVisible():
             self.hideLCDs()
@@ -12347,8 +12347,8 @@ class ApplicationWindow(QMainWindow):
         else:
             self.hide_minieventline(False)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def toggle_minieventline(self, _:bool = False) -> None:
         if self.EventsGroupLayout.isVisible():
             self.hide_minieventline()
@@ -12398,7 +12398,7 @@ class ApplicationWindow(QMainWindow):
                 self.autoAdjustAxis(background=(not len(self.qmc.timex) > 3), deltas=False)
                 self.qmc.redraw_keep_view(recomputeAllDeltas=False)
 
-    @pyqtSlot()
+    @Slot()
     def updatePlaybackIndicator(self) -> None:
         if self.qmc.l_subtitle is not None and self.qmc.ax is not None:
             if self.qmc.backgroundprofile is not None and self.qmc.backgroundPlaybackEvents:
@@ -12478,7 +12478,7 @@ class ApplicationWindow(QMainWindow):
                     pass
 
     #keyboard presses. There must not be widgets (pushbuttons, comboboxes, etc) in focus in order to work
-    @pyqtSlot('QKeyEvent')
+    @Slot('QKeyEvent')
     @override
     def keyPressEvent(self, a0: 'QKeyEvent|None') -> None: # pyright: ignore [reportGeneralTypeIssues] # Code is too complex to analyze; reduce complexity by refactoring into subroutines or reducing conditional code paths
         if not self.processingKeyEvent and a0 is not None:
@@ -13021,7 +13021,7 @@ class ApplicationWindow(QMainWindow):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def moveKbutton(self, kcommand:str, force:bool = False) -> None:
         #"Enter" toggles ON/OFF keyboard
         if kcommand =='enter' and self.qmc.flagstart:
@@ -13064,7 +13064,7 @@ class ApplicationWindow(QMainWindow):
         # we enable keyboard event processing again
 
     #sound feedback when pressing a push button
-    @pyqtSlot()
+    @Slot()
     def soundpop(self) -> None:
         if self.soundflag:
             QApplication.beep()
@@ -13402,8 +13402,8 @@ class ApplicationWindow(QMainWindow):
             self.qmc.adderror((QApplication.translate('Error Message', 'Error:') + ' automaticsave() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
         return filename
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def viewKshortcuts(self, _:bool = False) -> None:
         from help import keyboardshortcuts_help # pylint: disable=no-name-in-module
         self.helpdialog = self.showHelpDialog(
@@ -13412,11 +13412,11 @@ class ApplicationWindow(QMainWindow):
                 QApplication.translate('Form Caption','Keyboard Shortcuts Help'),
                 keyboardshortcuts_help.content())
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def decrEventNumber(self, _:bool = False) -> None:
         self.eNumberSpinBox.stepBy(-1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def incrEventNumber(self, _:bool = False) -> None:
         self.eNumberSpinBox.stepBy(1)
 
@@ -13428,7 +13428,7 @@ class ApplicationWindow(QMainWindow):
             self.qmc.ax.plot(x, y, marker ='o', markersize=12, color ='yellow', linestyle='-', linewidth = 7, alpha=.4)
 
     #moves events in minieditor
-    @pyqtSlot(int)
+    @Slot(int)
     def changeEventNumber(self, _:int = 0) -> None:
         if self.qmc.designerflag:
             return
@@ -13477,7 +13477,7 @@ class ApplicationWindow(QMainWindow):
 
 
     #updates events from mini editor
-    @pyqtSlot(bool)
+    @Slot(bool)
     def miniEventRecord(self, _:bool) -> None:
         lenevents = self.eNumberSpinBox.value()
         if lenevents and  lenevents-1 < len(self.qmc.specialevents):
@@ -13568,7 +13568,7 @@ class ApplicationWindow(QMainWindow):
         for j in range(numRecentFiles, self.MaxRecentFiles):
             self.recentFileActs[j].setVisible(False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def openRecentFile(self, _checked:bool = False) -> None:
         action = self.sender()
         if action and isinstance(action, QAction) and hasattr(action,'data'):
@@ -13666,8 +13666,8 @@ class ApplicationWindow(QMainWindow):
                 self.setDefaultPath(f)
             return f
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def newRoast(self, _:bool = False) -> bool:
         #####################################
         #IF there is an ongoing roast (if START):
@@ -13709,7 +13709,7 @@ class ApplicationWindow(QMainWindow):
             self.qmc.ToggleRecorder()
         return True
 
-    @pyqtSlot()
+    @Slot()
     def startNewRoast(self) -> None:
         self.qmc.monitorClosedDown.disconnect(self.startNewRoast)
         libtime.sleep(.3) # sleep a moment to ensure all serial devices have been disconnected
@@ -13718,8 +13718,8 @@ class ApplicationWindow(QMainWindow):
             self.qmc.ToggleRecorder()
             self.sendmessage(QApplication.translate('Message','New roast has started'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileLoad(self, _:bool = False) -> None:
         try:
             fileName = self.ArtisanOpenFileDialog(ext='*.alog')
@@ -13732,7 +13732,7 @@ class ApplicationWindow(QMainWindow):
             _a, _b, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' fileLoad() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(str)
+    @Slot(str)
     def loadFileSlot(self, filename:str) -> None:
         self.loadFile(filename)
 
@@ -14221,13 +14221,13 @@ class ApplicationWindow(QMainWindow):
         else:
             return False
 
-    @pyqtSlot()
+    @Slot()
     def clearbackgroundRedraw(self) -> None:
         self.deleteBackground()
         self.autoAdjustAxis()
         self.qmc.redraw()
 
-    @pyqtSlot(str)
+    @Slot(str)
     def loadbackgroundRedraw(self, filename:str) -> None:
         if len(filename) == 0:
             return
@@ -17402,18 +17402,18 @@ class ApplicationWindow(QMainWindow):
             self.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' getProfile(): {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
             return ProfileData()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileSave_current_action(self, _:bool = False) -> None:
         self.fileSave(self.curFile)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileSave_new_action(self, _:bool = False) -> None:
         self.fileSave(None)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileSave_copy_action(self, _:bool = False) -> None:
         self.fileSave(None,copy=True)
 
@@ -17505,100 +17505,100 @@ class ApplicationWindow(QMainWindow):
             _log.exception(ex)
             self.qmc.adderror((QApplication.translate('Error Message', 'IO Error:') + ' fileExport(): {0}').format(str(ex)))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileExportExcel(self, _:bool = False) -> None:
         self.fileExport(QApplication.translate('Message', 'Export {}').format('Excel'),'*.xlsx',self.exportExcel)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileExportCSV(self, _:bool = False) -> None:
         self.fileExport(QApplication.translate('Message', 'Export {}').format('CSV'),'*.csv',self.exportCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileExportJSON(self, _:bool = False) -> None:
         self.fileExport(QApplication.translate('Message', 'Export {}').format('JSON'),'*.json',self.exportJSON)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileExportOrbiter(self, _:bool = False) -> None:
         self.fileExport(QApplication.translate('Message', 'Export {}').format('Orbiter'),'*.rop.zip',self.exportOrbiterROP)
 
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def fileExportRoastLogger(self, _:bool = False) -> None:
 #        self.fileExport(QApplication.translate('Message', 'Export RoastLogger'),'*.csv',self.exportRoastLogger)
 #
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def fileExportPilot(self, _:bool = False) -> None:
 #        self.fileExport(QApplication.translate('Message', 'Export Probat Pilot'),'*.xml',self.exportPilot)
 
 #--
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromCropster(self, _:bool = False) -> None:
         from artisanlib.cropster import extractProfileCropsterXLS
         self.fileConvertFrom('*.xls', extractProfileCropsterXLS)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromHiBean(self, _:bool = False) -> None:
         from artisanlib.hibean import extractProfileHiBeanJSON
         self.fileConvertFrom('*.json', extractProfileHiBeanJSON)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromGiesen(self, _:bool = False) -> None:
         from artisanlib.giesen import extractProfileGiesenCSV
         self.fileConvertFrom('*.csv', extractProfileGiesenCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromIKAWA(self, _:bool = False) -> None:
         from artisanlib.ikawa import extractProfileIkawaCSV
         self.fileConvertFrom('*.csv', extractProfileIkawaCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromKaleido(self, _:bool = False) -> None:
         from artisanlib.kaleido import extractProfileKaleidoCSV
         self.fileConvertFrom('*.csv', extractProfileKaleidoCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromLoring(self, _:bool = False) -> None:
         from artisanlib.loring import extractProfileLoringCSV
         self.fileConvertFrom('*.csv', extractProfileLoringCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromPetroncini(self, _:bool = False) -> None:
         from artisanlib.petroncini import extractProfilePetronciniCSV
         self.fileConvertFrom('*.csv', extractProfilePetronciniCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromOrbiter(self, _:bool = False) -> None:
         from artisanlib.orbiter import extractProfileOrbiterROP
         self.fileConvertFrom('(*.rop *.zip)', extractProfileOrbiterROP)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromROEST(self, _:bool = False) -> None:
         from artisanlib.roest import extractProfileRoestCSV
         self.fileConvertFrom('*.csv', extractProfileRoestCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromRubase(self, _:bool = False) -> None:
         from artisanlib.rubasse import extractProfileRubasseCSV
         self.fileConvertFrom('*.csv', extractProfileRubasseCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def convertFromStronghold(self, _:bool = False) -> None:
         from artisanlib.stronghold import extractProfileStrongholdXLSX
         self.fileConvertFrom('*.xlsx', extractProfileStrongholdXLSX)
@@ -17701,43 +17701,43 @@ class ApplicationWindow(QMainWindow):
                 progress.cancel()
                 del progress
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertExcel(self, _:bool = False) -> None:
         self.fileConvert('.xlsx',self.exportExcel)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertCSV(self, _:bool = False) -> None:
         self.fileConvert('.csv',self.exportCSV)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertJSON(self, _:bool = False) -> None:
         self.fileConvert('.json',self.exportJSON)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertOrbiter(self, _:bool = False) -> None:
         self.fileConvert('.zip',self.exportOrbiterROP)
 
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def fileConvertRoastLogger(self, _:bool = False) -> None:
 #        self.fileConvert('.csv',self.exportRoastLogger)
 #
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def fileConvertPilot(self, _:bool = False) -> None:
 #        self.fileConvert('.xml',self.exportPilot)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertPNG(self, _:bool = False) -> None:
         self.fileConvertBITMAP('PNG')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertJPEG(self, _:bool = False) -> None:
         self.fileConvertBITMAP('JPEG')
 
@@ -17796,15 +17796,15 @@ class ApplicationWindow(QMainWindow):
                 progress.cancel()
                 del progress
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def fileConvertSVG(self, _:bool = False) -> None:
         self.fileConvertIMG('.svg')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def fileConvertPDF(self, _:bool = False) -> None:
         self.fileConvertIMG('.pdf')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def fileConvertReportPDF(self, _:bool = False) -> None:
         self.fileConvertReport('.pdf')
 
@@ -17891,13 +17891,13 @@ class ApplicationWindow(QMainWindow):
             progress.cancel()
             del progress
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertToFahrenheit(self, _:bool = False) -> None:
         self.fileConverToTemp('F')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileConvertToCelsius(self, _:bool = False) -> None:
         self.fileConverToTemp('C')
 
@@ -17977,30 +17977,30 @@ class ApplicationWindow(QMainWindow):
         except Exception: # pylint: disable=broad-except
             return None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def urlImport(self, _:bool = False) -> None:
         try:
             self.importExternalURL(self.artisanURLextractor, QApplication.translate('Message','Import {}').format('Artisan URL'))
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileImportCSV(self, _:bool = False) -> None:
         self.fileImport(QApplication.translate('Message', 'Import {}').format('CSV'),self.importCSV,True)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileImportJSON(self, _:bool = False) -> None:
         self.fileImport(QApplication.translate('Message', 'Import {}').format('JSON'),self.importJSON,True)
 
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def fileImportRoastLogger(self, _:bool = False) -> None:
 #        self.fileImport(QApplication.translate('Message', 'Import {}').format('RoastLogger'),self.importRoastLogger,True)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def notificationsSetEnabled(self, enabled:bool) -> None:
         if self.notificationsflag != enabled:
             _log.info('notifications: %s',self.notificationsflag)
@@ -18013,20 +18013,20 @@ class ApplicationWindow(QMainWindow):
                 self.notificationManager.disableNotifications()
                 self.notificationManager.hideNotifications()
 
-    @pyqtSlot(bytes,int)
+    @Slot(bytes,int)
     def santokerSendMessage(self, target:bytes, value:int) -> None:
         if self.santoker is not None:
             self.santoker.send_msg(target,value)
 
 
     # kaleidoSendMessage() just sends out the message to the machine without waiting for a response
-    @pyqtSlot(str,str)
+    @Slot(str,str)
     def kaleidoSendMessage(self, target:str, value:str) -> None:
         if self.kaleido is not None:
             self.kaleido.send_msg(target, value)
 
     # orbiterSendMessage() just sends out the message to the machine without waiting for a response
-    @pyqtSlot(bytes,bytes,bytes,int)
+    @Slot(bytes,bytes,bytes,int)
     def orbiterSendMessage(self, cmd:bytes, data:bytes, param:bytes, time:int) -> None:
         if self.orbiter is not None:
             self.orbiter.send_msg_await(cmd, data, param, time)
@@ -18034,7 +18034,7 @@ class ApplicationWindow(QMainWindow):
     # if record is True, an event is added during recording, otherwise only the slider is moved
     # if fire_slider_action is True, the slider action is fired
     # if force is True, process even if value is equal to the events lastvalue resp. the current slider value
-    @pyqtSlot(int,int,bool,bool,bool)
+    @Slot(int,int,bool,bool,bool)
     def addEventSlot(self, value:int, etype:int, record:bool, fire_slider_action:bool, force:bool) -> None:
         self.addEvent_internal(value, etype, record, fire_slider_action, force)
 
@@ -18042,7 +18042,7 @@ class ApplicationWindow(QMainWindow):
     # if fire_slider_action is True, the slider action is fired
     # if force is True, process even if value is equal to the events lastvalue resp. the current slider value
     # raw_value is forwarded to addEvent_internal to be send to the slider action
-    @pyqtSlot(int,float,int,bool,bool,bool)
+    @Slot(int,float,int,bool,bool,bool)
     def addRawEventSlot(self, value:int, raw_value:float, etype:int, record:bool, fire_slider_action:bool, force:bool) -> None:
         self.addEvent_internal(value, etype, record, fire_slider_action, force, raw_value)
 
@@ -18071,7 +18071,7 @@ class ApplicationWindow(QMainWindow):
                     self.qmc.eventRecordActionSignal.emit(etype,nv,'',True)
 
     # kaleidoSendMessageAwait() sends out the message to the machine, awaits the reply and creates a corresponding event entry
-    @pyqtSlot(str,str,int,int)
+    @Slot(str,str,int,int)
     def kaleidoSendMessageAwait(self, target:str, value:str, etype:int, lastbuttonpressed:int) -> None:
         if self.kaleido is not None:
             if etype == -1 and len(self.buttonlist)>lastbuttonpressed > -1:
@@ -19832,7 +19832,7 @@ class ApplicationWindow(QMainWindow):
 
     ## WebLCDs
 
-    @pyqtSlot()
+    @Slot()
     def startWebLCDsforced(self) -> None:
         self.startWebLCDs(force=True)
 
@@ -19885,7 +19885,7 @@ class ApplicationWindow(QMainWindow):
 
     ## WebGreen
 
-    @pyqtSlot()
+    @Slot()
     def startWebGreenforced(self) -> None:
         self.startWebGreen(force=True)
 
@@ -19935,7 +19935,7 @@ class ApplicationWindow(QMainWindow):
 
     ## WebRoasted
 
-    @pyqtSlot()
+    @Slot()
     def startWebRoastedforced(self) -> None:
         self.startWebRoasted(force=True)
 
@@ -20232,7 +20232,7 @@ class ApplicationWindow(QMainWindow):
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' fetchCurveStyles() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
     #Saves the settings when closing application. See the oppposite settingsLoad()
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         res = self.closeApp()
@@ -21643,13 +21643,13 @@ class ApplicationWindow(QMainWindow):
 #        except Exception as e: # pylint: disable=broad-except
 #            _log.exception(e)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def fileQuit(self, _:bool = False) -> None:
         self.closeApp()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def filePrint(self, _:bool = False) -> None:
         image = self.qmc.canvas.grab().toImage() # a QImage on macOS
         if image.isNull():
@@ -21991,13 +21991,13 @@ class ApplicationWindow(QMainWindow):
             res['cuppingnotes'] = profile['cuppingnotes']
         return res
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def productionPDFReport(self, _:bool = False) -> None:
         self.productionReport(pdf=True)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def productionHTMLReport(self, _:bool = False) -> None:
         self.productionReport()
 
@@ -22089,8 +22089,8 @@ class ApplicationWindow(QMainWindow):
             _, _, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' productionReport() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def saveStatistics_TXT(self, _:bool = False) -> None:
         if self.qmc.ax is None:
             return
@@ -22108,8 +22108,8 @@ class ApplicationWindow(QMainWindow):
             _a, _b, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' saveStatistics() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def saveStatistics_IMG(self, _:bool = False) -> None:
         if self.qmc.ax is None:
             return
@@ -22147,8 +22147,8 @@ class ApplicationWindow(QMainWindow):
             _a, _b, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' saveStatistics() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def productionCSVReport(self, _:bool = False) -> None:
         import csv
         # get profile filenames
@@ -22209,8 +22209,8 @@ class ApplicationWindow(QMainWindow):
 #        delta = date_time - datetime.datetime(1899, 12, 30, tzinfo=datetime.timezone.utc)
 #        return float(delta.days  - 1462) + (float(delta.seconds) / 86400)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def productionExcelReport(self, _:bool = False) -> None:
         # get profile filenames
         profiles = self.reportFiles()
@@ -22830,13 +22830,13 @@ class ApplicationWindow(QMainWindow):
                 files.append(f)
         return files
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def rankingPDFReport(self, _:bool = False) -> None:
         self.rankingReport(pdf=True)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def rankingHTMLReport(self, _:bool = False) -> None:
         self.rankingReport()
 
@@ -23442,8 +23442,8 @@ class ApplicationWindow(QMainWindow):
         except Exception as e:  # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def rankingCSVReport(self, _:bool = False) -> None: # get profile filenames
         profiles = self.reportFiles()
         if profiles and len(profiles) > 0:
@@ -23452,8 +23452,8 @@ class ApplicationWindow(QMainWindow):
             if filename:
                 self.rankingSpreadsheetCreate(filename, profiles, 'csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def rankingExcelReport(self, _:bool = False) -> None:
         # get profile filenames
         profiles = self.reportFiles()
@@ -23704,16 +23704,16 @@ class ApplicationWindow(QMainWindow):
             _a, _b, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' rankingExcelReport() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def pdfReport(self, _:bool = False) -> None:
         # select file
         filename = self.ArtisanSaveFileDialog(msg=QApplication.translate('Message', 'Export {}').format('PDF'),ext='*.pdf')
         if filename:
             self.roastReport(pdf_filename=filename)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def htmlReport(self, _:bool = False) -> None:
         self.roastReport()
 
@@ -23754,11 +23754,11 @@ class ApplicationWindow(QMainWindow):
                 self.releaseQWebEngineView()
             self.pdf_rendering = False
 
-        @pyqtSlot(str,bool)
+        @Slot(str,bool)
         def printing_finished(_file:str, _success:bool) -> None:
             release()
 
-        @pyqtSlot(bool)
+        @Slot(bool)
         def emit_pdf(ok:bool) -> None:
             if ok:
                 if self.html_loader is not None and self.pdf_page_layout is not None:
@@ -23771,7 +23771,7 @@ class ApplicationWindow(QMainWindow):
             else:
                 self.pdf_rendering = False
 
-        @pyqtSlot('QWebEnginePage::RenderProcessTerminationStatus', int)
+        @Slot('QWebEnginePage::RenderProcessTerminationStatus', int)
         def renderingTerminated(terminationStatus:'QWebEnginePage.RenderProcessTerminationStatus',exitCode:int) -> None:
             _log.debug('renderingTerminated(%s,%s)',terminationStatus,exitCode)
             release()
@@ -24620,8 +24620,8 @@ class ApplicationWindow(QMainWindow):
                 dt3 = temp[self.qmc.timeindex[6]]- temp[self.qmc.timeindex[2]]
         return (rc1,rc2,rc3,dt1,dt2,dt3)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def viewErrorLog(self, _:bool = False) -> None:
         if self.error_dlg is None:
             self.error_dlg = errorDlg(self,self)
@@ -24630,8 +24630,8 @@ class ApplicationWindow(QMainWindow):
         self.error_dlg.raise_()
         self.error_dlg.activateWindow()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def viewSerialLog(self, _:bool = False) -> None:
         if self.serial_dlg is None:
             self.serial_dlg = serialLogDlg(self,self)
@@ -24640,8 +24640,8 @@ class ApplicationWindow(QMainWindow):
         self.serial_dlg.raise_()
         self.serial_dlg.activateWindow()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def viewplatform(self, _:bool = False) -> None:
         from artisanlib.platformdlg import platformDlg
         platformDLG = platformDlg(self,self)
@@ -24649,8 +24649,8 @@ class ApplicationWindow(QMainWindow):
         platformDLG.show()
         platformDLG.activateWindow()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def viewMessageLog(self, _:bool = False) -> None:
         if self.message_dlg is None:
             self.message_dlg = messageDlg(self, self)
@@ -24659,8 +24659,8 @@ class ApplicationWindow(QMainWindow):
         self.message_dlg.raise_()
         self.message_dlg.activateWindow()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def helpAbout(self, _:bool = False) -> None:
         # pylint: disable=consider-using-f-string
         coredevelopers:str = '<br>Rafael Cobo, Marko Luther &amp; Dave Baxter'
@@ -24718,19 +24718,19 @@ class ApplicationWindow(QMainWindow):
                 otherlibs, # pyright:ignore[reportUnknownArgumentType]
                 '<a href="https://artisan-scope.org">https://artisan-scope.org</a>'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def showAboutQt(self, _:bool = False) -> None:
         # pylint: disable=no-self-use # used as slot
         self.app.aboutQt()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def helpHelp(self, _:bool = False) -> None:  # pylint: disable=no-self-use # used as slot
         QDesktopServices.openUrl(QUrl('https://artisan-scope.org/help/', QUrl.ParsingMode.TolerantMode))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def checkUpdate(self, _:bool = False) -> None:
         update_url = '<a href="https://artisan-scope.org">https://artisan-scope.org</a>'
         update_str = QApplication.translate('About', 'There was a problem retrieving the latest version information.  Please check your Internet connection, try again later, or check manually.')
@@ -24798,15 +24798,15 @@ class ApplicationWindow(QMainWindow):
                 if fileName:
                     imag.save(fileName, fmt)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def calibratedelay(self, _:bool = False) -> None:
         from artisanlib.sampling import SamplingDlg
         samplingDl = SamplingDlg(self,self)
         samplingDl.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def setcommport(self, _:bool = False) -> None:
         from artisanlib.ports import comportDlg
         dialog = comportDlg(self,self)
@@ -25098,7 +25098,7 @@ class ApplicationWindow(QMainWindow):
                 QApplication.translate('Message', 'Warning'), QApplication.translate('Message',
                 'To control a Hottop you need to activate the super user mode via a right click on the timer LCD first!'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def PIDcontrol(self, _:bool = False) -> None:
         #FUJI/DELTA pid
         if self.qmc.device in {0, 26}:
@@ -25152,13 +25152,13 @@ class ApplicationWindow(QMainWindow):
 
     # ---- AI Advisor ----
 
-    @pyqtSlot()
+    @Slot()
     def _on_ai_query_start(self) -> None:
         self.aiStatusLabel.setText('🔄 AI 查詢中…')
         self.aiStatusLabel.setStyleSheet('color:#ffd700;font-size:9pt;padding:2px 4px;')
         self.aiAskBtn.setEnabled(False)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _on_ai_advice(self, advice: str) -> None:
         """Receive AI advice and display it (called from background thread via signal)."""
         self.sendmessageSignal.emit(f'🤖 {advice[:80]}', True, '')
@@ -25173,7 +25173,7 @@ class ApplicationWindow(QMainWindow):
         self.aiAdvisorLabel.setHtml('<br>'.join(blocks))
         self.aiAdvisorLabel.verticalScrollBar().setValue(0)
 
-    @pyqtSlot()
+    @Slot()
     def _on_ai_ask_now(self) -> None:
         """Manually trigger an immediate AI query."""
         qmc = self.qmc
@@ -25188,7 +25188,7 @@ class ApplicationWindow(QMainWindow):
             ror_values=list(getattr(qmc, '_ai_ror_buffer', [])),
         )
 
-    @pyqtSlot()
+    @Slot()
     def _on_ai_export(self) -> None:
         """Save AI advice history to a text file."""
         import os
@@ -25257,15 +25257,15 @@ class ApplicationWindow(QMainWindow):
                f'padding:4px 6px;margin:4px 0;">')
         return div + '<br>'.join(html_lines) + '</div>'
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def openAIAdvisorConfig(self, _: bool = False) -> None:
         from artisanlib.ai_advisor_dialog import AIAdvisorDialog
         dialog = AIAdvisorDialog(self, self)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def openExcelImport(self, _: bool = False) -> None:
         from artisanlib.excel_import import ExcelImportDialog
         dialog = ExcelImportDialog(self, self)
@@ -25331,42 +25331,42 @@ class ApplicationWindow(QMainWindow):
                 if idx < len(self.extraeventbuttoncolor):
                     self.extraeventbuttoncolor[idx] = bg
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def deviceassigment(self, _:bool = False) -> None:
         from artisanlib.devices import DeviceAssignmentDlg
         dialog = DeviceAssignmentDlg(self,self,self.DeviceAssignmentDlg_activeTab)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def showstatistics(self, _:bool = False) -> None:
         from artisanlib.statistics import StatisticsDlg
         dialog = StatisticsDlg(self,self,self.StatisticsDlg_activeTab)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def Windowconfig(self, _:bool = False) -> None:
         from artisanlib.axis import WindowsDlg
         dialog = WindowsDlg(self,self)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def autosaveconf(self, _:bool = False) -> None:
         from artisanlib.autosave import autosaveDlg
         dialog = autosaveDlg(self,self)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def batchconf(self, _:bool = False) -> None:
         from artisanlib.batches import batchDlg
         dialog = batchDlg(self,self)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def calculator(self, _:bool = False) -> None:
         from artisanlib.calculator import calculatorDlg
         dialog = calculatorDlg(self,self)
@@ -25374,8 +25374,8 @@ class ApplicationWindow(QMainWindow):
         dialog.show()
 #        QApplication.processEvents()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def loadSettings_triggered(self, _:bool = False) -> None:
         _log.info('menu load settings')
         self.loadSettings()
@@ -25463,7 +25463,7 @@ class ApplicationWindow(QMainWindow):
         for j in range(numRecentSettings, self.MaxRecentFiles):
             self.recentSettingActs[j].setVisible(False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def openRecentSetting(self, _checked:bool = False) -> None:
         action = self.sender()
         if action and isinstance(action, QAction) and hasattr(action,'data'):
@@ -25484,8 +25484,8 @@ class ApplicationWindow(QMainWindow):
                         widget.updateRecentSettingActions()
                 self.sendmessage(QApplication.translate('Message','Settings not found'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def saveSettings(self, _:bool = False) -> None:
         path = QDir()
         path.setPath(self.getDefaultPath())
@@ -25534,7 +25534,7 @@ class ApplicationWindow(QMainWindow):
         for j in range(numRecentThemes, self.MaxRecentFiles):
             self.recentThemeActs[j].setVisible(False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def openRecentTheme(self, _checked:bool = False) -> None:
         action = self.sender()
         if action and isinstance(action, QAction) and hasattr(action,'data'):
@@ -25554,7 +25554,7 @@ class ApplicationWindow(QMainWindow):
                         widget.updateRecentThemeActions()
                 self.sendmessage(QApplication.translate('Message','Settings not found'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def saveSettings_theme(self, _:bool = False) -> None:
         path = QDir()
         path.setPath(self.getDefaultPath())
@@ -25582,7 +25582,7 @@ class ApplicationWindow(QMainWindow):
         else:
             self.sendmessage(QApplication.translate('Message','Cancelled'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def loadSettings_theme_Slot(self, _:bool = False) -> None:
         self.loadSettings_theme()
 
@@ -25657,8 +25657,8 @@ class ApplicationWindow(QMainWindow):
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' loadSettings_theme() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def schedule(self, b:bool = False) -> None:
         if b and self.schedule_window is None:
             if  not self.app.artisanviewerMode:  # no scheduler in ArtisanViewer mode
@@ -25670,8 +25670,8 @@ class ApplicationWindow(QMainWindow):
             self.schedule_window.close()
             self.schedule_window = None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def largeLCDs(self, _:bool = False) -> None:
         if self.largeLCDs_dialog is None:
             self.largeLCDs_dialog = LargeMainLCDs(self,self)
@@ -25683,8 +25683,8 @@ class ApplicationWindow(QMainWindow):
             self.largeLCDs_dialog.close()
             self.largeLCDs_dialog = None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def largeDeltaLCDs(self, _:bool = False) -> None:
         if self.largeDeltaLCDs_dialog is None:
             self.largeDeltaLCDs_dialog = LargeDeltaLCDs(self,self)
@@ -25696,8 +25696,8 @@ class ApplicationWindow(QMainWindow):
             self.largeDeltaLCDs_dialog.close()
             self.largeDeltaLCDs_dialog = None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def largePIDLCDs(self, _:bool = False) -> None:
         if self.largePIDLCDs_dialog is None:
             self.largePIDLCDs_dialog = LargePIDLCDs(self,self)
@@ -25709,8 +25709,8 @@ class ApplicationWindow(QMainWindow):
             self.largePIDLCDs_dialog.close()
             self.largePIDLCDs_dialog = None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def largeScaleLCDs(self, _:bool = False) -> None:
         if self.largeScaleLCDs_dialog is None:
             self.largeScaleLCDs_dialog = LargeScaleLCDs(self,self)
@@ -25722,8 +25722,8 @@ class ApplicationWindow(QMainWindow):
             self.largeScaleLCDs_dialog.close()
             self.largeScaleLCDs_dialog = None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def largeExtraLCDs(self, _:bool = False) -> None:
         if self.largeExtraLCDs_dialog is None:
             self.largeExtraLCDs_dialog = LargeExtraLCDs(self,self)
@@ -25735,8 +25735,8 @@ class ApplicationWindow(QMainWindow):
             self.largeExtraLCDs_dialog.close()
             self.largeExtraLCDs_dialog = None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def largePhasesLCDs(self, _:bool = False) -> None:
         if self.largePhasesLCDs_dialog is None:
             self.largePhasesLCDs_dialog = LargePhasesLCDs(self,self)
@@ -25749,8 +25749,8 @@ class ApplicationWindow(QMainWindow):
             self.largePhasesLCDs_dialog.close()
             self.largePhasesLCDs_dialog = None
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def graphwheel(self, _:bool = False) -> None:
         if self.qmc.designerflag:
             self.stopdesigner()
@@ -25787,8 +25787,8 @@ class ApplicationWindow(QMainWindow):
                     self.settingspath = ''
             self.qmc.drawWheel()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def background(self, _:bool = False) -> None:
         from artisanlib.background import backgroundDlg
         dialog = backgroundDlg(self,self,self.backgroundDlg_activeTab)
@@ -25823,8 +25823,8 @@ class ApplicationWindow(QMainWindow):
         self.qmc.deleteAnnoPositions(foreground=False, background=True)
         self.sendmessage(QApplication.translate('Message', 'Background profile removed'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def switchETBT(self, _:bool = False) -> None: # pylint: disable=no-self-use # used as slot
         t2 = self.qmc.temp2
         self.qmc.temp2 = self.qmc.temp1
@@ -25832,8 +25832,8 @@ class ApplicationWindow(QMainWindow):
         self.qmc.redraw(recomputeAllDeltas=True)
         self.qmc.fileDirtySignal.emit()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def switch(self,_:bool = False) -> None:
         if not self.qmc.checkSaved():
             return
@@ -25891,8 +25891,8 @@ class ApplicationWindow(QMainWindow):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def flavorchart(self, _:bool = False) -> None:
         self.redrawOnResize = False # disable the redraw triggered on resize (eg. by hiding widgets) that replaces the logo icon
         from artisanlib.cup_profile import flavorDlg
@@ -25900,8 +25900,8 @@ class ApplicationWindow(QMainWindow):
         dialog.show()
 
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def designerTriggered(self, _:bool = False) -> None:
         if self.qmc.designerflag:
             self.stopdesigner()
@@ -25931,8 +25931,8 @@ class ApplicationWindow(QMainWindow):
         self.update_minieventline_visibility()
         self.updateExtraButtonsVisibility()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def editgraph(self, _:bool = False) -> None:
         self.open_roast_properties_dialog()
 
@@ -25942,22 +25942,22 @@ class ApplicationWindow(QMainWindow):
             self.editgraphdialog = editGraphDlg(self,self,self.editGraphDlg_activeTab,start_recording_on_exit)
             self.editgraphdialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def editphases(self, _:bool = False) -> None:
         from artisanlib.phases import phasesGraphDlg
         dialog = phasesGraphDlg(self,self)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def eventsconf(self, _:bool = False) -> None:
         from artisanlib.events import EventsDlg
         dialog = EventsDlg(self,self,self.EventsDlg_activeTab)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def alarmconfig(self, _:bool = False) -> None:
         if self.qmc.device != 18 or self.simulator is not None:
             from artisanlib.alarms import AlarmDlg
@@ -25973,8 +25973,8 @@ class ApplicationWindow(QMainWindow):
         except Exception as e:  # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def change_local_action(self, _:bool = False) -> None:
         sender_action = self.sender()
         new_locale = next((local for local, action in self.language_menu_actions.items() if sender_action == action), 'en')
@@ -26023,8 +26023,8 @@ class ApplicationWindow(QMainWindow):
             return 0.
         return 100. * ((float(roasted) - float(green)) / float(green))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importK202(self, _:bool = False) -> None:
         import csv
         try:
@@ -26089,8 +26089,8 @@ class ApplicationWindow(QMainWindow):
             _a, _b, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' importK202() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importK204(self, _:bool = False) -> None:
         import csv
         try:
@@ -26183,8 +26183,8 @@ class ApplicationWindow(QMainWindow):
         for child in root:
             self.normalize_attr(child)
 
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def importPilot(self, _:bool = False) -> None: # pyright: ignore [reportGeneralTypeIssues] # Code is too complex to analyze; reduce complexity by refactoring into subroutines or reducing
 #        try:
 #            import xml.etree.ElementTree as ET
@@ -26385,8 +26385,8 @@ class ApplicationWindow(QMainWindow):
 #            self.sendmessage(QApplication.translate('Message','Import Probat Pilot failed'))
 #            self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' importPilot() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def importBullet(self,_=False):
 #        try:
 #            from artisanlib.aillio import extractProfileRoasTime
@@ -26394,8 +26394,8 @@ class ApplicationWindow(QMainWindow):
 #        except Exception as e: # pylint: disable=broad-except
 #            _log.exception(e)
 
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def importBulletURL(self,_=False):
 #        try:
 #            from artisanlib.aillio import extractProfileRoastWorld
@@ -26403,17 +26403,17 @@ class ApplicationWindow(QMainWindow):
 #        except Exception as e: # pylint: disable=broad-except
 #            _log.exception(e)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def comparatorAddProfileSlot(self, filename:str) -> None:
         if self.comparator is not None:
             self.comparator.addProfiles([filename])
 
-    @pyqtSlot('QUrl')
+    @Slot('QUrl')
     def comparatorAddProfileURLSlot(self, url:QUrl) -> None:
         if self.comparator is not None:
             self.comparator.addProfileFromURL(self.artisanURLextractor, url)
 
-    @pyqtSlot('QUrl')
+    @Slot('QUrl')
     def importArtisanURLSlot(self, url:QUrl) -> None:
         self.importExternalURL(self.artisanURLextractor, url=url)
 
@@ -26516,92 +26516,92 @@ class ApplicationWindow(QMainWindow):
             _, _, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' {1} {0}').format(str(ex),message),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importCropster(self, _:bool = False) -> None:
         from artisanlib.cropster import extractProfileCropsterXLS
         self.importExternal(extractProfileCropsterXLS, QApplication.translate('Message','Import {}').format('Cropster XLS'),'*.xls')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importStronghold(self, _:bool = False) -> None:
         from artisanlib.stronghold import extractProfileStrongholdXLSX
         self.importExternal(extractProfileStrongholdXLSX, QApplication.translate('Message','Import {}').format('Stronghold XLSX'), '*.xlsx')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importRoastLog(self, _:bool = False) -> None:
         from artisanlib.roastlog import extractProfileRoastLog
         self.importExternalURL(extractProfileRoastLog,QApplication.translate('Message','Import {}').format('RoastLog URL'))
 
-#    @pyqtSlot()
-#    @pyqtSlot(bool)
+#    @Slot()
+#    @Slot(bool)
 #    def importRoastPATH(self, _:bool = False) -> None:
 #        from artisanlib.roastpath import extractProfileRoastPathHTML
 #        self.importExternalURL(extractProfileRoastPathHTML,QApplication.translate('Message','Import {}').format('RoastPath URL'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importHiBean(self, _:bool = False) -> None:
         from artisanlib.hibean import extractProfileHiBeanJSON
         self.importExternal(extractProfileHiBeanJSON,QApplication.translate('Message','Import {}').format('HiBean JSON'),'*.json')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importGiesen(self, _:bool = False) -> None:
         from artisanlib.giesen import extractProfileGiesenCSV
         self.importExternal(extractProfileGiesenCSV,QApplication.translate('Message','Import {}').format('Giesen CSV'),'*.csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importPetroncini(self, _:bool = False) -> None:
         from artisanlib.petroncini import extractProfilePetronciniCSV
         self.importExternal(extractProfilePetronciniCSV,QApplication.translate('Message','Import {}').format('Petroncini CSV'),'*.csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importIkawaURL(self, _:bool = False) -> None:
         from artisanlib.ikawa import extractProfileIkawaURL
         self.importExternalURL(extractProfileIkawaURL,QApplication.translate('Message','Import {}').format('IKAWA URL'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importIkawa(self, _:bool = False) -> None:
         from artisanlib.ikawa import extractProfileIkawaCSV
         self.importExternal(extractProfileIkawaCSV,QApplication.translate('Message','Import {}').format('IKAWA CSV'),'*.csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importOrbiter(self, _:bool = False) -> None:
         from artisanlib.orbiter import extractProfileOrbiterROP
         self.importExternal(extractProfileOrbiterROP,QApplication.translate('Message','Import {}').format('Orbiter'),'(*.rop *.zip)')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importKaleido(self, _:bool = False) -> None:
         from artisanlib.kaleido import extractProfileKaleidoCSV
         self.importExternal(extractProfileKaleidoCSV,QApplication.translate('Message','Import {}').format('Kaleido CSV'),'*.csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importLoring(self, _:bool = False) -> None:
         from artisanlib.loring import extractProfileLoringCSV
         self.importExternal(extractProfileLoringCSV,QApplication.translate('Message','Import {}').format('Loring CSV'),'*.csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importRoest(self, _:bool = False) -> None:
         from artisanlib.roest import extractProfileRoestCSV
         self.importExternal(extractProfileRoestCSV,QApplication.translate('Message','Import {}').format('ROEST CSV'),'*.csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importRubasse(self, _:bool = False) -> None:
         from artisanlib.rubasse import extractProfileRubasseCSV
         self.importExternal(extractProfileRubasseCSV,QApplication.translate('Message','Import {}').format('Rubasse CSV'),'*.csv')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def importHH506RA(self, _:bool = False) -> None:
         import csv
         try:
@@ -26665,65 +26665,65 @@ class ApplicationWindow(QMainWindow):
             _a, _b, exc_tb = sys.exc_info()
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' importHH506RA() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_0_1(self, _:bool = False) -> None:
         self.resizeImgToSize(0,0,'PNG')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_0_1_JPEG(self, _:bool = False) -> None:
         self.resizeImgToSize(0,0,'JPEG')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_1200_1(self, _:bool = False) -> None:
         self.resizeImgToSize(1200,0)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_800_1(self, _:bool = False) -> None:
         self.resizeImgToSize(800,0)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_700_1(self, _:bool = False) -> None:
         self.resizeImgToSize(700,0)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_620_1(self, _:bool = False) -> None:
         self.resizeImgToSize(620,0)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_600_1(self, _:bool = False) -> None:
         self.resizeImgToSize(600,0)
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImg_500_1(self, _:bool = False) -> None:
         self.resizeImgToSize(500,0)
 
     # Facebook
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImgSize_1200_628(self, _:bool = False) -> None:
         self.resizeImgToSize(1200,628,'JPEG')
 
     # Instagram
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def resizeImgSize_1080_608(self, _:bool = False) -> None:
         self.resizeImgToSize(1080,608,'JPEG')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def saveVectorGraph_SVG(self, _:bool = False) -> None:
         self.saveVectorGraph(extension='*.svg')
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def saveVectorGraph_PDF(self, _:bool = False) -> None:
         self.saveVectorGraph(extension='*.pdf')
 
@@ -26854,8 +26854,8 @@ class ApplicationWindow(QMainWindow):
             _log.exception(e)
 
     #displays Dialog for the setting of the curves parameters (like RoR, Filters,..)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def setCurves(self, _:bool = False) -> None:
         from artisanlib.curves import CurvesDlg
         curvesDlg = CurvesDlg(self,self,self.CurveDlg_activeTab)
@@ -27019,7 +27019,7 @@ class ApplicationWindow(QMainWindow):
 
 
     #orders extra event buttons based on max number of buttons
-    @pyqtSlot()
+    @Slot()
     def realignbuttons(self) -> None:
         #clear buttons
         self.clearBoxLayout(self.e1buttonbarLayout)
@@ -27241,7 +27241,7 @@ class ApplicationWindow(QMainWindow):
             else:
                 bl.setToolTip('')
 
-    @pyqtSlot()
+    @Slot()
     def update_extraeventbuttons_visibility(self) -> None:
         for i, bl in enumerate(self.buttonlist):
             try:
@@ -27271,7 +27271,7 @@ class ApplicationWindow(QMainWindow):
             self.sendmessage(f"{QApplication.translate('Message','Buttons copied to Palette #')}{pindex}")
 
     # action not returning anything
-    @pyqtSlot(int)
+    @Slot(int)
     def setbuttonsfromAction(self, pindex:int) -> None:
         self.setbuttonsfrom(pindex)
 
@@ -27523,7 +27523,7 @@ class ApplicationWindow(QMainWindow):
 #        if filename:
 #            self.getPalettes(filename,pal)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def loadAlarms(self, filename:str) -> None:
         try:
             from json import load as json_load
@@ -27556,28 +27556,28 @@ class ApplicationWindow(QMainWindow):
             self.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' loadAlarms() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
             return
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def analysisfitCurvesALL(self, _:bool = False) -> None:
         self.analysisfitCurves(-1)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def analysisfitCurvesLN(self, _:bool = False) -> None:
         self.analysisfitCurves(0)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def analysisfitCurvesX2(self, _:bool = False) -> None:
         self.analysisfitCurves(2)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def analysisfitCurvesX3(self, _:bool = False) -> None:
         self.analysisfitCurves(3)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def analysisfitCurvesBkgnd(self, _:bool = False) -> None:
         self.analysisfitCurves(4)
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def clearResults(self, _:bool = False) -> None:
         if self.qmc.analyzer_connect_id is not None:
             self.qmc.fig.canvas.mpl_disconnect(self.qmc.analyzer_connect_id)
@@ -28084,15 +28084,15 @@ class ApplicationWindow(QMainWindow):
                 _, _, exc_tb = sys.exc_info()
                 self.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' setbackgroundequ(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def transform(self, _:bool = False) -> None:
         from artisanlib.transposer import profileTransformatorDlg
         dialog = profileTransformatorDlg(self,self)
         dialog.show()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def roastCompare(self, _:bool = False) -> None:
         if self.comparator is not None:
             self.comparator.close()
@@ -28121,8 +28121,8 @@ class ApplicationWindow(QMainWindow):
                     self.comparator.show()
             self.roastCompareAction.setChecked(bool(self.comparator))
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def simulate(self, _:bool = False) -> None:
         modifiers = QApplication.keyboardModifiers()
         control_modifier = modifiers == Qt.KeyboardModifier.ControlModifier # command/apple key on macOS, Control key on Windows

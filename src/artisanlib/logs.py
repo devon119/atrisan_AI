@@ -27,7 +27,7 @@ from artisanlib import __version__
 
 from artisanlib.dialogs import ArtisanDialog
 
-from qtpy.QtCore import pyqtSlot
+from qtpy.QtCore import Slot
 from qtpy.QtWidgets import (QApplication, QLabel, QCheckBox, QTextEdit, QVBoxLayout)
 
 
@@ -64,14 +64,14 @@ class serialLogDlg(ArtisanDialog):
         if self.aw.seriallogflag:
             self.serialEdit.setText(self.getstring())
 
-    @pyqtSlot(int)
+    @Slot(int)
     def serialcheckboxChanged(self, _:int) -> None:
         if self.serialcheckbox.isChecked():
             self.aw.seriallogflag = True
         else:
             self.aw.seriallogflag = False
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -106,7 +106,7 @@ class errorDlg(ArtisanDialog):
         self.elabel.setText(labelstr)
         self.errorEdit.setHtml('version = ' +__version__ +'<br><br>' + htmlerr)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -136,7 +136,7 @@ class messageDlg(ArtisanDialog):
         htmlmessage = ''.join([f'<b>{lenl-i}</b> {m}<br><br>' for i,m in enumerate(reversed(self.aw.messagehist))])
         self.messageEdit.setHtml(htmlmessage)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0

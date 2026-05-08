@@ -9,7 +9,7 @@ import random
 from collections import deque
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import QTimer, pyqtSlot, Qt
+from qtpy.QtCore import QTimer, Slot, Qt
 from qtpy.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QComboBox, QGroupBox, QWidget, QSlider,
@@ -282,19 +282,19 @@ class AIAdvisorSimDialog(ArtisanDialog):
 
     # ── Control slots ─────────────────────────────────────────────────────────
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _on_heat_changed(self, v: int) -> None:
         self._heat = v
         self._heat_label.setText(str(v))
         self._update_effect_hint()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _on_airflow_changed(self, v: int) -> None:
         self._airflow = v
         self._air_label.setText(str(v))
         self._update_effect_hint()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _on_bean_load_changed(self, v: int) -> None:
         self._bean_load = v
 
@@ -313,12 +313,12 @@ class AIAdvisorSimDialog(ArtisanDialog):
             f'RoR {sign_ror}{ror_delta:.1f}°/m（~{tau_bt}s）'
         )
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _on_speed_change(self, idx: int) -> None:
         if self._timer.isActive():
             self._timer.setInterval(_SPEED_INTERVALS[idx])
 
-    @pyqtSlot()
+    @Slot()
     def _on_start(self) -> None:
         self._sim_time = 0.0; self._charge_at = None
         self._timex.clear(); self._temp2.clear()
@@ -341,7 +341,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
         self._timer.start(_SPEED_INTERVALS[self._speed_combo.currentIndex()])
         self._stage.setText('機器預熱中… 按 CHARGE 投豆')
 
-    @pyqtSlot()
+    @Slot()
     def _on_stop(self) -> None:
         self._timer.stop()
         self._btn_start.setEnabled(True); self._btn_stop.setEnabled(False)
@@ -349,7 +349,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
             b.setEnabled(False)
         self._stage.setText('已停止')
 
-    @pyqtSlot()
+    @Slot()
     def _on_charge(self) -> None:
         self._charge_at = self._sim_time
         self._timeindex[0] = max(0, len(self._timex) - 1)
@@ -370,7 +370,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
         self._stage.setStyleSheet('QLabel{background:#1a2a3a;color:#4fc3f7;padding:4px;border-radius:3px;}')
         self._fire_advice('CHARGE（投豆）')
 
-    @pyqtSlot()
+    @Slot()
     def _on_fc(self) -> None:
         self._timeindex[2] = max(0, len(self._timex) - 1)
         self._btn_fc.setEnabled(False); self._btn_drop.setEnabled(True)
@@ -381,7 +381,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
         self._fc_exo_elapsed = 0.0  # start exothermic countdown
         self._fire_advice('一爆開始（FC）')
 
-    @pyqtSlot()
+    @Slot()
     def _on_drop(self) -> None:
         self._timeindex[6] = max(0, len(self._timex) - 1)
         self._btn_drop.setEnabled(False)
@@ -439,7 +439,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
 
     # ── Tick ──────────────────────────────────────────────────────────────────
 
-    @pyqtSlot()
+    @Slot()
     def _tick(self) -> None:
         self._sim_time += 1.0
         self._tick_count += 1
@@ -559,7 +559,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
 
     # ── AI advice ─────────────────────────────────────────────────────────────
 
-    @pyqtSlot()
+    @Slot()
     def _on_ask_ai(self) -> None:
         if not hasattr(self.aw, 'ai_advisor') or not self.aw.ai_advisor.enabled:
             return

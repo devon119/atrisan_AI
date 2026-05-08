@@ -19,7 +19,7 @@ import platform
 import logging
 import re
 
-from qtpy.QtCore import Qt, QEvent, QSettings, pyqtSlot, pyqtSignal, QRegularExpression
+from qtpy.QtCore import Qt, QEvent, QSettings, Slot, Signal, QRegularExpression
 from qtpy.QtWidgets import (QApplication, QWidget, QDialog, QMessageBox, QDialogButtonBox, QTextEdit,
             QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QLayout, QTableWidget, QHeaderView, QPushButton, QSpinBox, QCheckBox)
 from qtpy.QtGui import QKeySequence, QAction, QIntValidator, QTextCharFormat, QTextCursor, QColor
@@ -98,12 +98,12 @@ class ArtisanDialog(QDialog):
             if txt != current_trans:
                 btn.setText(current_trans)
 
-    @pyqtSlot()
+    @Slot()
     def cancelDialog(self) -> None:  # ESC key
 #        self.reject() # this does not call any closeEvent in subclasses!
         self.dialogbuttons.rejected.emit()
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None') -> None:
         del a0
@@ -236,13 +236,13 @@ class HelpDlg(ArtisanDialog):
             else:
                 super().keyPressEvent(a0)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0: 'QCloseEvent|None' = None) -> None:
         del a0
         self.handleClose()
 
-    @pyqtSlot()
+    @Slot()
     def handleClose(self) -> None:
         settings = QSettings()
         # Save window geometry
@@ -362,7 +362,7 @@ class ArtisanInputDialog(ArtisanDialog):
         if okButton is not None:
             okButton.setFocus()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.url = self.inputLine.text()
@@ -416,7 +416,7 @@ class ArtisanComboBoxDialog(ArtisanDialog):
         if okButton is not None:
             okButton.setFocus()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.idx = self.comboBox.currentIndex()
@@ -453,14 +453,14 @@ class PortComboBox(MyQComboBox):  # pyright: ignore [reportGeneralTypeIssues] # 
             pass
         self.editTextChanged.connect(self.textEdited) # this has to be done after the setCurrentIndex above to avoid setting the self.edited to the currents ports name
 
-    @pyqtSlot(str)
+    @Slot(str)
     def textEdited(self, txt:str) -> None:
         self.edited = txt
 
     def getSelection(self) -> str|None:
         return self.edited or self.selection
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setSelection(self, i:int) -> None:
         if i >= 0:
             try:
@@ -537,7 +537,7 @@ class ArtisanPortsDialog(ArtisanDialog):
     def getSelection(self) -> str|None:
         return self.comboBox.getSelection()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.idx = self.comboBox.currentIndex()
@@ -583,7 +583,7 @@ class ArtisanSliderLCDinputDlg(ArtisanDialog):
         mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
         self.setLayout(mainLayout)
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.value = int(self.valueEdit.text())
@@ -596,7 +596,7 @@ class ArtisanSliderLCDinputDlg(ArtisanDialog):
 
 
 class tareDlg(ArtisanDialog):
-    tare_updated_signal = pyqtSignal()  # signalled after tare data table got updated
+    tare_updated_signal = Signal()  # signalled after tare data table got updated
 
     def __init__(self, parent:ArtisanDialog, aw:'ApplicationWindow', get_scale_weight: Callable[[], float|None]) -> None:
         super().__init__(parent, aw)
@@ -643,14 +643,14 @@ class tareDlg(ArtisanDialog):
         self.setMinimumWidth(230)
         self.setMinimumHeight(250)
 
-    @pyqtSlot()
+    @Slot()
     def selectionChanged(self) -> None:
         if len(self.taretable.selectedRanges()) > 0:
             self.delButton.setDisabled(False)
         else:
             self.delButton.setDisabled(False)
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.saveTareTable()
@@ -682,7 +682,7 @@ class tareDlg(ArtisanDialog):
         self.taretable.setCellWidget(row, 0, name_widget)
         self.taretable.setCellWidget(row, 1, weight_widget)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def addTare(self, _:bool = False) -> None:
         rows = self.taretable.rowCount()
         self.taretable.setRowCount(rows + 1)
@@ -692,7 +692,7 @@ class tareDlg(ArtisanDialog):
         #add widgets to the table
         self.setTableRow(rows, QApplication.translate('Label', 'container'), weight)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def delTare(self, _:bool = False) -> None:
         selected = self.taretable.selectedRanges()
         if len(selected) > 0:
@@ -719,7 +719,7 @@ class tareDlg(ArtisanDialog):
         self.aw.qmc.container_names = names
         self.aw.qmc.container_weights = weights
 
-    @pyqtSlot()
+    @Slot()
     def weightEdited(self) -> None:
         sender = self.sender()
         if sender and isinstance(sender, QLineEdit):
@@ -818,7 +818,7 @@ class DesignerSplineNodesDlg(ArtisanDialog):
         self.dialogbuttons.accepted.connect(self.accept_dialog)
         self.dialogbuttons.rejected.connect(self.reject)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def on_legacy_changed(self, state: int) -> None:
         """Enable/disable spinbox based on legacy checkbox state."""
         is_legacy:bool = state == cast(int, Qt.CheckState.Checked.value)
@@ -826,7 +826,7 @@ class DesignerSplineNodesDlg(ArtisanDialog):
         self.nodes_label.setEnabled(not is_legacy)
         self.spline_info_label.setEnabled(not is_legacy)
 
-    @pyqtSlot()
+    @Slot()
     def accept_dialog(self) -> None:
         """Store the selected number of nodes and accept the dialog."""
         if self.legacy_checkbox.isChecked():

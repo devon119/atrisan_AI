@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.main import UI_MODE
 
-from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtCore import Qt, Slot, QSettings
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLayout, QSpinBox, QPushButton,
@@ -260,21 +260,21 @@ class phasesGraphDlg(ArtisanDialog):
 
         mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def lcdmodeFlagFinChanged(self, value:int) -> None:
         self.aw.qmc.phasesLCDmode_all[2] = bool(value)
         self.lcdmodeComboBox_fin.setEnabled(not bool(self.aw.qmc.phasesLCDmode_all[2]))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def lcdmodeComboBox_dryChanged(self, _:int) -> None:
         self.aw.qmc.phasesLCDmode_l[0] = self.lcdmodeComboBox_dry.currentIndex()
         self.aw.qmc.phasesLCDmode = self.aw.qmc.phasesLCDmode_l[0]
 
-    @pyqtSlot(int)
+    @Slot(int)
     def lcdmodeComboBox_midChanged(self, _:int) -> None:
         self.aw.qmc.phasesLCDmode_l[1] = self.lcdmodeComboBox_mid.currentIndex()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def lcdmodeComboBox_finChanged(self, _:int) -> None:
         self.aw.qmc.phasesLCDmode_l[2] = self.lcdmodeComboBox_fin.currentIndex()
 
@@ -304,12 +304,12 @@ class phasesGraphDlg(ArtisanDialog):
             self.endmid.setDisabled(True)
             self.startfinish.setDisabled(True)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def watermarksflagChanged(self, _:int) -> None:
         self.aw.qmc.watermarksflag = not self.aw.qmc.watermarksflag
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def phasesLCDsflagChanged(self, _:int) -> None:
         self.aw.qmc.phasesLCDflag = not self.aw.qmc.phasesLCDflag
         if self.aw.qmc.flagstart:
@@ -318,19 +318,19 @@ class phasesGraphDlg(ArtisanDialog):
             else:
                 self.aw.phasesLCDs.hide()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def autoDRYflagChanged(self, _:int) -> None:
         self.aw.qmc.autoDRYflag = not self.aw.qmc.autoDRYflag
         if self.aw.qmc.autoDRYflag:
             self.pushbuttonflag.setChecked(False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def autoFCsFlagChanged(self, _:int) -> None:
         self.aw.qmc.autoFCsFlag = not self.aw.qmc.autoFCsFlag
         if self.aw.qmc.autoFCsFlag:
             self.pushbuttonflag.setChecked(False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def fromBackgroundflagChanged(self, i:int) -> None:
         if i:
             self.aw.qmc.phasesfromBackgroundflag = True
@@ -340,7 +340,7 @@ class phasesGraphDlg(ArtisanDialog):
         else:
             self.aw.qmc.phasesfromBackgroundflag = False
 
-    @pyqtSlot(int)
+    @Slot(int)
     def pushbuttonflagChanged(self, i:int) -> None:
         if i:
             self.aw.qmc.phasesbuttonflag = True
@@ -357,7 +357,7 @@ class phasesGraphDlg(ArtisanDialog):
             self.autoDRYflag.setChecked(False)
             self.autoFCsFlag.setChecked(False)
 
-    @pyqtSlot()
+    @Slot()
     def updatephases(self) -> None:
         self.aw.qmc.phases[0] = self.startdry.value()
         self.aw.qmc.phases[1] = self.enddry.value()
@@ -383,7 +383,7 @@ class phasesGraphDlg(ArtisanDialog):
 #        self.aw.closeEventSettings()
         self.accept()
 
-    @pyqtSlot()
+    @Slot()
     def cancel(self) -> None:
         self.aw.qmc.phases = list(self.phases)
         self.aw.qmc.phasesbuttonflag = bool(self.org_phasesbuttonflag)
@@ -412,7 +412,7 @@ class phasesGraphDlg(ArtisanDialog):
         self.endfinish.setValue(int(round(self.aw.qmc.phases[3])))
         self.endfinish.repaint()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setdefault(self, _:bool) -> None:
         if self.aw.qmc.mode == 'F':
             self.aw.qmc.phases = list(self.aw.qmc.phases_fahrenheit_defaults)

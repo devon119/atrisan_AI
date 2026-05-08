@@ -34,7 +34,7 @@ from artisanlib.dialogs import ArtisanDialog
 from artisanlib.util import stringfromseconds, stringtoseconds, float2float
 
 
-from qtpy.QtCore import Qt, pyqtSlot, QSettings, QRegularExpression, QDateTime
+from qtpy.QtCore import Qt, Slot, QSettings, QRegularExpression, QDateTime
 from qtpy.QtGui import QRegularExpressionValidator
 from qtpy.QtWidgets import (QApplication, QHeaderView, QAbstractItemView, QWidget, QLabel, QLineEdit, QComboBox, QDialogButtonBox,
             QTableWidget, QTableWidgetItem, QGroupBox, QLayout, QHBoxLayout, QVBoxLayout, QFrame)
@@ -357,13 +357,13 @@ class profileTransformatorDlg(ArtisanDialog):
 
     # message slots
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeMappingMode(self, i:int) -> None:
         self.aw.qmc.transMappingMode = i
         self.updateTimeResults()
         self.updateTempResults()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def phasesTableColumnHeaderClicked(self, i:int) -> None:
         if (self.phases_target_widgets_time is not None and
                 self.phases_target_widgets_time[i] is not None and
@@ -397,7 +397,7 @@ class profileTransformatorDlg(ArtisanDialog):
                     qline_edit.setText(s)
             self.updateTimeResults()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def phasesTableRowHeaderClicked(self, i:int) -> None:
         if i == 1: # row targets
             # clear all targets and results
@@ -406,7 +406,7 @@ class profileTransformatorDlg(ArtisanDialog):
             self.clearPhasesTargetPercent()
             self.clearPhasesResults()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def timeTableColumnHeaderClicked(self, i:int) -> None:
         if self.time_target_widgets is not None and self.time_target_widgets[i] is not None:
             # clear target value i
@@ -422,13 +422,13 @@ class profileTransformatorDlg(ArtisanDialog):
                         time_target_widgets_i.setText(s)
                         self.updateTimeResults()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def timeTableRowHeaderClicked(self, i:int) -> None:
         if i == 1: # row targets
             self.clearTimeTargets()
             self.clearTimeResults()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tempTableColumnHeaderClicked(self, i:int) -> None:
         if self.temp_target_widgets is not None and self.temp_target_widgets[i] is not None:
             # clear target value i
@@ -443,13 +443,13 @@ class profileTransformatorDlg(ArtisanDialog):
                         temp_target_widgets_i.setText(str(float2float(self.aw.qmc.temp2B[self.aw.qmc.timeindexB[timeidx]])))
                         self.updateTempResults()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tempTableRowHeaderClicked(self, i:int) -> None:
         if i == 1: # row targets
             self.clearTempTargets()
             self.clearTempResults()
 
-    @pyqtSlot()
+    @Slot()
     def updatePhasesWidget(self) -> None:
         self.clearTimeTargets()
         if self.phases_target_widgets_time is not None and self.phases_target_widgets_percent is not None:
@@ -473,7 +473,7 @@ class profileTransformatorDlg(ArtisanDialog):
                     pass
             self.updateTimeResults()
 
-    @pyqtSlot()
+    @Slot()
     def updateTimesWidget(self) -> None:
         self.clearPhasesTargetTimes()
         self.clearPhasesTargetPercent()
@@ -529,7 +529,7 @@ class profileTransformatorDlg(ArtisanDialog):
                 if phases_result_widgets is not None:
                     phases_result_widgets.setText(finishing_str)
 
-    @pyqtSlot()
+    @Slot()
     def updateTempResults(self) -> None:
         self.targetTemps = self.getTargetTemps()
         if all(v is None for v in self.targetTemps):
@@ -550,7 +550,7 @@ class profileTransformatorDlg(ArtisanDialog):
             self.temp_formula.repaint()
 
     #called from Apply button
-    @pyqtSlot(bool)
+    @Slot(bool)
     def apply(self,_:bool = False) -> None:
         applied_time = self.applyTimeTransformation()
         applied_temp = self.applyTempTransformation()
@@ -571,7 +571,7 @@ class profileTransformatorDlg(ArtisanDialog):
             self.restore()
 
     #called from Restore button
-    @pyqtSlot(bool)
+    @Slot(bool)
     def restore(self, _:bool = False) -> None:
         self.aw.setCurrentFile(self.org_curFile,addToRecent=False)
         self.aw.qmc.roastUUID = self.org_UUID
@@ -592,7 +592,7 @@ class profileTransformatorDlg(ArtisanDialog):
         self.aw.qmc.redraw()
 
     #called from OK button
-    @pyqtSlot()
+    @Slot()
     def applyTransformations(self) -> None:
         self.apply()
         #save window position (only; not size!)
@@ -601,7 +601,7 @@ class profileTransformatorDlg(ArtisanDialog):
         self.accept()
 
     #called from Cancel button
-    @pyqtSlot()
+    @Slot()
     def restoreState(self) -> None:
         self.restore()
         self.aw.qmc.transMappingMode = self.org_transMappingMode
@@ -611,7 +611,7 @@ class profileTransformatorDlg(ArtisanDialog):
         self.closeHelp()
         self.reject()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def openHelp(self,_:bool = False) -> None:
         from help import transposer_help # pyright: ignore [attr-defined] # pylint: disable=no-name-in-module
         self.helpdialog = self.aw.showHelpDialog(
@@ -623,7 +623,7 @@ class profileTransformatorDlg(ArtisanDialog):
     def closeHelp(self) -> None:
         self.aw.closeHelpDialog(self.helpdialog)
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0

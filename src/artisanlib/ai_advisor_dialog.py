@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (
     QSlider, QRadioButton, QButtonGroup
 )
 from qtpy.QtCore import Qt
-from qtpy.QtCore import pyqtSlot, pyqtSignal, QUrl
+from qtpy.QtCore import Slot, Signal, QUrl
 from qtpy.QtGui import QDesktopServices
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.ai_advisor import AIProvider
@@ -44,8 +44,8 @@ API_KEY_URLS = {
 
 class AIAdvisorDialog(ArtisanDialog):
 
-    _resultSignal  = pyqtSignal(str, str)        # (text, color)
-    _modelsSignal  = pyqtSignal(list)            # list[str] of model names
+    _resultSignal  = Signal(str, str)        # (text, color)
+    _modelsSignal  = Signal(list)            # list[str] of model names
 
     def __init__(self, parent: QWidget, aw: 'ApplicationWindow') -> None:
         super().__init__(parent, aw)
@@ -258,29 +258,29 @@ class AIAdvisorDialog(ArtisanDialog):
         self.getApiKeyBtn.setVisible(needs_key and provider in API_KEY_URLS)
         self.listModelsBtn.setVisible(provider == AIProvider.GEMINI)
 
-    @pyqtSlot()
+    @Slot()
     def _open_api_key_page(self) -> None:
         provider = self.providerCombo.currentData()
         url = API_KEY_URLS.get(provider)
         if url:
             QDesktopServices.openUrl(QUrl(url))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _on_provider_changed(self, _: int) -> None:
         provider = self.providerCombo.currentData()
         if provider:
             self._update_model_list(provider)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _on_enabled_toggled(self, enabled: bool) -> None:
         self.aw.aiAdvisorWindow.setVisible(enabled)
 
-    @pyqtSlot(str, str)
+    @Slot(str, str)
     def _set_result(self, text: str, color: str) -> None:
         self.testResultLabel.setPlainText(text)
         self.testResultLabel.setStyleSheet(f'QTextEdit {{ color: {color}; }}')
 
-    @pyqtSlot()
+    @Slot()
     def _refresh_voices(self) -> None:
         import platform as _plt3
         if _plt3.system() != 'Windows':
@@ -310,7 +310,7 @@ class AIAdvisorDialog(ArtisanDialog):
         advisor.tts_prefix = self.ttsPrefixCheck.isChecked()
         advisor.tts_voice = self.ttsVoiceCombo.currentData() or ''
 
-    @pyqtSlot()
+    @Slot()
     def _test_connection(self) -> None:
         import threading
         self._apply_advisor_settings()
@@ -326,7 +326,7 @@ class AIAdvisorDialog(ArtisanDialog):
 
         threading.Thread(target=_run, daemon=True).start()
 
-    @pyqtSlot()
+    @Slot()
     def _simulate_roast_query(self) -> None:
         import threading
         from artisanlib.ai_advisor import _build_user_message
@@ -352,7 +352,7 @@ class AIAdvisorDialog(ArtisanDialog):
 
         threading.Thread(target=_run, daemon=True).start()
 
-    @pyqtSlot(list)
+    @Slot(list)
     def _on_gemini_models(self, names: list) -> None:
         for n in names:
             if self.modelCombo.findText(n) < 0:
@@ -360,7 +360,7 @@ class AIAdvisorDialog(ArtisanDialog):
         if names:
             self.modelCombo.setCurrentText(names[0])
 
-    @pyqtSlot()
+    @Slot()
     def _list_gemini_models(self) -> None:
         import threading, urllib.request, json as _json
         api_key = self.apiKeyEdit.text().strip()
@@ -386,7 +386,7 @@ class AIAdvisorDialog(ArtisanDialog):
 
         threading.Thread(target=_run, daemon=True).start()
 
-    @pyqtSlot()
+    @Slot()
     def _open_sim_window(self) -> None:
         from artisanlib.ai_advisor_sim import AIAdvisorSimDialog
         self._apply_advisor_settings()
@@ -396,7 +396,7 @@ class AIAdvisorDialog(ArtisanDialog):
         dlg.finished.connect(lambda: setattr(self.aw.ai_advisor, 'enabled', _was_enabled))
         dlg.show()
 
-    @pyqtSlot()
+    @Slot()
     def _test_tts(self) -> None:
         from artisanlib.ai_advisor import _compute_rule_advice
         self._apply_advisor_settings()

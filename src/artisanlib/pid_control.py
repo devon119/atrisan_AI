@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 from artisanlib.util import fromCtoFstrict, fromFtoCstrict, hex2int, str2cmd, stringfromseconds, cmd2str, float2float
 
-from qtpy.QtCore import pyqtSlot
+from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QApplication
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
@@ -1578,12 +1578,12 @@ class PIDcontrol:
             if not self.aw.HottopControlActive:
                 self.aw.buttonCONTROL.setStyleSheet(self.aw.pushbuttonstyles['PID'])
 
-    @pyqtSlot(int)
+    @Slot(int)
     def sliderMinValueChanged(self, i:int) -> None:
         self.svSliderMin = i
         self.aw.sliderSV.setMinimum(self.svSliderMin)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def sliderMaxValueChanged(self, i:int) -> None:
         self.svSliderMax = i
         self.aw.sliderSV.setMaximum(self.svSliderMax)

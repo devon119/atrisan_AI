@@ -29,7 +29,7 @@ from artisanlib.util import stringfromseconds, stringtoseconds, comma2dot, toInt
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.widgets import MyQComboBox, MyQDoubleSpinBox
 
-from qtpy.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings, QTimer
+from qtpy.QtCore import Qt, Slot, QRegularExpression, QSettings, QTimer
 from qtpy.QtGui import QIntValidator, QRegularExpressionValidator
 from qtpy.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QGroupBox, QLineEdit,
@@ -1126,15 +1126,15 @@ class PID_DlgControl(ArtisanDialog):
         # some tabs are not rendered at all on Windows using Qt v6.5.1 (https://bugreports.qt.io/projects/QTBUG/issues/QTBUG-114204?filter=allissues)
         QTimer.singleShot(10, self.setActiveTab)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scheduling_state_changed(self, _:int) -> None:
         self.updateSchedulingWidgetsEnableStatus()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def scheduling_input_changed(self, _:bool = False) -> None:
         self.updateSchedulingInput()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def scheduling_method_changed(self, _:bool = False) -> None:
         self.updateSchedulingWidgetsEnableStatus()
 
@@ -1175,41 +1175,41 @@ class PID_DlgControl(ArtisanDialog):
         self.dTermSPweightSpinBox.blockSignals(False)
 
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def PoERadioButtonToggled(self, checked:bool) -> None:
         if checked:
             self.aw.pidcontrol.pidPsetpointWeight = 1
             self.updatePTermSPweightSpinBox()
             self.PoX.setExclusive(True)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def PoMRadioButtonToggled(self, checked:bool) -> None:
         if checked:
             self.aw.pidcontrol.pidPsetpointWeight = 0
             self.updatePTermSPweightSpinBox()
             self.PoX.setExclusive(True)
 
-    @pyqtSlot(float)
+    @Slot(float)
     def pTermSPweightChanged(self, value:float) -> None:
         self.aw.pidcontrol.pidPsetpointWeight = min(self.aw.pidcontrol.pidPsetpointWeightMax, max(0., float2float(value,2)))
         self.updatePtypeRadioButtons()
 
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def DoERadioButtonToggled(self, checked:bool) -> None:
         if checked:
             self.aw.pidcontrol.pidDsetpointWeight = 1
             self.updateDTermSPweightSpinBox()
             self.DoX.setExclusive(True)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def DoMRadioButtonToggled(self, checked:bool) -> None:
         if checked:
             self.aw.pidcontrol.pidDsetpointWeight = 0
             self.updateDTermSPweightSpinBox()
             self.DoX.setExclusive(True)
 
-    @pyqtSlot(float)
+    @Slot(float)
     def dTermSPweightChanged(self, value:float) -> None:
         self.aw.pidcontrol.pidDsetpointWeight = min(self.aw.pidcontrol.pidDsetpointWeightMax, max(0., float2float(value,2)))
         self.updateDtypeRadioButtons()
@@ -1248,15 +1248,15 @@ class PID_DlgControl(ArtisanDialog):
             curveNames.append(self.aw.qmc.device_name_subst(self.aw.qmc.extraname2[i]))
         return curveNames
 
-    @pyqtSlot(int)
+    @Slot(int)
     def IRoCFlag_changedSlot(self, flag:int) -> None:
         self.SPthresholdSpinBox.setEnabled(bool(flag))
 
-    @pyqtSlot()
+    @Slot()
     def setActiveTab(self) -> None:
         self.tabWidget.setCurrentIndex(self.activeTab)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def updatePidMode(self, i:int) -> None:
         self.aw.pidcontrol.svMode = i
         if self.aw.pidcontrol.pidActive and i == 1:
@@ -1266,34 +1266,34 @@ class PID_DlgControl(ArtisanDialog):
             if self.aw.qmc.flagon and not self.aw.qmc.flagstart:
                 self.aw.qmc.setLCDtime(0)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def activateSVSlider(self, i:int) -> None:
         self.aw.pidcontrol.activateSVSlider(bool(i))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def pidONAction(self, _:bool = False) -> None:
         self.aw.pidcontrol.pidOn()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def pidOFFAction(self, _:bool = False) -> None:
         self.aw.pidcontrol.pidOff()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def okAction(self, _:bool = False) -> None:
         self.close()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def activateONOFFeasySVslot(self, i:int) -> None:
         self.aw.pidcontrol.activateONOFFeasySV(bool(i))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def positiveTargetRangeLimitSlot(self, i:int) -> None:
         self.aw.pidcontrol.positiveTargetRangeLimit = bool(i)
         self.positiveTargetMin.setEnabled(self.aw.pidcontrol.positiveTargetRangeLimit)
         self.positiveTargetMax.setEnabled(self.aw.pidcontrol.positiveTargetRangeLimit)
 
     # ensure that the target limits are within the selected target sliders limits
-    @pyqtSlot(int)
+    @Slot(int)
     def updatePositiveTargetLimits(self, i:int) -> None:
         self.aw.pidcontrol.pidPositiveTarget = i
         if self.aw.pidcontrol.pidPositiveTarget == 0:
@@ -1315,7 +1315,7 @@ class PID_DlgControl(ArtisanDialog):
 
 
     # ensure that the target limits are within the selected target sliders limits
-    @pyqtSlot(int)
+    @Slot(int)
     def updateNegativeTargetLimits(self, i:int) -> None:
         self.aw.pidcontrol.pidNegativeTarget = i
         if self.aw.pidcontrol.pidNegativeTarget == 0:
@@ -1336,25 +1336,25 @@ class PID_DlgControl(ArtisanDialog):
         self.negativeTargetMax.setRange(slider_min, slider_max)
 
 
-    @pyqtSlot(int)
+    @Slot(int)
     def negativeTargetRangeLimitSlot(self, i:int) -> None:
         self.aw.pidcontrol.negativeTargetRangeLimit = bool(i)
         self.negativeTargetMin.setEnabled(self.aw.pidcontrol.negativeTargetRangeLimit)
         self.negativeTargetMax.setEnabled(self.aw.pidcontrol.negativeTargetRangeLimit)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def sliderMinValueChangedSlot(self, i:int) -> None:
         self.aw.pidcontrol.sliderMinValueChanged(i)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def sliderMaxValueChangedSlot(self, i:int) -> None:
         self.aw.pidcontrol.sliderMaxValueChanged(i)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def importrampsoaks(self, _:bool = False) -> None:
         self.aw.fileImport(QApplication.translate('Message', 'Load Ramp/Soak Table'),self.importrampsoaksJSON)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setRS(self, _:bool = False) -> None:
         try:
             sender = self.sender()
@@ -1456,7 +1456,7 @@ class PID_DlgControl(ArtisanDialog):
                 self.aw.qmc.rampSoakSemaphore.release(1)
             self.setrampsoaks()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def exportrampsoaks(self, _:bool = False) -> None:
         self.aw.fileExport(QApplication.translate('Message', 'Save Ramp/Soak Table'),'*.aprs',self.exportrampsoaksJSON)
 
@@ -1559,7 +1559,7 @@ class PID_DlgControl(ArtisanDialog):
             self.setRSnSVbeeps(n)
             self.setRSnSVdescriptions(n)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def pidConf(self, _:bool = False) -> None:
         kp = self.pidKp.value() # 5.00
         ki = self.pidKi.value() # 0.15
@@ -1589,7 +1589,7 @@ class PID_DlgControl(ArtisanDialog):
         else:
             self.aw.pidcontrol.confPID(kp,ki,kd,source,cycle)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setSV(self, _:bool = False) -> None: # and DutySteps
         self.aw.pidcontrol.setSV(self.pidSV.value())
         if self.aw.pidcontrol.externalPIDControl() == 0: # only the internal PID allows for duty control
@@ -1696,7 +1696,7 @@ class PID_DlgControl(ArtisanDialog):
         self.closeEvent(None)
         return True
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -1721,11 +1721,11 @@ class PXpidDlgControl(ArtisanDialog):
         self.BTthermocombobox = QComboBox()
         self.BTthermocombobox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setpointET(self, _:bool = False) -> None:
         self.setpoint('ET')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setpointBT(self, _:bool = False) -> None:
         self.setpoint('BT')
 
@@ -1768,11 +1768,11 @@ class PXpidDlgControl(ArtisanDialog):
             _, _, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' setpoint(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setthermocoupletypeET(self, _:bool = False) -> None:
         self.setthermocoupletype('ET')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setthermocoupletypeBT(self, _:bool = False) -> None:
         self.setthermocoupletype('BT')
 
@@ -1825,11 +1825,11 @@ class PXpidDlgControl(ArtisanDialog):
             _, _, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' setthermocoupletype(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def readthermocoupletypeET(self, _:bool = False) -> None:
         self.readthermocoupletype('ET')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def readthermocoupletypeBT(self, _:bool = False) -> None:
         self.readthermocoupletype('BT')
 
@@ -2193,11 +2193,11 @@ class PXRpidDlgControl(PXpidDlgControl):
         Mlayout.addLayout(buttonLayout,2)
         self.setLayout(Mlayout)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setSVbuttons(self, flag:int) -> None:
         self.aw.pidcontrol.svButtons = bool(flag)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setSVsliderSlot(self, flag:int) -> None:
         self.setSVslider(flag)
         self.aw.pidcontrol.activateSVSlider(bool(flag))
@@ -2205,15 +2205,15 @@ class PXRpidDlgControl(PXpidDlgControl):
     def setSVslider(self, flag:int) -> None:
         self.aw.pidcontrol.svSlider = bool(flag)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeLookAhead(self, _:int) -> None:
         self.aw.fujipid.lookahead = int(self.pidSVLookahead.value())
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeFollowBackground(self, _:int) -> None:
         self.aw.fujipid.followBackground = not self.aw.fujipid.followBackground
 
-    @pyqtSlot(int)
+    @Slot(int)
     def paintlabels(self, _:int = 0) -> None:
         str1 = 'T = ' + str(self.aw.fujipid.PXR['segment1sv'][0]) + ', Ramp = ' + stringfromseconds(self.aw.fujipid.PXR['segment1ramp'][0]) + ', Soak = ' + stringfromseconds(self.aw.fujipid.PXR['segment1soak'][0])
         str2 = 'T = ' + str(self.aw.fujipid.PXR['segment2sv'][0]) + ', Ramp = ' + stringfromseconds(self.aw.fujipid.PXR['segment2ramp'][0]) + ', Soak = ' + stringfromseconds(self.aw.fujipid.PXR['segment2soak'][0])
@@ -2268,11 +2268,11 @@ class PXRpidDlgControl(PXpidDlgControl):
         else:
             self.label_rs8.setStyleSheet('background-color:white;')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setONautotune(self, _:bool = False) -> None:
         self.setONOFFautotune(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setOFFautotune(self, _:bool = False) -> None:
         self.setONOFFautotune(0)
 
@@ -2298,11 +2298,11 @@ class PXRpidDlgControl(PXpidDlgControl):
             self.status.showMessage(mssg,5000)
             self.aw.qmc.adderror(QApplication.translate('Error Message','Exception:') + ' setONOFFautotune()')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setONstandby(self, _:bool = False) -> None:
         self.setONOFFstandby(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setOFFstandby(self, _:bool = False) -> None:
         self.setONOFFstandby(0)
 
@@ -2326,7 +2326,7 @@ class PXRpidDlgControl(PXpidDlgControl):
             _, _, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' setONOFFstandby() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv(self, _:bool = False) -> None:
         self.svedit.setText(comma2dot(str(self.svedit.text())))
         if self.svedit.text() != '':
@@ -2357,7 +2357,7 @@ class PXRpidDlgControl(PXpidDlgControl):
         else:
             self.status.showMessage(QApplication.translate('StatusBar','Empty SV box'),5000)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getsv(self, _:bool = False) -> None:
         temp = self.aw.fujipid.readcurrentsv()
         if temp != -1:
@@ -2494,11 +2494,11 @@ class PXRpidDlgControl(PXpidDlgControl):
             return 1
         return 0
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setONrampsoak(self, _:bool) -> None:
         self.setONOFFrampsoak(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setOFFrampsoak(self, _:bool) -> None:
         self.setONOFFrampsoak(0)
 
@@ -2562,7 +2562,7 @@ class PXRpidDlgControl(PXpidDlgControl):
             self.aw.fujipid.setrampsoak(flag)
 
     #get all Ramp Soak values for all 8 segments
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getallsegments(self, _:bool = False) -> None:
         for i in range(8):
             msg = QApplication.translate('StatusBar','Reading Ramp/Soak {0} ...').format(str(i+1))
@@ -2576,7 +2576,7 @@ class PXRpidDlgControl(PXpidDlgControl):
         self.status.showMessage(QApplication.translate('StatusBar','Finished reading Ramp/Soak val.'),5000)
         self.createsegmenttable()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getpid(self, _:bool = False) -> None:
         p:float
         if self.aw.ser.useModbusPort:
@@ -2624,19 +2624,19 @@ class PXRpidDlgControl(PXpidDlgControl):
 
         self.status.showMessage(QApplication.translate('StatusBar','Finished reading pid values'),5000)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setpid_p(self, _:bool = False) -> None:
         if str(self.pedit.text()).isdigit():
             p = int(str(self.pedit.text()))
             self.aw.fujipid.setpidPXR('p',p)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setpid_i(self, _:bool = False) -> None:
         if str(self.iedit.text()).isdigit():
             i = int(str(self.iedit.text()))
             self.aw.fujipid.setpidPXR('i',i)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setpid_d(self, _:bool = False) -> None:
         if str(self.dedit.text()).isdigit():
             d = int(str(self.dedit.text()))
@@ -2678,7 +2678,7 @@ class PXRpidDlgControl(PXpidDlgControl):
             self.segmenttable.setCellWidget(i,2,soakedit)
             self.segmenttable.setCellWidget(i,3,setButton)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsegment(self, _:bool = False) -> None:
         i = self.aw.findWidgetsRow(self.segmenttable,self.sender(),3)
         if i is not None:
@@ -3347,40 +3347,40 @@ class PXG4pidDlgControl(PXpidDlgControl):
         layout.addLayout(buttonLayout,3)
         self.setLayout(layout)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def cancelAction(self, _:bool = False) -> None:
         self.reject()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def sliderMinValueChangedSlot(self, i:int) -> None:
         self.aw.pidcontrol.sliderMinValueChanged(i)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def sliderMaxValueChangedSlot(self, i:int) -> None:
         self.aw.pidcontrol.sliderMaxValueChanged(i)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setSVbuttons(self, flag:int) -> None:
         self.aw.pidcontrol.svButtons = bool(flag)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setSVsliderSlot(self, i:int) -> None:
         self.setSVslider(bool(i))
         self.aw.pidcontrol.activateSVSlider(bool(i))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setSVslider(self, flag:int) -> None:
         self.aw.pidcontrol.svSlider = bool(flag)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeLookAhead(self, _:int) -> None:
         self.aw.fujipid.lookahead = int(self.pidSVLookahead.value())
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeFollowBackground(self, _:int) -> None:
         self.aw.fujipid.followBackground = not self.aw.fujipid.followBackground
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def load(self, _:bool = False) -> None:
         self.aw.fileImport(QApplication.translate('Message', 'Load PID Settings'),self.loadPIDJSON)
 
@@ -3445,17 +3445,17 @@ class PXG4pidDlgControl(PXpidDlgControl):
             _, _, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' loadPIDJSON() {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def writeSetValues(self, _:bool = False) -> None:
         for i in range(7):
             self.setsv(i+1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def writePIDValues(self, _:bool = False) -> None:
         for i in range(7):
             self.setpid(i+1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def writeRSValues(self, _:bool = False) -> None:
         for i in range(16):
             try:
@@ -3463,13 +3463,13 @@ class PXG4pidDlgControl(PXpidDlgControl):
             except Exception: # pylint: disable=broad-exception-caught
                 self.aw.qmc.adderror(QApplication.translate('Message','Error writing PID RS value {0}').format(str(i)))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def writeAll(self, _:bool = False) -> None:
         self.writeSetValues()
         self.writePIDValues()
         self.writeRSValues()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def save(self, _:bool = False) -> None:
         self.aw.fileExport(QApplication.translate('Message', 'Save PID Settings'),'*.apid',self.savePIDJSON)
 
@@ -3512,7 +3512,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' savePIDJSON(): {0}').format(str(ex)),getattr(exc_tb, 'tb_lineno', '?'))
             return False
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def settimeunits(self, _:bool) -> None:
         if self.aw.ser.controlETpid[0] == 0:
             reg_dict = self.aw.fujipid.PXG4
@@ -3536,7 +3536,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             _i, _r, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' settimeunits(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def paintlabels(self, _:int = 0) -> None:
         #read values of computer variables (not the actual pid values) to place in buttons
         str1 = '1 [T ' + str(self.aw.fujipid.PXG4['segment1sv'][0]) + '] [R ' + stringfromseconds(self.aw.fujipid.PXG4['segment1ramp'][0]) + '] [S ' + stringfromseconds(self.aw.fujipid.PXG4['segment1soak'][0]) + ']'
@@ -3645,7 +3645,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
         else:
             self.label_rs16.setStyleSheet('background-color:white;')
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setNsvSlot(self, _:bool = False) -> None:
         widget = self.sender()
         if widget == self.radiosv1:
@@ -3816,25 +3816,25 @@ class PXG4pidDlgControl(PXpidDlgControl):
             self.status.showMessage(mssg,1000)
             self.aw.qmc.adderror(mssg)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv1(self, _:bool = False) -> None:
         self.setsv(1)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv2(self,_:bool = False) -> None:
         self.setsv(2)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv3(self,_:bool = False) -> None:
         self.setsv(3)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv4(self,_:bool = False) -> None:
         self.setsv(4)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv5(self,_:bool = False) -> None:
         self.setsv(5)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv6(self,_:bool = False) -> None:
         self.setsv(6)
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsv7(self,_:bool = False) -> None:
         self.setsv(7)
 
@@ -3946,7 +3946,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             self.status.showMessage(mssg,5000)
             self.aw.qmc.adderror(mssg)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setpidSlot(self, _:bool = False) -> None:
         widget = self.sender()
         if widget == self.pid1button:
@@ -4090,7 +4090,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             self.status.showMessage(mssg,5000)
             self.aw.qmc.adderror(mssg)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getallpid(self, _:bool = False) -> None:
         if self.aw.ser.controlETpid[0] == 0:
             reg_dict = self.aw.fujipid.PXG4
@@ -4223,7 +4223,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             self.status.showMessage(mssg,5000)
             self.aw.qmc.adderror(mssg)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getallsv(self, _:bool = False) -> None:
         if self.aw.ser.controlETpid[0] == 0:
             reg_dict = self.aw.fujipid.PXG4
@@ -4419,11 +4419,11 @@ class PXG4pidDlgControl(PXpidDlgControl):
             return 1
         return 0
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setONrampsoak(self, _:bool = False) -> None:
         self.setONOFFrampsoak(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setOFFrampsoak(self, _:bool = False) -> None:
         self.setONOFFrampsoak(0)
 
@@ -4509,11 +4509,11 @@ class PXG4pidDlgControl(PXpidDlgControl):
 #        elif onoff == 2:
 #            self.aw.sendmessage(QApplication.translate('Message','Ramp/Soak was found in Hold! Turn it off before changing the pattern'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setONstandby(self, _:bool = False) -> None:
         self.setONOFFstandby(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setOFFstandby(self, _:bool = False) -> None:
         self.setONOFFstandby(0)
 
@@ -4537,7 +4537,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             self.aw.qmc.adderror((QApplication.translate('Error Message','Exception:') + ' setONOFFstandby() {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
     #get all Ramp Soak values for all 8 segments
-    @pyqtSlot(bool)
+    @Slot(bool)
     def getallsegments(self, _:bool = False) -> None:
         for i in range(1,17):
             msg = QApplication.translate('StatusBar','Reading Ramp/Soak {0} ...').format(str(i))
@@ -4551,11 +4551,11 @@ class PXG4pidDlgControl(PXpidDlgControl):
         self.status.showMessage(QApplication.translate('StatusBar','Finished reading Ramp/Soak val.'),5000)
         self.createsegmenttable()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setONautotune(self, _:bool = False) -> None:
         self.setONOFFautotune(1)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setOFFautotune(self, _:bool = False) -> None:
         self.setONOFFautotune(0)
 
@@ -4600,7 +4600,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             else:
                 self.status.showMessage(QApplication.translate('StatusBar','UNABLE to set Autotune'),5000)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     @override
     def accept(self, _:bool = False) -> None:
         # store set values
@@ -4694,7 +4694,7 @@ class PXG4pidDlgControl(PXpidDlgControl):
             self.segmenttable.setCellWidget(i,3,setButton)
 
     #idn = id number, sv = float set value, ramp = ramp value, soak = soak value
-    @pyqtSlot(bool)
+    @Slot(bool)
     def setsegment(self, _:bool = False) -> None:
         i = self.aw.findWidgetsRow(self.segmenttable,self.sender(),3)
         if i is not None:
@@ -4780,7 +4780,7 @@ class DTApidDlgControl(ArtisanDialog):
         mainlayout.addWidget(TabWidget,1)
         self.setLayout(mainlayout)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def readsv(self, _:bool = False) -> None:
         ### create command message2send(unitID,function,address,ndata)
         command = self.aw.dtapid.message2send(self.aw.ser.controlETpid[1],3,str(self.aw.dtapid.dtamem['sv'][1]),1)
@@ -4797,7 +4797,7 @@ class DTApidDlgControl(ArtisanDialog):
         self.status.showMessage(message,5000)
 
     #write uses function = 6
-    @pyqtSlot(bool)
+    @Slot(bool)
     def writesv(self, _:bool = False) -> None:
         v = comma2dot(self.svedit.text())
         if v:

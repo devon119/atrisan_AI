@@ -23,7 +23,7 @@
 
 from qtpy.QtWidgets import (QApplication, QComboBox, QLineEdit, QDialogButtonBox,
     QToolButton, QTableWidget, QStyle, QHeaderView)
-from qtpy.QtCore import Qt, pyqtSlot, QSize, QSettings
+from qtpy.QtCore import Qt, Slot, QSize, QSettings
 from qtpy.QtGui import QKeySequence, QAction, QIcon, QStandardItemModel
 
 import logging
@@ -172,7 +172,7 @@ class CustomBlendDialog(ArtisanDialog):
         if settings.contains('BlendGeometry'):
             self.restoreGeometry(settings.value('BlendGeometry'))
 
-    @pyqtSlot()
+    @Slot()
     @override
     def cancelDialog(self) -> None: # ESC key
         self.reject()
@@ -190,19 +190,19 @@ class CustomBlendDialog(ArtisanDialog):
             else:
                 super().keyPressEvent(a0)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def textChanged(self,s:str) -> None:
         if s == '': # content got cleared
             self.ui.lineEdit_weight.setText('0')
             self.ui.lineEdit_weight.repaint()
             self.weighteditChanged()
 
-    @pyqtSlot()
+    @Slot()
     def nameChanged(self) -> None:
         self.blend.name = self.ui.lineEdit_name.text().strip()
 
     # as the total weight was explicitly updated by the user, we set the initialTotalWeight here
-    @pyqtSlot()
+    @Slot()
     def weighteditChanged(self) -> None:
         try:
             weight = float(comma2dot(self.ui.lineEdit_weight.text())) # text could be a non-float!
@@ -215,7 +215,7 @@ class CustomBlendDialog(ArtisanDialog):
         except Exception as e: # pylint: disable=broad-except
             _log.error(e)
 
-    @pyqtSlot()
+    @Slot()
     def ratioChanged(self) -> None:
         i = self.aw.findWidgetsRow(self.ui.tableWidget,self.sender(), 0)
         if i is not None:
@@ -227,7 +227,7 @@ class CustomBlendDialog(ArtisanDialog):
                 self.blend.components[(i+1) % 2].ratio = max(0.0, min(1.0, 1 - ratio))
             self.updateComponentTable()
 
-    @pyqtSlot()
+    @Slot()
     def weightChanged(self) -> None:
         i = self.aw.findWidgetsRow(self.ui.tableWidget,self.sender(), 1)
         if i is not None:
@@ -264,7 +264,7 @@ class CustomBlendDialog(ArtisanDialog):
                             self.blend.components[j].ratio = ratio
             self.updateComponentTable()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def componentCoffeeChanged(self,_:int) -> None:
         i = self.aw.findWidgetsRow(self.ui.tableWidget,self.sender(), 2)
         if i is not None:
@@ -274,7 +274,7 @@ class CustomBlendDialog(ArtisanDialog):
 
     ###
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def addComponent(self,_:bool) -> None:
         ratio = min(100.0, max(0.0, 1 - sum(c.ratio for c in self.blend.components)))
         blend_coffees = [c.coffee for c in self.blend.components]
@@ -283,7 +283,7 @@ class CustomBlendDialog(ArtisanDialog):
         self.updateAddButton()
         self.updateComponentTable()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def deleteComponent(self,_:bool) -> None:
         i = self.aw.findWidgetsRow(self.ui.tableWidget,self.sender(), 3)
         if i is not None:
@@ -296,25 +296,25 @@ class CustomBlendDialog(ArtisanDialog):
         #save window geometry
         settings.setValue('BlendGeometry',self.saveGeometry())
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
         self.reject()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.saveSettings()
         super().accept()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def reject(self) -> None:
         self.saveSettings()
         super().reject()
 
-    @pyqtSlot()
+    @Slot()
     @override
     def close(self) -> bool:
         self.closeEvent(None)

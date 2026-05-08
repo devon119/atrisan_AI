@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
     from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
-from qtpy.QtCore import (Qt, pyqtSlot, QSettings)
+from qtpy.QtCore import (Qt, Slot, QSettings)
 from qtpy.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QVBoxLayout, QLabel,
                              QLineEdit,QPushButton, QComboBox, QDialogButtonBox, QHeaderView,
                              QTableWidget, QDoubleSpinBox, QGroupBox)
@@ -174,7 +174,7 @@ class flavorDlg(ArtisanResizeablDialog):
         if ok_button is not None:
             ok_button.setFocus()
 
-    @pyqtSlot(int,int,int)
+    @Slot(int,int,int)
     def sectionMoved(self, logicalIndex:int, _oldVisualIndex:int, newVisualIndex:int) -> None:
         # adjust datamodel
         swap:bool = False # default action is to move item to new position
@@ -201,7 +201,7 @@ class flavorDlg(ArtisanResizeablDialog):
     def moveItem(l:list[Any], source:int, target:int) -> None:
         l.insert(target, l.pop(source))
 
-    @pyqtSlot(float)
+    @Slot(float)
     def setaspect(self, _:float) -> None:
         self.aw.qmc.flavoraspect = self.aspectSpinBox.value()
         self.aw.qmc.flavorchart()
@@ -247,7 +247,7 @@ class flavorDlg(ArtisanResizeablDialog):
             if header is not None:
                 header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def showbackground(self, _:bool) -> None:
         if self.backgroundCheck.isChecked():
             if not self.aw.qmc.background:
@@ -266,12 +266,12 @@ class flavorDlg(ArtisanResizeablDialog):
             self.aw.qmc.flavorbackgroundflag = False
             self.aw.qmc.flavorchart()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def moveLeft(self, _:bool) -> None:
         self.aw.qmc.flavorstartangle += 5
         self.aw.qmc.flavorchart()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def moveRight(self, _:bool) -> None:
         self.aw.qmc.flavorstartangle -= 5
         self.aw.qmc.flavorchart()
@@ -290,7 +290,7 @@ class flavorDlg(ArtisanResizeablDialog):
             # store the current labels as *CUSTOM*
             self.aw.qmc.customflavorlabels = self.aw.qmc.flavorlabels
 
-    @pyqtSlot(str)
+    @Slot(str)
     def setlabel(self,_:str) -> None:
         x = self.aw.findWidgetsRow(self.flavortable,self.sender(),0)
         if x is not None:
@@ -298,7 +298,7 @@ class flavorDlg(ArtisanResizeablDialog):
             self.aw.qmc.flavorlabels[x] = labeledit.text()
             self.aw.qmc.updateFlavorchartLabel(x) # fast incremental redraw
 
-    @pyqtSlot(float)
+    @Slot(float)
     def setvalue(self,_:float) -> None:
         x = self.aw.findWidgetsRow(self.flavortable,self.sender(),1)
         if x is not None:
@@ -307,12 +307,12 @@ class flavorDlg(ArtisanResizeablDialog):
             self.aw.qmc.updateFlavorchartValues() # fast incremental redraw
             self.aw.qmc.updateFlavorchartLabel(x) # fast incremental redraw
 
-    @pyqtSlot(float)
+    @Slot(float)
     def setcorrection(self,_:float) -> None:
         self.aw.qmc.flavors_total_correction = self.correctionSpinBox.value()
         self.aw.qmc.updateFlavorchartValues() # fast incremental redraw
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setdefault(self,_:int) -> None:
         if self.lastcomboboxIndex == self.defaultcombobox.count()-1:
             # store the current labels as *CUSTOM*
@@ -352,16 +352,16 @@ class flavorDlg(ArtisanResizeablDialog):
         self.aw.qmc.flavorchart()
         self.lastcomboboxIndex = dindex
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def addlabel(self,_:bool = False) -> None:
         self.aw.qmc.flavorlabels.append('???')
         self.aw.qmc.flavors.append(5.)
         self.createFlavorTable()
         self.aw.qmc.flavorchart()
 
-    @pyqtSlot()
-    @pyqtSlot(bool)
+    @Slot()
+    @Slot(bool)
     def poplabel(self,_:bool = False) -> None:
         fn = len(self.aw.qmc.flavors)
         if fn>1:
@@ -370,7 +370,7 @@ class flavorDlg(ArtisanResizeablDialog):
             self.createFlavorTable()
             self.aw.qmc.flavorchart()
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0

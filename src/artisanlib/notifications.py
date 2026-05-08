@@ -17,7 +17,7 @@
 
 from qtpy.QtWidgets import QSystemTrayIcon, QApplication, QMenu
 from qtpy.QtGui import QIcon, QDesktopServices, QAction
-from qtpy.QtCore import QTimer, pyqtSlot, QUrl, QObject, QDateTime, QLocale
+from qtpy.QtCore import QTimer, Slot, QUrl, QObject, QDateTime, QLocale
 
 import os
 import sys
@@ -194,7 +194,7 @@ class NotificationManager(QObject):
             p = os.path.join(basedir, 'artisan-notification.svg')
         return QIcon(p)
 
-    @pyqtSlot()
+    @Slot()
     def messageClicked(self) -> None:
         try:
             if self.active_notification:
@@ -307,7 +307,7 @@ class NotificationManager(QObject):
         except Exception as e: # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def notificationItemSelected(self, _checked:bool = False) -> None:
         action = self.sender()
         if action is not None and isinstance(action, QAction) and hasattr(action, 'data'):

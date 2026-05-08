@@ -53,7 +53,7 @@ if TYPE_CHECKING:
 
 from artisanlib.util import cmd2str, RoRfromCtoFstrict, fromCtoFstrict, fromFtoCstrict, hex2int, str2cmd
 
-from qtpy.QtCore import Qt, QDateTime, QSemaphore, pyqtSlot
+from qtpy.QtCore import Qt, QDateTime, QSemaphore, Slot
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import (QApplication, QCheckBox, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout,
                              QLabel, QLineEdit,QPushButton, QWidget)
@@ -217,7 +217,7 @@ class nonedevDlg(QDialog):
         mainLayout.addLayout(buttonLayout)
         self.setLayout(mainLayout)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changemanuallogETflag(self, _:int) -> None:
         if self.ETbox.isChecked():
             self.aw.qmc.manuallogETflag = 1
@@ -2756,7 +2756,7 @@ class serialport:
         except Exception: # pylint: disable=broad-except
             pass
 
-#    @pyqtSlot('QCloseEvent')
+#    @Slot('QCloseEvent')
 #    def closeEvent(self,_:'QCloseEvent') -> None:
 #        try:
 #            self.closeport()

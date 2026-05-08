@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from qtpy.QtCore import QModelIndex, QPointF, QObject # pylint: disable=unused-import
     from qtpy.QtWidgets import QStyleOption # pylint: disable=unused-import
 
-from qtpy.QtCore import Qt, QEvent, QTimer, pyqtSignal, QSize
+from qtpy.QtCore import Qt, QEvent, QTimer, Signal, QSize
 from qtpy.QtGui import ( QStandardItemModel,
     QPalette, QFontMetrics, QBrush, QColor, QPixmap, QIcon)
 from qtpy.QtWidgets import (
@@ -33,7 +33,7 @@ class CheckComboBox(QComboBox):
     """A QComboBox allowing multiple item selection.
     """
 
-    flagChanged=pyqtSignal(int,bool)
+    flagChanged=Signal(int,bool)
 
     __slots__ = [ '__popupIsShown', '__blockMouseReleaseTimer', '__initialMousePos', '__separator', '__placeholderText' ]
 

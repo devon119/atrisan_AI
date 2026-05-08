@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from qtpy.QtCore import QSemaphore, QObject, QThread, pyqtSlot, pyqtSignal
+from qtpy.QtCore import QSemaphore, QObject, QThread, Slot, Signal
 from qtpy.QtWidgets import QApplication
 
 import copy
@@ -182,17 +182,17 @@ worker:'Worker|None' = None
 worker_thread:QThread|None = None
 
 class Worker(QObject): # pyright: ignore [reportGeneralTypeIssues]
-    startSignal = pyqtSignal(bool)
-    replySignal = pyqtSignal(float, float, str, int, list) # rlimit:float, rused:float, pu:str, notifications:int, machines:list[str]
-    updatedSignal = pyqtSignal()  # issued once the stock was updated
-    upToDateSignal = pyqtSignal() # issued if the stock was still valid and did NOT get update
+    startSignal = Signal(bool)
+    replySignal = Signal(float, float, str, int, list) # rlimit:float, rused:float, pu:str, notifications:int, machines:list[str]
+    updatedSignal = Signal()  # issued once the stock was updated
+    upToDateSignal = Signal() # issued if the stock was still valid and did NOT get update
 
     # if schedule is True, a stock update is retrieved only if the schedule on the server has changed.
     # if schedule is False, a full stock update is done if config.stock_cache_expiration is expired or
     #    config.schedule_cache_expiration is expired and the schedule on the server has changed (schedule updates are received at faster frequency that way).
     # The request adds the 'lsrt' (last schedule retrieved time) parameter holding the 'serverTime' of
     # the last stock received to allow the server to decide if the schedule has changed in this second case.
-    @pyqtSlot(bool)
+    @Slot(bool)
     def update_blocking(self, schedule:bool) -> None:
         _log.debug('update_blocking(%s)', schedule)
         if stock is None:

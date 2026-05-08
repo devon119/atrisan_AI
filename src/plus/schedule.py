@@ -36,7 +36,7 @@ from platform import python_version
 from uuid import UUID
 from packaging.version import Version
 
-from qtpy.QtCore import (Qt, QMimeData, QSettings, pyqtSlot, pyqtSignal, QPoint, QPointF, QLocale, QDate, QDateTime, QSemaphore, QTimer)
+from qtpy.QtCore import (Qt, QMimeData, QSettings, Slot, Signal, QPoint, QPointF, QLocale, QDate, QDateTime, QSemaphore, QTimer)
 from qtpy.QtGui import (QDrag, QPixmap, QPainter, QTextLayout, QTextLine, QColor, QFontMetrics, QCursor, QAction, QIcon)
 from qtpy.QtWidgets import (QDialogButtonBox, QMessageBox, QStackedWidget, QApplication, QWidget, QVBoxLayout, QHBoxLayout, QFrame, QTabWidget,
         QCheckBox, QGroupBox, QScrollArea, QLabel, QSizePolicy,
@@ -1175,9 +1175,9 @@ class DragTargetIndicator(QFrame): # pyright: ignore[reportGeneralTypeIssues]
 
 class StandardItem(QFrame): # pyright: ignore[reportGeneralTypeIssues]
 
-    clicked = pyqtSignal()
-    selected = pyqtSignal()
-    prepared = pyqtSignal()
+    clicked = Signal()
+    selected = Signal()
+    prepared = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -1367,7 +1367,7 @@ class NoDragItem(StandardItem):
 
 class DragItem(StandardItem):
 
-    registerRoast = pyqtSignal() # register current loaded roast profile in the schedule item with the given scheduleID
+    registerRoast = Signal() # register current loaded roast profile in the schedule item with the given scheduleID
 
     # today a date in local timezone
     def __init__(self, data:ScheduledItem, aw:'ApplicationWindow', today:datetime.date, user_id: str|None, machine: str) -> None:
@@ -1485,36 +1485,36 @@ class DragItem(StandardItem):
         self.third_label.setText(self.getRight())
 
 
-    @pyqtSlot()
+    @Slot()
     def allPrepared(self) -> None:
         set_prepared(self.aw.plus_account_id, self.data)
         self.update_widget()
         self.prepared.emit()
 
-    @pyqtSlot()
+    @Slot()
     def addPrepared(self) -> None:
         add_one_prepared(self.aw.plus_account_id, self.data)
         self.update_widget()
         self.prepared.emit()
 
-    @pyqtSlot()
+    @Slot()
     def removePrepared(self) -> None:
         remove_one_prepared(self.aw.plus_account_id, self.data)
         self.update_widget()
         self.prepared.emit()
 
-    @pyqtSlot()
+    @Slot()
     def nonePrepared(self) -> None:
         set_unprepared(self.aw.plus_account_id, self.data)
         self.update_widget()
         self.prepared.emit()
 
-    @pyqtSlot()
+    @Slot()
     def hideItem(self) -> None:
         set_hidden(self.aw.plus_account_id, self.data)
         self.aw.updateScheduleSignal.emit()
 
-    @pyqtSlot()
+    @Slot()
     def showItem(self) -> None:
         set_visible(self.aw.plus_account_id, self.data)
         self.aw.updateScheduleSignal.emit()
@@ -1736,7 +1736,7 @@ class DragWidget(BaseWidget):
     """Widget list allowing sorting via drag-and-drop.
     """
 
-    orderChanged = pyqtSignal(list)
+    orderChanged = Signal(list)
 
     def __init__(self, parent:'ScheduleWindow|None' = None, orientation:Qt.Orientation = Qt.Orientation.Vertical) -> None:
         super().__init__(parent, orientation)
@@ -1909,7 +1909,7 @@ class DragWidget(BaseWidget):
 
 class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralTypeIssues]
 
-    register_completed_roast = pyqtSignal()
+    register_completed_roast = Signal()
 
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow', activeTab:int = 0) -> None:
         if aw.get_os()[0] == 'RPi':
@@ -2480,7 +2480,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
 
         self.aw.sendmessage(QApplication.translate('Message','Scheduler started'))
 
-    @pyqtSlot()
+    @Slot()
     def accept_updated_schedule(self) -> None:
         self.open_stacked_widget.setCurrentWidget(self.remaining_splitter_layout_widget)
 
@@ -2488,7 +2488,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
         self.open_stacked_widget.setCurrentWidget(self.update_confirmation_widget)
 
     @staticmethod
-    @pyqtSlot(bool)
+    @Slot(bool)
     def trigger_stock_update(_:bool = False) -> None:
         QTimer.singleShot(10, plus.stock.update_schedule)
 
@@ -2499,7 +2499,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                 self.task_frame.hide()
             self.task_frame_hide = False
 
-    @pyqtSlot(int,int)
+    @Slot(int,int)
     def mainSplitterMoved(self, _pos: int, index: int) -> None:
         splitter_sizes = self.main_splitter.sizes()
         if len(splitter_sizes)>1:
@@ -2521,7 +2521,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                 self.remaining_filter_group.hide()
             self.filter_frame_hide = False
 
-    @pyqtSlot(int,int)
+    @Slot(int,int)
     def remainingSplitterMoved(self, _pos: int, index: int) -> None:
         splitter_sizes = self.remaining_splitter.sizes()
         if len(splitter_sizes)>1:
@@ -2543,7 +2543,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                 self.completed_details_scrollarea.hide()
             self.completed_details_scrollarea_hide = False
 
-    @pyqtSlot(int,int)
+    @Slot(int,int)
     def completedSplitterMoved(self, _pos: int, index: int) -> None:
         splitter_sizes = self.completed_splitter.sizes()
         if len(splitter_sizes)>1:
@@ -2558,7 +2558,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                     self.completed_details_scrollarea_hide = True
                     QTimer.singleShot(1000, self.hide_completed_frame)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def disconnected_link_handler(self, _link:str) -> None:
         plus.controller.toggle(self.aw)
 
@@ -2575,7 +2575,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
         except Exception as e:  # pylint: disable=broad-except
             _log.exception(e)
 
-    @pyqtSlot()
+    @Slot()
     def taskCompleted(self) -> None:
         todo_tab_active:bool = self.TabWidget.currentIndex() == 0
         if todo_tab_active:
@@ -2585,21 +2585,21 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
 
 
 
-    @pyqtSlot(list)
+    @Slot(list)
     def update_order(self, l:list[ScheduledItem]) -> None:
         self.scheduled_items = l
         # update next weight item
         self.set_next()
 
-    @pyqtSlot()
+    @Slot()
     def tabSwitched(self) -> None:
         self.set_next()
 
-    @pyqtSlot()
+    @Slot()
     def setActiveTab(self) -> None:
         self.TabWidget.setCurrentIndex(self.activeTab)
 
-    @pyqtSlot()
+    @Slot()
     def roasted_weight_selected(self) -> None:
         if self.roasted_weight.text() == '':
             self.roasted_weight.setText(self.roasted_weight.placeholderText())
@@ -2608,7 +2608,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                 self.selected_completed_item.data.measured = True
             self.roasted_weight_suffix.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     def roasted_weight_changed(self) -> None:
         text:str = self.roasted_weight.text()
         if self.selected_completed_item is not None:
@@ -2628,7 +2628,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                 self.selected_completed_item.data.measured = True
                 self.roasted_weight_suffix.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     def roasted_measured_toggle(self) -> None:
         if self.selected_completed_item is not None:
             self.selected_completed_item.data.measured = False
@@ -2639,7 +2639,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
             self.roasted_yield.setPlaceholderText(self.roasted_weight.placeholderText())
 
 
-    @pyqtSlot()
+    @Slot()
     def roasted_yield_changed(self) -> None:
         defects:float = 0
         roasted_yield:float = 0
@@ -2667,7 +2667,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
             self.roasted_yield.setText('')
             self.roasted_defects.setText('0')
 
-    @pyqtSlot()
+    @Slot()
     def defects_weight_changed(self) -> None:
         defects:float = 0
         roasted_yield:float = 0
@@ -2690,21 +2690,21 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
             self.roasted_defects.setText('0')
 
 
-    @pyqtSlot()
+    @Slot()
     def roasted_color_changed(self) -> None:
         self.roasted_color.setText(comma2dot(self.roasted_color.text()))
 
 
-    @pyqtSlot()
+    @Slot()
     def roasted_moisture_changed(self) -> None:
         self.roasted_moisture.setText(comma2dot(self.roasted_moisture.text()))
 
 
-    @pyqtSlot()
+    @Slot()
     def roasted_density_changed(self) -> None:
         self.roasted_density.setText(comma2dot(self.roasted_density.text()))
 
-    @pyqtSlot()
+    @Slot()
     def cupping_score_changed(self) -> None:
         if self.cupping_score.text() == '0':
             self.cupping_score.setText('')
@@ -2712,7 +2712,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
             self.cupping_score.setText(str(float2float(float(comma2dot(self.cupping_score.text())), 2)).rstrip('0').rstrip('.'))
 
 
-    @pyqtSlot(int)
+    @Slot(int)
     def remainingFilterChanged(self, _:int = 0) -> None:
         self.aw.schedule_visible_filter = self.visible_filter.isChecked()
         self.aw.schedule_day_filter = self.day_filter.isChecked()
@@ -2745,7 +2745,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                     next_selected_item.selected.emit()
 
 
-    @pyqtSlot('QKeyEvent')
+    @Slot('QKeyEvent')
     @override
     def keyPressEvent(self, a0: 'QKeyEvent|None') -> None:
         if a0 is not None:
@@ -2784,7 +2784,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                 super().keyPressEvent(a0)
 
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         if self.aw.scheduler_auto_open and len(self.scheduled_items) > 0 and self.aw.plus_account is not None:
@@ -2821,7 +2821,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
             if update_schedule_window_semaphore.available() < 1:
                 update_schedule_window_semaphore.release(1)
 
-    @pyqtSlot()
+    @Slot()
     @override
     def close(self) -> bool:
         try:
@@ -3100,19 +3100,19 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
                 # while sampling and DROP not yet set, we update the roast properties on schedule item changes
                 self.set_selected_remaining_item_roast_properties()
 
-    @pyqtSlot()
+    @Slot()
     def prepared_items_changed(self) -> None:
         sender = self.sender()
         if sender is not None and isinstance(sender, DragItem):
             self.set_next()
 
-    @pyqtSlot()
+    @Slot()
     def remaining_items_selection_changed(self) -> None:
         sender = self.sender()
         if not self.being_updated and sender is not None and isinstance(sender, DragItem):
             self.select_item(sender)
 
-    @pyqtSlot()
+    @Slot()
     def register_roast(self) -> None:
         sender = self.sender()
         if sender is not None and isinstance(sender, DragItem):
@@ -3341,7 +3341,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
 #            _log.exception(e) # this can raise an exception on macOS if Artisan is started using sudo as the logging framework might not fully initialized
             return 0
 
-    @pyqtSlot()
+    @Slot()
     def updateFilters(self) -> None:
         nickname:str|None = plus.connection.getNickname()
         if nickname is not None and nickname != '':
@@ -3525,7 +3525,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
 
 
 
-    @pyqtSlot()
+    @Slot()
     def completed_item_clicked(self) -> None:
         sender = self.sender()
         if not self.aw.qmc.flagon and sender is not None and isinstance(sender, NoDragItem):
@@ -3546,7 +3546,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
             self.selected_completed_item.deselect()
             self.clearCompletedItemSelection()
 
-    @pyqtSlot()
+    @Slot()
     def completed_items_selection_changed(self) -> None:
         sender = self.sender()
         if sender is not None and isinstance(sender, NoDragItem):
@@ -3918,7 +3918,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
             self.updateScheduleWindow()
 
     # register the current completed roast
-    @pyqtSlot()
+    @Slot()
     def register_completed_roast_slot(self) -> None:
         # if there is a non-empty schedule with a selected item
         if self.selected_remaining_item is not None:
@@ -3945,7 +3945,7 @@ class ScheduleWindow(ArtisanResizeablDialog): # pyright:ignore[reportGeneralType
     # on stock updates (eg. after successful login) and on plus disconnect
     # also called on switching between light and dark mode to adjust the colors accordingly
     # Note that on app raise (depending on the interval) also a stock update is triggered fetching the latest schedule from the server along
-    @pyqtSlot()
+    @Slot()
     def updateScheduleWindow(self) -> None:
         _log.debug('updateScheduleWindow()')
         # lock resources to prevent race conditions

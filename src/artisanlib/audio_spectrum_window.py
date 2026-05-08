@@ -7,7 +7,7 @@
 from collections import deque
 from typing import TYPE_CHECKING, Optional
 
-from qtpy.QtCore import pyqtSlot, Qt
+from qtpy.QtCore import Slot, Qt
 from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from matplotlib.figure import Figure
@@ -88,7 +88,7 @@ class AudioSpectrumWindow(ArtisanDialog):
 
     # ── Slots (called from main thread via signal) ───────────────────────────
 
-    @pyqtSlot(list)
+    @Slot(list)
     def on_spectrum(self, bands: list[float]) -> None:
         """Receive FFT band energies, compute hi/lo ratio and update chart."""
         if len(bands) < 4:
@@ -104,7 +104,7 @@ class AudioSpectrumWindow(ArtisanDialog):
         self._update_chart()
         self._lbl_status.setText(f'錄音中  {int(self._elapsed)}s  比值 {ratio:.3f}')
 
-    @pyqtSlot(str, float)
+    @Slot(str, float)
     def on_event(self, name: str, elapsed: float) -> None:
         """Mark an event on the chart."""
         self._event_markers.append((elapsed, name))

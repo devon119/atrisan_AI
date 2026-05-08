@@ -23,7 +23,7 @@ from artisanlib.util import deltaLabelUTF8
 from artisanlib.widgets import MyContentLimitedQComboBox, MyQTableWidget
 import logging
 
-from qtpy.QtCore import Qt, pyqtSlot, QSettings, QTimer
+from qtpy.QtCore import Qt, Slot, QSettings, QTimer
 from qtpy.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGroupBox,
     QSpinBox, QWidget, QTabWidget, QTableWidget, QPushButton, QHeaderView, QLineEdit)
@@ -384,7 +384,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         QTimer.singleShot(50, self.setActiveTab)
 
 
-    @pyqtSlot(int)
+    @Slot(int)
     def AUCLCDflagChanged(self, _:int) -> None:
         self.aw.qmc.AUClcdFlag = not self.aw.qmc.AUClcdFlag
         if self.aw.qmc.flagstart:
@@ -395,22 +395,22 @@ class StatisticsDlg(ArtisanResizeablDialog):
         if self.aw.largePhasesLCDs_dialog is not None:
             self.aw.largePhasesLCDs_dialog.updateVisiblitiesPhases()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def AUCBeginChanged(self, _:int) -> None:
         self.aw.qmc.AUCbegin = self.beginComboBox.currentIndex()
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def AUCbaseChanged(self, _:int) -> None:
         self.aw.qmc.AUCbase = self.baseedit.value()
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeAUCshowFlag(self, _:int) -> None:
         self.aw.qmc.AUCshowFlag = not self.aw.qmc.AUCshowFlag
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def switchAUCbase(self, i:int) -> None:
         if i:
             self.baseedit.setEnabled(False)
@@ -421,14 +421,14 @@ class StatisticsDlg(ArtisanResizeablDialog):
         self.aw.qmc.AUCbaseFlag = self.baseFlag.isChecked()
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def switchAUCtarget(self, i:int) -> None:
         if i:
             self.targetedit.setEnabled(False)
         else:
             self.targetedit.setEnabled(True)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeStatsSummary(self, _:int) -> None:
         self.aw.qmc.statssummary = not self.aw.qmc.statssummary
         # If Auto is set for the axis then recompute it
@@ -437,7 +437,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         self.aw.qmc.redraw(recomputeAllDeltas=False)
         self.aw.saveStatisticsMenu.setEnabled(self.aw.qmc.statssummary and not self.aw.qmc.flagon)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def changeStatisticsflag(self, value:int) -> None:
         sender = self.sender()
         if sender == self.timez:
@@ -457,7 +457,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         self.aw.qmc.statisticsflags[i] = value
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot()
+    @Slot()
     @override
     def accept(self) -> None:
         self.aw.qmc.AUCtarget = self.targetedit.value()
@@ -479,7 +479,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         self.updatetypes()
         self.close()
 
-    @pyqtSlot()
+    @Slot()
     def setActiveTab(self) -> None:
         self.TabWidget.setCurrentIndex(self.activeTab)
 
@@ -491,7 +491,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
     def moveItem(l:list[Any], source:int, target:int) -> None:
         l.insert(target, l.pop(source))
 
-    @pyqtSlot(int,int,int)
+    @Slot(int,int,int)
     def sectionMoved(self, logicalIndex:int, _oldVisualIndex:int, newVisualIndex:int) -> None:
         max_rows:int = len(self.summarystatstypes)
 
@@ -515,7 +515,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         self.summarystatstable.setRowCount(0)  # resets the data model
         self.createSummarystatsTable()
 
-    @pyqtSlot()
+    @Slot()
     def selectionChanged(self) -> None:
         selected = self.summarystatstable.selectedRanges()
         if selected and len(selected) > 0:
@@ -526,19 +526,19 @@ class StatisticsDlg(ArtisanResizeablDialog):
         if self.summarystatstable.cursor_navigation and vheader is not None:
             QTimer.singleShot(0, vheader.setFocus)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def tabSwitched(self, i:int) -> None:
         if i == 0:
             pass
         elif i == 1: # switched to Config Summary tab
             self.createSummarystatsTable()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setstatsmaxchrperline(self, _:int) -> None:
         self.aw.qmc.statsmaxchrperline = self.statsmaxchrperlineSpinBox.value()
         self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setstatsfontsize(self, _:int) -> None:
         self.aw.summarystatsfontsize = self.fontsizeSpinBox.value()
         self.aw.qmc.redraw(recomputeAllDeltas=False)
@@ -608,7 +608,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
 
         self.savetablesummarystats()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def copyEventButtonTabletoClipboard(self, _:bool=False) -> None:
         import prettytable
         nrows = self.summarystatstable.rowCount()
@@ -671,7 +671,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         if prev_summarystatstypes != self.summarystatstypes or forceRedraw:
             self.aw.qmc.redraw(recomputeAllDeltas=False)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def setitemsummarystat(self, _:int) -> None:
         i = self.aw.findWidgetsRow(self.summarystatstable,self.sender(),0)
         if i is not None:
@@ -688,7 +688,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
             except Exception: # pylint: disable=broad-except
                 pass
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def deletesummarystat(self, _:bool = False) -> None:
         bindex = len(self.summarystatstypes)-1
         selected = self.summarystatstable.selectedRanges()
@@ -705,11 +705,11 @@ class StatisticsDlg(ArtisanResizeablDialog):
             if len(self.summarystatstypes) > 1:
                 self.repaint()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def addsummarystatSlot(self, _:bool = False) -> None:
         self.insertsummarystat(insert=False)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def insertsummarystatSlot(self, _:bool = False) -> None:
         self.insertsummarystat(insert=True)
 
@@ -748,7 +748,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         self.buttonlistmaxlen = self.aw.buttonlistmaxlen
 
     #called from OK button
-    @pyqtSlot()
+    @Slot()
     def updatetypes(self) -> None:
         try:
 #            self.closeHelp()
@@ -760,7 +760,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
             _, _, exc_tb = sys.exc_info()
             self.aw.qmc.adderror((QApplication.translate('Error Message', 'Exception:') + ' updatetypes(): {0}').format(str(e)),getattr(exc_tb, 'tb_lineno', '?'))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def restoreDefaults(self, _:bool = False) -> None:
         self.summarystatstypes = self.aw.summarystatstypes_default.copy()
         self.createSummarystatsTable()
@@ -771,7 +771,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
             vheader.setFocus()
 
 
-    @pyqtSlot('QCloseEvent')
+    @Slot('QCloseEvent')
     @override
     def closeEvent(self, a0:'QCloseEvent|None' = None) -> None:
         del a0
@@ -781,7 +781,7 @@ class StatisticsDlg(ArtisanResizeablDialog):
         settings.setValue('StatisticsGeometry',self.saveGeometry())
         self.aw.StatisticsDlg_activeTab = self.TabWidget.currentIndex()
 
-#    @pyqtSlot(bool)
+#    @Slot(bool)
 #    def showSummarystatshelp(self, _:bool = False) -> None:
 #        from help import eventbuttons_help # pyright: ignore [attr-defined] # pylint: disable=no-name-in-module
 #        self.helpdialog = self.aw.showHelpDialog(

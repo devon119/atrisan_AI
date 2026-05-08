@@ -23,7 +23,7 @@
 
 import logging
 
-from qtpy.QtCore import QObject, QTimer, QSemaphore, pyqtSlot
+from qtpy.QtCore import QObject, QTimer, QSemaphore, Slot
 
 from dataclasses import dataclass
 from enum import IntEnum, unique
@@ -924,7 +924,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
     # queues a RoastedWeightItem for processing
     # if item is None, the next roasted item is cleared
     # Note: the queue has size 1 and a newer incoming item overwrites an older already queued item
-    @pyqtSlot()
+    @Slot()
     def set_next_roasted(self, item: RoastedWeightItem | None) -> None:
         if item is None:
             self.clear_next_roasted()
@@ -976,12 +976,12 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
         self.clear_next()
         self.fetch_next()
 
-    @pyqtSlot()
+    @Slot()
     def scales_available(self) -> None:
         self.sm_green.send('available')
         self.sm_roasted.send('available')
 
-    @pyqtSlot()
+    @Slot()
     def scales_unavailable(self) -> None:
         self.sm_green.send('unavailable')
         self.sm_roasted.send('unavailable')
@@ -1452,28 +1452,28 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
 
     #-
 
-    @pyqtSlot()
+    @Slot()
     def scale1_connected_slot(self) -> None:
         if self.green_task_scale == 1:
             self.green_task_scale_reconnect()
         elif self.roasted_task_scale == 1:
             self.roasted_task_scale_reconnect()
 
-    @pyqtSlot()
+    @Slot()
     def scale1_disconnected_slot(self) -> None:
         if self.green_task_scale == 1:
             self.green_task_scale_discconnect(self.scale1_last_stable_weight)
         elif self.roasted_task_scale == 1:
             self.roasted_task_scale_discconnect(self.scale1_last_stable_weight)
 
-    @pyqtSlot()
+    @Slot()
     def scale2_connected_slot(self) -> None:
         if self.green_task_scale == 2:
             self.green_task_scale_reconnect()
         elif self.roasted_task_scale == 2:
             self.roasted_task_scale_reconnect()
 
-    @pyqtSlot()
+    @Slot()
     def scale2_disconnected_slot(self) -> None:
         if self.green_task_scale == 2:
             self.green_task_scale_discconnect(self.scale2_last_stable_weight)
@@ -1536,7 +1536,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             self.scale_manager.signal_user_scale2_signal.emit(STATE_ACTION.RELEASED)
         self.roasted_task_scale = 0
 
-    @pyqtSlot()
+    @Slot()
     def cancel_green_task_slot(self) -> None:
         if self.sm_green.is_current_state_one_of({GreenWeighingState.cancel_weighing1, GreenWeighingState.cancel_weighing2}):
             self.signal_green_task_scale(STATE_ACTION.CANCEL_EXIT)
@@ -1545,7 +1545,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             if self.sm_green.current_weight_item is not None:
                 self.sm_green.current_weight_item.callback('', 0) # trigger an refresh of the next weight_item, a previous fetch_next_green update might have been blocked while processing
 
-    @pyqtSlot()
+    @Slot()
     def tap_cancel_green_task_slot(self) -> None:
         if (self.green_task_scale != 0 and (self.sm_green.is_current_state_one_of({
                     GreenWeighingState.empty, GreenWeighingState.done_weighing1, GreenWeighingState.done_weighing2 })
@@ -1562,7 +1562,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
 
 
 
-    @pyqtSlot()
+    @Slot()
     def cancel_roasted_task_slot(self) -> None:
         if self.sm_roasted.is_current_state(RoastedWeighingState.cancel_filling):  # zuban:ignore[no-untyped-call]
             self.signal_roasted_task_scale(STATE_ACTION.CANCEL_EXIT)
@@ -1572,7 +1572,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
                 self.sm_roasted.current_weight_item.callback('', 0) # trigger an refresh of the next weight_item, a previous fetch_next_roasted update might have been blocked while processing
 
 
-    @pyqtSlot()
+    @Slot()
     def tap_cancel_roasted_task_slot(self) -> None:
         if (self.roasted_task_scale != 0 and self.sm_roasted.is_current_state_one_of({RoastedWeighingState.done, RoastedWeighingState.done_filling}) and
                 self.scale_empty(self.roasted_task_scale, self.roasted_task_empty_scale_weight, self.last_nonstable_roasted_weight)):
@@ -1586,7 +1586,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
                 self.sm_roasted.current_weight_item.callback('', 0) # trigger an refresh of the next weight_item, a previous fetch_next_roasted update might have been blocked while processing, update now to the latest
 
 
-    @pyqtSlot()
+    @Slot()
     def done_green_task_slot(self) -> None:
         if self.sm_green.is_current_state_one_of({GreenWeighingState.done_weighing1, GreenWeighingState.done_weighing2}):
             self.signal_green_task_scale(STATE_ACTION.OK_EXIT)
@@ -1594,7 +1594,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             self.task_done_step = 0
             self.task_done_weight = 0
 
-    @pyqtSlot()
+    @Slot()
     def done_roasted_task_slot(self) -> None:
         if self.sm_roasted.is_current_state_one_of({RoastedWeighingState.done, RoastedWeighingState.done_filling}):
             self.signal_roasted_task_scale(STATE_ACTION.OK_EXIT)
@@ -1642,7 +1642,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             self.signal_green_task_scale(STATE_ACTION.COMPONENT_CHANGED)
 
 
-    @pyqtSlot()
+    @Slot()
     def scale1_tare_pressed_slot(self) -> None:
         if self.green_task_scale == 1:
             self.sm_green.send('reset')
@@ -1650,7 +1650,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             self.sm_roasted.send('reset')
 
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale1_stable_weight_changed_slot(self, stable_weight:int) -> None:
 #        _log.debug('PRINT WM.scale1_stable_weight_changed_slot(%s)',stable_weight)
         last_stable_weight = self.scale1_last_stable_weight
@@ -1671,7 +1671,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             self.sm_roasted.send('fill', max(0, new_weight), True)
 
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale1_weight_changed_slot(self, weight:int) -> None:
 #        _log.debug('PRINT WM.scale1_weight_changed_slot(%s)',weight)
         if self.green_task_scale == 1:
@@ -1698,7 +1698,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
 
 
 
-    @pyqtSlot()
+    @Slot()
     def scale2_tare_pressed_slot(self) -> None:
         if self.green_task_scale == 2:
             self.sm_green.send('reset')
@@ -1706,7 +1706,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             self.sm_roasted.send('reset')
 
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale2_stable_weight_changed_slot(self, stable_weight:int) -> None:
 #        _log.debug('PRINT WM.scale2_stable_weight_changed_slot(%s)',stable_weight)
         last_stable_weight = self.scale1_last_stable_weight
@@ -1723,7 +1723,7 @@ class WeightManager(QObject): # pyright:ignore[reportGeneralTypeIssues]
             last_weight = last_stable_weight - self.roasted_task_scale_tare_weight + self.roasted_task_stable_weight_before_connection_loss
             self.sm_roasted.send('fill', max(0, new_weight), True)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def scale2_weight_changed_slot(self, weight:int) -> None:
 #        _log.debug('WM.scale2_weight_changed_slot(%s)',weight)
         if self.green_task_scale == 2:

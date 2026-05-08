@@ -15,15 +15,15 @@ from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
 
-from qtpy.QtCore import pyqtSignal, QTextStream, Qt, pyqtSlot
+from qtpy.QtCore import Signal, QTextStream, Qt, Slot
 from qtpy.QtWidgets import QApplication
 from qtpy.QtNetwork import QLocalSocket, QLocalServer
 
 
 class QtSingleApplication(QApplication):
-    messageReceived = pyqtSignal(str)
+    messageReceived = Signal(str)
 
-    activateWindowSignal = pyqtSignal()
+    activateWindowSignal = Signal()
 
     __slots__ = [ '_id', '_viewer_id', '_activationWindow', '_activateOnMessage', '_inSocket', '_outSocket', '_isRunning', '_server',
         '_isRunningViewer', '_outSocketViewer', '_inStream', '_outStream', '_outStreamViewer' ]
@@ -111,7 +111,7 @@ class QtSingleApplication(QApplication):
         self._activationWindow = activationWindow
         self._activateOnMessage = activateOnMessage
 
-    @pyqtSlot()
+    @Slot()
     def activateWindow(self) -> None:
         if not self._activationWindow:
             return
@@ -129,7 +129,7 @@ class QtSingleApplication(QApplication):
         self._outStream.flush()
         return self._outSocket.waitForBytesWritten()
 
-    @pyqtSlot()
+    @Slot()
     def _onNewConnection(self) -> None:
         if self._inSocket is not None:
             self._inSocket.readyRead.disconnect(self._onReadyRead)
@@ -142,7 +142,7 @@ class QtSingleApplication(QApplication):
         if self._activateOnMessage and self._isRunning:
             self.activateWindow()
 
-    @pyqtSlot()
+    @Slot()
     def _onReadyRead(self) -> None:
         while True:
             if self._inStream is None:
