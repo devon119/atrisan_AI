@@ -2604,9 +2604,9 @@ class editGraphDlg(ArtisanResizeablDialog):
             self.whole_color_edit.setText(float2str(float(profile['whole_color'])))
         if 'ground_color' in profile:
             self.ground_color_edit.setText(float2str(float(profile['ground_color'])))
-        if 'color_system_idx' in profile and isinstance(profile['color_system_idx'], int):
-            if 0 <= profile['color_system_idx'] < self.colorSystemComboBox.count():
-                self.colorSystemComboBox.setCurrentIndex(profile['color_system_idx'])
+        if 'color_system_idx' in profile and isinstance(profile['color_system_idx'], int) and \
+                0 <= profile['color_system_idx'] < self.colorSystemComboBox.count():
+            self.colorSystemComboBox.setCurrentIndex(profile['color_system_idx'])
         # Greens temp
         if 'greens_temp' in profile:
             self.greens_temp_edit.setText(f"{float(profile['greens_temp']):g}")

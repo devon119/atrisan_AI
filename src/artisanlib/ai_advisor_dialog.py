@@ -362,7 +362,9 @@ class AIAdvisorDialog(ArtisanDialog):
 
     @Slot()
     def _list_gemini_models(self) -> None:
-        import threading, urllib.request, json as _json
+        import threading
+        import urllib.request
+        import json as _json
         api_key = self.apiKeyEdit.text().strip()
         if not api_key:
             self._resultSignal.emit('❌ 請先填入 API Key', 'red')

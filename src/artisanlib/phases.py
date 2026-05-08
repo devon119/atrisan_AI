@@ -20,7 +20,6 @@ from artisanlib.dialogs import ArtisanDialog
 from artisanlib.main import UI_MODE
 
 from qtpy.QtCore import Qt, Slot, QSettings
-from qtpy.QtGui import QColor
 from qtpy.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLayout, QSpinBox, QPushButton,
     QFrame)

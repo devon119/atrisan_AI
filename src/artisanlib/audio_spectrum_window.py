@@ -5,10 +5,10 @@
 # 純觀察用，不需要操作
 
 from collections import deque
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from qtpy.QtCore import Slot, Qt
-from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -149,7 +149,8 @@ class AudioSpectrumWindow(ArtisanDialog):
         self._event_markers = []
         for vl, tx in self._vlines:
             try:
-                vl.remove(); tx.remove()
+                vl.remove()
+                tx.remove()
             except Exception:  # pylint: disable=broad-except
                 pass
         self._vlines = []

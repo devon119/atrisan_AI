@@ -15,7 +15,8 @@ import logging
 import threading
 import json
 from collections import deque
-from typing import Optional, Callable, Final
+from typing import Final
+from collections.abc import Callable
 from enum import Enum, unique
 
 _MAX_TOKENS: Final[int] = 4096
@@ -293,7 +294,7 @@ def _pace_assessment(bt: float, time_since_charge: float, ror_bt: float) -> 'str
         eta_total = time_since_charge + eta_sec
         if eta_total < EARLY_SEC:
             return f'⚠️ 烘焙進度偏快：預估 {eta_total/60:.1f} 分鐘到達 {TARGET_BT:.0f}°C（目標約5分鐘），考慮稍降火力。'
-        elif eta_total > LATE_SEC:
+        if eta_total > LATE_SEC:
             return f'⚠️ 烘焙進度偏慢：預估 {eta_total/60:.1f} 分鐘才到達 {TARGET_BT:.0f}°C（目標約5分鐘），考慮適度加火。'
     elif time_since_charge > LATE_SEC:
         return f'⚠️ 烘焙進度嚴重偏慢：已過 {time_since_charge/60:.1f} 分鐘但 BT 仍 {bt:.0f}°C，遠未到達 {TARGET_BT:.0f}°C 目標，必須加火。'
@@ -437,23 +438,21 @@ def _coordinated_action(ror_bt: float, bt: float,
             damper_reminder = f'此時縮小風門反而升RoR（{damper_reason}），靠減火控制就好，風門維持現況'
         elif need_cool:
             damper_reminder = f'風門維持中段（{damper_reason}），減火觀察'
+        # fire_delta == 0
+        elif damper_delta > 0:
+            damper_reminder = f'可稍開風門排蒸汽（{damper_reason}），開後RoR會微降，幅度小不需補火'
+        elif damper_delta < 0:
+            damper_reminder = f'可縮小風門（{damper_reason}），縮後RoR會微升，留意節奏別跑過頭'
         else:
-            # fire_delta == 0
-            if damper_delta > 0:
-                damper_reminder = f'可稍開風門排蒸汽（{damper_reason}），開後RoR會微降，幅度小不需補火'
-            elif damper_delta < 0:
-                damper_reminder = f'可縮小風門（{damper_reason}），縮後RoR會微升，留意節奏別跑過頭'
-            else:
-                damper_reminder = f'風門維持中段（{damper_reason}），節奏穩'
+            damper_reminder = f'風門維持中段（{damper_reason}），節奏穩'
 
+    # ── 發展期：風門全開固定排煙，RoR只靠火力控制 ──
+    elif need_heat:
+        damper_reminder = f'風門全開繼續排煙（{damper_reason}），發展期靠補火把RoR穩住'
+    elif need_cool:
+        damper_reminder = f'風門全開繼續排煙（{damper_reason}），靠減火把RoR壓回來'
     else:
-        # ── 發展期：風門全開固定排煙，RoR只靠火力控制 ──
-        if need_heat:
-            damper_reminder = f'風門全開繼續排煙（{damper_reason}），發展期靠補火把RoR穩住'
-        elif need_cool:
-            damper_reminder = f'風門全開繼續排煙（{damper_reason}），靠減火把RoR壓回來'
-        else:
-            damper_reminder = f'風門全開排煙（{damper_reason}），節奏穩'
+        damper_reminder = f'風門全開排煙（{damper_reason}），節奏穩'
 
     return fire_delta_base, f'{fire_text_base}；{damper_reminder}'
 
@@ -544,9 +543,9 @@ def _fire_recommendation(ror_bt: float, bt: float,
             return +1, (f'投豆兩分鐘了，RoR 才 {ror_bt:.1f}——有點低，'
                         f'入豆溫或初始火力可能不夠，補一點火')
         if pace_warn and '偏快' in pace_warn:
-            return -1, f'進度偏快，火稍微收一點，別讓豆表跑太前面'
+            return -1, '進度偏快，火稍微收一點，別讓豆表跑太前面'
         if pace_warn and '偏慢' in pace_warn:
-            return +1, f'進度有點慢，補火讓它追上來'
+            return +1, '進度有點慢，補火讓它追上來'
         return 0, f'RoR {ror_bt:.1f} 跟參考曲線貼得不錯（目標 {bg_ror:.1f}），現況維持就好'
 
     # ── No background: fall back to fixed-target rules ──
@@ -569,9 +568,9 @@ def _fire_recommendation(ror_bt: float, bt: float,
         return +1, (f'投豆兩分鐘了，RoR 才 {ror_bt:.1f}——'
                     f'入豆溫或初始火力可能偏低，補火')
     if pace_warn and '偏快' in pace_warn:
-        return -1, f'進度有點快，火稍微收一下，豆表色感別跑太前面'
+        return -1, '進度有點快，火稍微收一下，豆表色感別跑太前面'
     if pace_warn and '偏慢' in pace_warn:
-        return +1, f'進度有點慢，補火讓它在5分鐘內到達150°C'
+        return +1, '進度有點慢，補火讓它在5分鐘內到達150°C'
     return 0, f'RoR {ror_bt:.1f} 在目標範圍，節奏不錯，維持就好'
 
 
@@ -585,16 +584,16 @@ def _expected_outcome(fire_delta: int, ror_bt: float, bt: float,
     target_lo = bg_ror if bg_ror is not None else lo
     if fire_delta == +2:
         new_ror = min(ror_bt + 3.5, target_hi)
-        base = f'40秒左右RoR應該會止跌往上，盯著它；BT繼續往上走'
+        base = '40秒左右RoR應該會止跌往上，盯著它；BT繼續往上走'
     elif fire_delta == +1:
         new_ror = min(ror_bt + 2.0, target_hi)
-        base = f'60秒後RoR應該會穩住，BT繼續穩升；如果還沒止跌再評估'
+        base = '60秒後RoR應該會穩住，BT繼續穩升；如果還沒止跌再評估'
     elif fire_delta == -2:
         new_ror = max(ror_bt - 3.0, target_lo)
-        base = f'40秒後RoR應該明顯下來；注意別讓它降過頭，隨時準備收手'
+        base = '40秒後RoR應該明顯下來；注意別讓它降過頭，隨時準備收手'
     elif fire_delta == -1:
         new_ror = max(ror_bt - 1.5, target_lo)
-        base = f'60秒後RoR會緩緩下來，BT升幅也會趨緩；觀察一下效果'
+        base = '60秒後RoR會緩緩下來，BT升幅也會趨緩；觀察一下效果'
     else:
         mins_to_150 = ''
         if bt < 150 and ror_bt > 0.5:
@@ -988,10 +987,10 @@ class AIAdvisor:
         self.tts_voice: str = ''         # SAPI description or Edge voice name; '' = auto
         self._tts_busy: bool = False
 
-        self.on_advice: Optional[Callable[[str], None]] = None
-        self.on_query_start: Optional[Callable[[], None]] = None
-        self.on_tts_start: Optional[Callable[[], None]] = None  # called before TTS plays
-        self.on_tts_end: Optional[Callable[[], None]] = None    # called after TTS ends
+        self.on_advice: Callable[[str], None] | None = None
+        self.on_query_start: Callable[[], None] | None = None
+        self.on_tts_start: Callable[[], None] | None = None  # called before TTS plays
+        self.on_tts_end: Callable[[], None] | None = None    # called after TTS ends
 
     # ------------------------------------------------------------------
     # Public API
@@ -1072,12 +1071,12 @@ class AIAdvisor:
 
         # Detect auto-triggers (temperature milestones and 30-second marks)
         # Store detected values; commit to state only after lock is acquired
-        _detected_temp: 'float|None' = None
+        _detected_temp: float|None = None
         _detected_seg: int = -1
         _detected_tp: bool = False
-        _detected_dtr: 'str|None' = None
+        _detected_dtr: str|None = None
         _dtr_advice_text: str = ''
-        _detected_anomaly: 'str|None' = None
+        _detected_anomaly: str|None = None
         _anomaly_advice_text: str = ''
         now = time.time()
 

@@ -13,7 +13,7 @@ import threading
 import time
 import wave
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import numpy as np
 from qtpy.QtCore import QObject, Signal
@@ -52,10 +52,10 @@ class AudioRoastRecorder(QObject):
         self.aw = aw
         self._recording  = False
         self._tts_active = False   # True while TTS is playing — apply speech-band filter
-        self._device_idx: Optional[int] = None   # None = system default
-        self._session_dir: Optional[str] = None
+        self._device_idx: int | None = None   # None = system default
+        self._session_dir: str | None = None
         self._audio_queue: queue.Queue = queue.Queue()
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self._stream = None
 
         # accumulated data for this session
@@ -72,7 +72,7 @@ class AudioRoastRecorder(QObject):
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
-    def set_device(self, device_idx: Optional[int]) -> None:
+    def set_device(self, device_idx: int | None) -> None:
         self._device_idx = device_idx
 
     def start(self, session_dir: str) -> bool:
@@ -229,15 +229,14 @@ class AudioRoastRecorder(QObject):
                     alpha = 1.0 / (self._fc_baseline_n + 1)
                     self._fc_baseline_db = (1 - alpha) * self._fc_baseline_db + alpha * low_db
                     self._fc_baseline_n += 1
+                # Compare spike against current baseline BEFORE updating it
+                elif low_db >= self._fc_baseline_db + self._FC_SPIKE_DB:
+                    self._fc_detected = True
+                    self._fc_armed = False
+                    self.fcSuggested.emit(elapsed)
                 else:
-                    # Compare spike against current baseline BEFORE updating it
-                    if low_db >= self._fc_baseline_db + self._FC_SPIKE_DB:
-                        self._fc_detected = True
-                        self._fc_armed = False
-                        self.fcSuggested.emit(elapsed)
-                    else:
-                        # Only update baseline when no spike (don't let cracks drift the baseline up)
-                        self._fc_baseline_db = 0.99 * self._fc_baseline_db + 0.01 * low_db
+                    # Only update baseline when no spike (don't let cracks drift the baseline up)
+                    self._fc_baseline_db = 0.99 * self._fc_baseline_db + 0.01 * low_db
 
     def _fft_bands(self, samples: np.ndarray) -> list[float]:
         """Compute energy (dB) in each frequency band."""

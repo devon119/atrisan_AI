@@ -4484,7 +4484,7 @@ class ApplicationWindow(QMainWindow):
             config_menu.addSeparator()
             config_menu.addAction(self.calibrateDelayAction)
             config_menu.addSeparator()
-            pass  # Curves removed
+            # Curves removed
         if ui_mode in {UI_MODE.EXPERT, UI_MODE.DEFAULT}:
             config_menu.addSeparator()
             config_menu.addAction(self.phasesGraphAction)

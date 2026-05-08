@@ -142,7 +142,7 @@ class ExcelImportDialog(ArtisanDialog):
         self._rows: list[list] = []
         self._headers: list[str] = []
         self._filepath: str = ''
-        self._auto_result: 'dict | None' = None
+        self._auto_result: dict | None = None
         self._build_ui()
 
     # ------------------------------------------------------------------

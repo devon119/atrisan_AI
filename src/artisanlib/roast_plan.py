@@ -7,15 +7,14 @@ from __future__ import annotations
 import csv
 import io
 import json
-import math
 import urllib.request
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from qtpy.QtCore import QSettings, QThread, Qt, Signal, Slot
 from qtpy.QtWidgets import (
-    QComboBox, QDialog, QDoubleSpinBox, QFrame, QGridLayout, QGroupBox,
+    QComboBox, QDoubleSpinBox, QFrame, QGridLayout, QGroupBox,
     QHBoxLayout, QLabel, QPushButton, QScrollArea, QSizePolicy,
-    QSpinBox, QTabWidget, QVBoxLayout, QWidget,
+    QTabWidget, QVBoxLayout, QWidget,
 )
 
 from matplotlib.figure import Figure
@@ -214,11 +213,10 @@ def _rp_stage_machine_load(s: dict) -> None:
             _rp_adj(s, 'MachineLoad', 'drying', -15, '低載 Drying 縮短 15s 避免 baked')
         else:
             _rp_adj(s, 'MachineLoad', 'charge', -8,  f'⚠️ 極低載 {pct}% ({g}g/{kg}kg 機)：強烈建議換小機')
-    else:
-        if g >= 400:
-            _rp_adj(s, 'Batch', 'charge', +3, f'大批量 {g}g：熱質量高，入豆溫 +3°C（填機器容量可更精準）')
-        elif g <= 150:
-            _rp_adj(s, 'Batch', 'charge', -3, f'小批量 {g}g：熱質量低，入豆溫 -3°C（填機器容量可更精準）')
+    elif g >= 400:
+        _rp_adj(s, 'Batch', 'charge', +3, f'大批量 {g}g：熱質量高，入豆溫 +3°C（填機器容量可更精準）')
+    elif g <= 150:
+        _rp_adj(s, 'Batch', 'charge', -3, f'小批量 {g}g：熱質量低，入豆溫 -3°C（填機器容量可更精準）')
 
 
 def _rp_stage_ambient(s: dict) -> None:
@@ -350,7 +348,7 @@ class AnchorWidget(QFrame):
                  t: float, temp: float, fire: float, damper: float,
                  t_min: float, t_max: float,
                  temp_min: float, temp_max: float,
-                 parent: Optional[QWidget] = None) -> None:
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setStyleSheet('QFrame { background: #fafafa; border-radius: 4px; }')
@@ -431,7 +429,7 @@ class CustomEventWidget(QFrame):
     changed  = Signal()
 
     def __init__(self, t: float, fire: float, damper: float, t_max: float,
-                 parent: Optional[QWidget] = None) -> None:
+                 parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.Box)
         self.setStyleSheet('QFrame { background: #fffbf0; border: 1px solid #ffca28; }')
@@ -479,7 +477,7 @@ class CustomEventWidget(QFrame):
 
 class RoastPlanDlg(ArtisanDialog):
 
-    def __init__(self, aw: 'ApplicationWindow') -> None:
+    def __init__(self, aw: ApplicationWindow) -> None:
         super().__init__(parent=aw, aw=aw)
         self.aw = aw
         self.setWindowTitle('烘焙計畫')
@@ -487,9 +485,9 @@ class RoastPlanDlg(ArtisanDialog):
         self.resize(960, 720)
         self.setStyleSheet('font-size: 13px;')
 
-        self._profile: Optional[dict]  = None
+        self._profile: dict | None  = None
         self._custom_event_widgets: list[CustomEventWidget] = []
-        self._ambient_thread: Optional[AmbientFetchThread] = None
+        self._ambient_thread: AmbientFetchThread | None = None
 
         self._build_ui()
         self._load_machine_kg()
@@ -627,11 +625,16 @@ class RoastPlanDlg(ArtisanDialog):
         # default: city_plus
         self._cb_roast.setCurrentIndex(2)
 
-        grid.addWidget(QLabel('產區'),  0, 0); grid.addWidget(self._cb_country,  0, 1)
-        grid.addWidget(QLabel('海拔'),  0, 2); grid.addWidget(self._cb_altitude, 0, 3)
-        grid.addWidget(QLabel('品種'),  1, 0); grid.addWidget(self._cb_variety,  1, 1)
-        grid.addWidget(QLabel('處理法'), 1, 2); grid.addWidget(self._cb_proc,     1, 3)
-        grid.addWidget(QLabel('焙度'),  2, 0); grid.addWidget(self._cb_roast,    2, 1)
+        grid.addWidget(QLabel('產區'),   0, 0)
+        grid.addWidget(self._cb_country,  0, 1)
+        grid.addWidget(QLabel('海拔'),   0, 2)
+        grid.addWidget(self._cb_altitude, 0, 3)
+        grid.addWidget(QLabel('品種'),   1, 0)
+        grid.addWidget(self._cb_variety,  1, 1)
+        grid.addWidget(QLabel('處理法'), 1, 2)
+        grid.addWidget(self._cb_proc,     1, 3)
+        grid.addWidget(QLabel('焙度'),   2, 0)
+        grid.addWidget(self._cb_roast,    2, 1)
 
         for cb in (self._cb_country, self._cb_altitude, self._cb_variety,
                    self._cb_proc, self._cb_roast):
@@ -1009,8 +1012,10 @@ class RoastPlanDlg(ArtisanDialog):
 
     @staticmethod
     def _interp_bt(bt_pts: list[tuple], t: float) -> float:
-        if t <= bt_pts[0][0]:  return bt_pts[0][1]
-        if t >= bt_pts[-1][0]: return bt_pts[-1][1]
+        if t <= bt_pts[0][0]:
+            return bt_pts[0][1]
+        if t >= bt_pts[-1][0]:
+            return bt_pts[-1][1]
         for i in range(len(bt_pts) - 1):
             if bt_pts[i][0] <= t <= bt_pts[i+1][0]:
                 r = (t - bt_pts[i][0]) / (bt_pts[i+1][0] - bt_pts[i][0] or 1e-9)
@@ -1171,7 +1176,7 @@ class RoastPlanDlg(ArtisanDialog):
 
         self._stats_text_lbl.setText('<br>'.join(rows))
 
-    def _update_stats(self, bt_pts: list, ror_pts: list) -> None:
+    def _update_stats(self, bt_pts: list, ror_pts: list) -> None:  # noqa: ARG002
         aw = self._anchor_widgets
         anchors = {k: aw[k].values for k in aw}
         total_min    = anchors['drop']['t']
@@ -1246,7 +1251,7 @@ class RoastPlanDlg(ArtisanDialog):
         ax_phase.set_ylim(-0.5, 0.5)
         # dev target band
         if p['devLow'] <= dev_pct <= p['devHigh']:
-            ax_phase.set_title(ax_phase.get_title() + f'  ✓ Dev 達標', fontsize=11)
+            ax_phase.set_title(ax_phase.get_title() + '  ✓ Dev 達標', fontsize=11)
         else:
             ax_phase.set_title(ax_phase.get_title() + f'  ⚠ Dev 目標 {p["devLow"]}-{p["devHigh"]}%', fontsize=11, color='#c62828')
 
@@ -1258,7 +1263,7 @@ class RoastPlanDlg(ArtisanDialog):
         ideal_hi     = [25, 15, 10]
         colors_ror   = ['#ffa726', '#66bb6a', '#ef5350']
         x = [0, 1, 2]
-        for i, (xi, val, lo, hi, col) in enumerate(zip(x, actual_ror, ideal_lo, ideal_hi, colors_ror)):
+        for _i, (xi, val, lo, hi, col) in enumerate(zip(x, actual_ror, ideal_lo, ideal_hi, colors_ror, strict=False)):
             # ideal band
             ax_ror.bar(xi, hi - lo, bottom=lo, width=0.5, color=col, alpha=0.18, zorder=1)
             # actual bar
@@ -1275,13 +1280,13 @@ class RoastPlanDlg(ArtisanDialog):
         ax_ror.set_ylim(0, max(max(actual_ror) + 5, 30))
         ax_ror.grid(axis='y', alpha=0.3)
         # flick check
-        flick_ok = all(actual_ror[i] >= actual_ror[i+1] for i in range(len(actual_ror)-1))
+        flick_ok = all(actual_ror[j] >= actual_ror[j+1] for j in range(len(actual_ror)-1))
         flick_txt = '✓ RoR 依序遞減 (always-declining)' if flick_ok else '⚠ RoR 未遞減 — flick/baked 警訊'
         ax_ror.set_title(ax_ror.get_title(), fontsize=11, pad=6)
         ax_ror.text(0.99, 0.97, flick_txt, transform=ax_ror.transAxes,
                     ha='right', va='top', fontsize=9,
                     color='#2e7d32' if flick_ok else '#c62828',
-                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+                    bbox={'boxstyle': 'round,pad=0.3', 'facecolor': 'white', 'alpha': 0.8})
 
         # ── ③ 火力時間軸（階梯線）────────────────────────────────────────────
         ax_fire.set_title('火力操作時間軸', fontsize=11, pad=6)
@@ -1291,7 +1296,7 @@ class RoastPlanDlg(ArtisanDialog):
         evt_lbl  = [e['label']  for e in all_evts]
         ax_fire.step(evt_t, evt_fire, where='post', color='#d32f2f', linewidth=2.2)
         ax_fire.fill_between(evt_t, evt_fire, step='post', alpha=0.15, color='#d32f2f')
-        for t, v, lbl in zip(evt_t, evt_fire, evt_lbl):
+        for t, v, lbl in zip(evt_t, evt_fire, evt_lbl, strict=False):
             ax_fire.annotate(f'{lbl}\n{v:.0f}%', (t, v), textcoords='offset points',
                              xytext=(0, 6), ha='center', fontsize=8, color='#b71c1c')
         ax_fire.set_ylim(0, 115)
@@ -1304,7 +1309,7 @@ class RoastPlanDlg(ArtisanDialog):
         ax_damper.set_title('風門操作時間軸', fontsize=11, pad=6)
         ax_damper.step(evt_t, evt_damp, where='post', color='#0288d1', linewidth=2.2)
         ax_damper.fill_between(evt_t, evt_damp, step='post', alpha=0.15, color='#0288d1')
-        for t, v, lbl in zip(evt_t, evt_damp, evt_lbl):
+        for t, v, lbl in zip(evt_t, evt_damp, evt_lbl, strict=False):
             ax_damper.annotate(f'{lbl}\n{v:.0f}%', (t, v), textcoords='offset points',
                                xytext=(0, 6), ha='center', fontsize=8, color='#01579b')
         ax_damper.set_ylim(0, 115)
@@ -1374,11 +1379,13 @@ class RoastPlanDlg(ArtisanDialog):
             return f'{mins}:{secs:02d}'
 
         def bt_val(t: float) -> str:
-            if t > drop_t + 0.01: return ''
+            if t > drop_t + 0.01:
+                return ''
             return str(round(self._interp_bt(bt_pts, t)))
 
         def fire_damper(t: float) -> tuple:
-            if t > drop_t + 0.01: return ('', '')
+            if t > drop_t + 0.01:
+                return ('', '')
             f = d = None
             for ev in fire_evts:
                 if ev['t'] <= t + 0.01:

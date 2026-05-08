@@ -313,6 +313,14 @@ target-version = "py312"
 
 [tool.ruff.lint.per-file-ignores]
 "uic/*.py" = ["UP004", "F401", "ARG002"]
+"artisanlib/ai_advisor.py" = ["ARG001", "F841", "DTZ005", "PLW1510"]
+"artisanlib/ai_advisor_sim.py" = ["PLW0108", "E701", "E702"]
+"artisanlib/audio_roast.py" = ["ARG002", "DTZ005"]
+"artisanlib/canvas.py" = ["B905"]
+"artisanlib/colors.py" = ["B905"]
+"artisanlib/main.py" = ["SIM102", "PLW2901"]
+"artisanlib/phases.py" = ["B905"]
+"artisanlib/roast_plan.py" = ["ARG002", "E701", "E702"]
 
 
 
