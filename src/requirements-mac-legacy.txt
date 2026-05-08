@@ -46,7 +46,7 @@ arabic-reshaper==3.0.0
 pillow==10.4.0
 pydantic==2.13.2
 babel==2.18.0
-bleak==0.22.3
+bleak==3.0.2
 python-statemachine==3.0.0
 yoctopuce==2.1.12672
 paho-mqtt==2.1.0
