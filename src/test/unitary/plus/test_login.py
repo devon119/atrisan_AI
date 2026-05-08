@@ -5,6 +5,7 @@
 
 import sys
 from collections.abc import Generator
+from contextlib import ExitStack
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -205,65 +206,43 @@ class MockQLayout:
         self.setSpacing = Mock()
 
 
-with patch('PyQt6.QtWidgets.QApplication', MockQApplication), patch(
-    'PyQt6.QtWidgets.QLabel', MockQLabel
-), patch('PyQt6.QtWidgets.QLineEdit', MockQLineEdit), patch(
-    'PyQt6.QtWidgets.QCheckBox', MockQCheckBox
-), patch(
-    'PyQt6.QtWidgets.QGroupBox', Mock
-), patch(
-    'PyQt6.QtWidgets.QVBoxLayout', MockQLayout
-), patch(
-    'PyQt6.QtWidgets.QHBoxLayout', MockQLayout
-), patch(
-    'PyQt6.QtWidgets.QDialogButtonBox', MockQDialogButtonBox
-), patch(
-    'PyQt6.QtWidgets.QWidget', Mock
-), patch(
-    'PyQt6.QtCore.Qt', MockQt
-), patch(
-    'PyQt6.QtCore.pyqtSlot', side_effect=lambda *_args, **_kwargs: lambda f: f
-), patch(
-    'PyQt6.QtGui.QKeySequence', MockQKeySequence
-), patch(
-    'PyQt6.QtGui.QAction', MockQAction
-), patch(
-    'qtpy.QtWidgets.QApplication', MockQApplication
-), patch(
-    'qtpy.QtWidgets.QLabel', MockQLabel
-), patch(
-    'qtpy.QtWidgets.QLineEdit', MockQLineEdit
-), patch(
-    'qtpy.QtWidgets.QCheckBox', MockQCheckBox
-), patch(
-    'qtpy.QtWidgets.QGroupBox', Mock
-), patch(
-    'qtpy.QtWidgets.QVBoxLayout', MockQLayout
-), patch(
-    'qtpy.QtWidgets.QHBoxLayout', MockQLayout
-), patch(
-    'qtpy.QtWidgets.QDialogButtonBox', MockQDialogButtonBox
-), patch(
-    'qtpy.QtWidgets.QWidget', Mock
-), patch(
-    'qtpy.QtCore.Qt', MockQt
-), patch(
-    'qtpy.QtCore.Slot', side_effect=lambda *_args, **_kwargs: lambda f: f
-), patch(
-    'qtpy.QtGui.QKeySequence', MockQKeySequence
-), patch(
-    'qtpy.QtGui.QAction', MockQAction
-), patch(
-    'artisanlib.dialogs.ArtisanDialog', MockArtisanDialog
-), patch(
-    'plus.config.register_url', 'https://artisan.plus/register'
-), patch(
-    'plus.config.reset_passwd_url', 'https://artisan.plus/resetPassword'
-), patch(
-    'plus.config.min_passwd_len', 4
-), patch(
-    'plus.config.min_login_len', 6
-):
+_slot_decorator = lambda *_args, **_kwargs: lambda f: f  # noqa: E731
+_patches = [
+    patch('PyQt6.QtWidgets.QApplication', MockQApplication),
+    patch('PyQt6.QtWidgets.QLabel', MockQLabel),
+    patch('PyQt6.QtWidgets.QLineEdit', MockQLineEdit),
+    patch('PyQt6.QtWidgets.QCheckBox', MockQCheckBox),
+    patch('PyQt6.QtWidgets.QGroupBox', Mock),
+    patch('PyQt6.QtWidgets.QVBoxLayout', MockQLayout),
+    patch('PyQt6.QtWidgets.QHBoxLayout', MockQLayout),
+    patch('PyQt6.QtWidgets.QDialogButtonBox', MockQDialogButtonBox),
+    patch('PyQt6.QtWidgets.QWidget', Mock),
+    patch('PyQt6.QtCore.Qt', MockQt),
+    patch('PyQt6.QtCore.pyqtSlot', side_effect=_slot_decorator),
+    patch('PyQt6.QtGui.QKeySequence', MockQKeySequence),
+    patch('PyQt6.QtGui.QAction', MockQAction),
+    patch('qtpy.QtWidgets.QApplication', MockQApplication),
+    patch('qtpy.QtWidgets.QLabel', MockQLabel),
+    patch('qtpy.QtWidgets.QLineEdit', MockQLineEdit),
+    patch('qtpy.QtWidgets.QCheckBox', MockQCheckBox),
+    patch('qtpy.QtWidgets.QGroupBox', Mock),
+    patch('qtpy.QtWidgets.QVBoxLayout', MockQLayout),
+    patch('qtpy.QtWidgets.QHBoxLayout', MockQLayout),
+    patch('qtpy.QtWidgets.QDialogButtonBox', MockQDialogButtonBox),
+    patch('qtpy.QtWidgets.QWidget', Mock),
+    patch('qtpy.QtCore.Qt', MockQt),
+    patch('qtpy.QtCore.Slot', side_effect=_slot_decorator),
+    patch('qtpy.QtGui.QKeySequence', MockQKeySequence),
+    patch('qtpy.QtGui.QAction', MockQAction),
+    patch('artisanlib.dialogs.ArtisanDialog', MockArtisanDialog),
+    patch('plus.config.register_url', 'https://artisan.plus/register'),
+    patch('plus.config.reset_passwd_url', 'https://artisan.plus/resetPassword'),
+    patch('plus.config.min_passwd_len', 4),
+    patch('plus.config.min_login_len', 6),
+]
+with ExitStack() as _stack:
+    for _p in _patches:
+        _stack.enter_context(_p)
     from plus import login
 
 
