@@ -25177,7 +25177,7 @@ class ApplicationWindow(QMainWindow):
     def _on_ai_ask_now(self) -> None:
         """Manually trigger an immediate AI query."""
         qmc = self.qmc
-        if qmc is None or not self.ai_advisor.enabled:
+        if not self.ai_advisor.enabled:
             return
         bt  = qmc.temp2[-1]  if qmc.temp2  else 0.0
         et  = qmc.temp1[-1]  if qmc.temp1  else 0.0
