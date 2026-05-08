@@ -52,7 +52,9 @@ class TestPIDControlModuleImport:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib import pid_control
             assert pid_control is not None
@@ -68,7 +70,9 @@ class TestPIDControlModuleImport:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import FujiPID
             assert FujiPID is not None
@@ -85,7 +89,9 @@ class TestPIDControlModuleImport:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import PIDcontrol
             assert PIDcontrol is not None
@@ -102,7 +108,9 @@ class TestPIDControlModuleImport:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import DtaPID
             assert DtaPID is not None
@@ -128,7 +136,9 @@ class TestFujiPIDBasicFunctionality:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import FujiPID
             fuji_pid = FujiPID(mock_aw)
@@ -155,7 +165,9 @@ class TestFujiPIDBasicFunctionality:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import FujiPID
             fuji_pid = FujiPID(mock_aw)
@@ -189,7 +201,9 @@ class TestPIDcontrolBasicFunctionality:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import PIDcontrol
             pid_control_obj = PIDcontrol(mock_aw)
@@ -215,7 +229,9 @@ class TestPIDcontrolBasicFunctionality:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import PIDcontrol
             pid_control_obj = PIDcontrol(mock_aw)
@@ -245,7 +261,9 @@ class TestDtaPIDBasicFunctionality:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import DtaPID
             dta_pid = DtaPID(mock_aw)
@@ -270,7 +288,9 @@ class TestDtaPIDBasicFunctionality:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import DtaPID
             dta_pid = DtaPID(mock_aw)
@@ -295,7 +315,9 @@ class TestPIDControlStaticMethods:
              patch('artisanlib.util.cmd2str'), \
              patch('artisanlib.util.float2float'), \
              patch('PyQt6.QtWidgets.QApplication'), \
-             patch('PyQt6.QtCore.pyqtSlot'):
+             patch('PyQt6.QtCore.pyqtSlot'), \
+             patch('qtpy.QtWidgets.QApplication'), \
+             patch('qtpy.QtCore.Slot', side_effect=lambda *_a, **_kw: lambda f: f):
 
             from artisanlib.pid_control import DtaPID
 

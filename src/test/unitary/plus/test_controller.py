@@ -162,6 +162,20 @@ with patch('PyQt6.QtCore.QSemaphore', MockQSemaphore), patch(
 ), patch(
     'PyQt6.QtWidgets.QWidget', Mock
 ), patch(
+    'qtpy.QtCore.QSemaphore', MockQSemaphore
+), patch(
+    'qtpy.QtCore.QTimer', MockQTimer
+), patch(
+    'qtpy.QtCore.Qt', MockQt
+), patch(
+    'qtpy.QtCore.Slot', side_effect=lambda *_args, **_kwargs: lambda f: f
+), patch(
+    'qtpy.QtWidgets.QApplication', MockQApplication
+), patch(
+    'qtpy.QtWidgets.QMessageBox', MockQMessageBox
+), patch(
+    'qtpy.QtWidgets.QWidget', Mock
+), patch(
     'artisanlib.util.getDirectory', return_value='/test/cache/path'
 ), patch(
     'plus.config.connected', False

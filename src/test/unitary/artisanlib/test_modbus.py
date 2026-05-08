@@ -118,6 +118,10 @@ mock_modules = {
     'PyQt5.QtWidgets': Mock(),
     'PyQt5.QtGui': Mock(),
     'sip': Mock(),
+    'qtpy': Mock(),
+    'qtpy.QtCore': Mock(),
+    'qtpy.QtWidgets': Mock(),
+    'qtpy.QtGui': Mock(),
 }
 
 # Configure Qt mocks with proper classes
@@ -125,6 +129,8 @@ mock_modules['PyQt6.QtCore'].QSemaphore = MockQSemaphore
 mock_modules['PyQt6.QtWidgets'].QApplication = MockQApplication
 mock_modules['PyQt5.QtCore'].QSemaphore = MockQSemaphore
 mock_modules['PyQt5.QtWidgets'].QApplication = MockQApplication
+mock_modules['qtpy.QtCore'].QSemaphore = MockQSemaphore
+mock_modules['qtpy.QtWidgets'].QApplication = MockQApplication
 
 # ============================================================================
 # ISOLATED MODULE IMPORT WITH PROPER CLEANUP
@@ -148,6 +154,10 @@ def _import_modbus_with_mocks() -> tuple[Any, Any, Any, Any]: # pyrefly: ignore[
         'PyQt5.QtWidgets',
         'PyQt5.QtGui',
         'sip',
+        'qtpy',
+        'qtpy.QtCore',
+        'qtpy.QtWidgets',
+        'qtpy.QtGui',
     ]
 
     for module_name in qt_module_names:
@@ -167,6 +177,10 @@ def _import_modbus_with_mocks() -> tuple[Any, Any, Any, Any]: # pyrefly: ignore[
             'PyQt5.QtWidgets': Mock(),
             'PyQt5.QtGui': Mock(),
             'sip': Mock(),
+            'qtpy': Mock(),
+            'qtpy.QtCore': Mock(),
+            'qtpy.QtWidgets': Mock(),
+            'qtpy.QtGui': Mock(),
         }
 
         # Configure Qt mocks with proper classes
@@ -178,6 +192,10 @@ def _import_modbus_with_mocks() -> tuple[Any, Any, Any, Any]: # pyrefly: ignore[
         mock_modules_local['PyQt5.QtCore'].QStandardPaths = MockQStandardPaths
         mock_modules_local['PyQt5.QtCore'].QCoreApplication = Mock()
         mock_modules_local['PyQt5.QtWidgets'].QApplication = MockQApplication
+        mock_modules_local['qtpy.QtCore'].QSemaphore = MockQSemaphore
+        mock_modules_local['qtpy.QtCore'].QStandardPaths = MockQStandardPaths
+        mock_modules_local['qtpy.QtCore'].QCoreApplication = Mock()
+        mock_modules_local['qtpy.QtWidgets'].QApplication = MockQApplication
 
         # Force override any existing Qt modules
         for module_name, mock_module in mock_modules_local.items():

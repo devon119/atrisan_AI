@@ -54,8 +54,8 @@ class TestAcaiaModuleImport:
     def test_acaia_module_import(self) -> None:
         """Test that acaia module can be imported."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -73,8 +73,8 @@ class TestAcaiaModuleImport:
     def test_acaia_ble_class_exists(self) -> None:
         """Test that AcaiaBLE class exists and can be imported."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -93,8 +93,8 @@ class TestAcaiaModuleImport:
     def test_acaia_class_exists(self) -> None:
         """Test that Acaia class exists and can be imported."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -117,8 +117,8 @@ class TestAcaiaEnums:
     def test_scale_class_enum(self) -> None:
         """Test SCALE_CLASS enum values."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -138,8 +138,8 @@ class TestAcaiaEnums:
     def test_unit_enum(self) -> None:
         """Test UNIT enum values."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -159,8 +159,8 @@ class TestAcaiaEnums:
     def test_msg_enum(self) -> None:
         """Test MSG enum values."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -185,8 +185,8 @@ class TestAcaiaEnums:
     def test_cmd_enum(self) -> None:
         """Test CMD enum values."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -207,8 +207,8 @@ class TestAcaiaEnums:
     def test_event_enum(self) -> None:
         """Test EVENT enum values."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -236,8 +236,8 @@ class TestAcaiaConstants:
     def test_acaia_legacy_uuids(self) -> None:
         """Test Acaia Legacy service and characteristic UUIDs."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -261,8 +261,8 @@ class TestAcaiaConstants:
     def test_acaia_modern_uuids(self) -> None:
         """Test Acaia modern service and characteristic UUIDs."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -286,8 +286,8 @@ class TestAcaiaConstants:
     def test_acaia_relay_uuids(self) -> None:
         """Test Acaia Relay service and characteristic UUIDs."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -311,8 +311,8 @@ class TestAcaiaConstants:
     def test_acaia_scale_names(self) -> None:
         """Test Acaia scale name prefixes and product names."""
         # Arrange & Act & Assert
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.ble_port.ClientBLE'), patch(
             'artisanlib.async_comm.AsyncIterable'
         ), patch(
@@ -344,8 +344,8 @@ class TestAcaiaProtocolFunctions:
         # Test the actual CRC implementation from the AcaiaBLE class
         # Import the actual implementation and test it directly
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -416,8 +416,8 @@ class TestAcaiaProtocolFunctions:
         # Test the actual decode_time implementation from the AcaiaBLE class
         # Import the actual implementation and test it directly
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -495,8 +495,8 @@ class TestAcaiaBLEStaticMethods:
         """Test parse_timer_event static method implementation."""
         # Test the actual parse_timer_event implementation from the AcaiaBLE class
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -545,8 +545,8 @@ class TestAcaiaBLEWeightDecoding:
         """Test decode_weight method implementation."""
         # Test the actual decode_weight implementation from the AcaiaBLE class
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -634,8 +634,8 @@ class TestAcaiaBLEMessageConstruction:
         """Test message construction method implementation."""
         # Test the actual message method from the AcaiaBLE class
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -722,8 +722,8 @@ class TestAcaiaBLEEventParsing:
         """Test parse_battery_event method implementation."""
         # Test the actual parse_battery_event implementation from the AcaiaBLE class
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -802,8 +802,8 @@ class TestAcaiaBLEEventParsing:
         """Test parse_weight_event method implementation."""
         # Test the actual parse_weight_event implementation from the AcaiaBLE class
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -875,8 +875,8 @@ class TestAcaiaBLEScaleClassBehavior:
         """Test MODERN scale class specific behavior."""
         # Test the actual scale class behavior from the AcaiaBLE class
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -937,8 +937,8 @@ class TestAcaiaBLEScaleClassBehavior:
         """Test RELAY scale class specific behavior."""
         # Test the actual scale class behavior from the AcaiaBLE class
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -1007,8 +1007,8 @@ class TestAcaiaWrapperClass:
         """Test Acaia wrapper class initialization."""
         # Test the actual Acaia wrapper class from the acaia module
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(
@@ -1075,8 +1075,8 @@ class TestAcaiaWrapperClass:
         """Test Acaia wrapper connection methods."""
         # Test the actual Acaia wrapper connection methods
 
-        with patch('artisanlib.util.float2float'), patch('PyQt6.QtCore.pyqtSignal'), patch(
-            'PyQt6.QtCore.pyqtSlot'
+        with patch('artisanlib.util.float2float'), patch('qtpy.QtCore.Signal'), patch(
+            'qtpy.QtCore.Slot'
         ), patch('artisanlib.async_comm.AsyncIterable'), patch(
             'artisanlib.async_comm.IteratorReader'
         ), patch(

@@ -118,7 +118,9 @@ mock_qsemaphore.available = Mock(return_value=1)
 # Only patch PyQt6 since PyQt5 is not installed and should be ignored
 with patch('plus.config.account_cache', 'account'), patch(
     'artisanlib.util.getDirectory', return_value='/test/cache/path'
-), patch('PyQt6.QtCore.QSemaphore', return_value=mock_qsemaphore):
+), patch('PyQt6.QtCore.QSemaphore', return_value=mock_qsemaphore), patch(
+    'qtpy.QtCore.QSemaphore', return_value=mock_qsemaphore
+):
     from plus import account
 
 

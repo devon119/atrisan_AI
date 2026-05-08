@@ -143,6 +143,8 @@ with patch('artisanlib.__version__', '2.8.4'), patch(
 ), patch(
     'PyQt6.QtCore.QSemaphore', MockQSemaphore
 ), patch(
+    'qtpy.QtCore.QSemaphore', MockQSemaphore
+), patch(
     'requests.get', Mock()
 ), patch(
     'requests.post', Mock()
@@ -165,6 +167,7 @@ def isolated_test_environment() -> Generator[None, None, None]:
         {
             'PyQt6.QtCore': Mock(),
             'PyQt5.QtCore': Mock(),
+            'qtpy.QtCore': Mock(),
             'artisanlib.util': Mock(),
             'artisanlib.main': Mock(),
             'plus.config': Mock(),
@@ -189,6 +192,7 @@ def isolated_test_environment() -> Generator[None, None, None]:
 
         sys.modules['PyQt6.QtCore'].QSemaphore = create_mock_qsemaphore # type: ignore[attr-defined]
         sys.modules['PyQt5.QtCore'].QSemaphore = create_mock_qsemaphore # type: ignore[attr-defined]
+        sys.modules['qtpy.QtCore'].QSemaphore = create_mock_qsemaphore # type: ignore[attr-defined]
 
         # Configure config mock with default values
         config_mock = sys.modules['plus.config']

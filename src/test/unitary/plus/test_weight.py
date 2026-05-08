@@ -33,6 +33,7 @@ import pytest
 modules_to_isolate = [
     'PyQt6.QtCore',
     'PyQt5.QtCore',
+    'qtpy.QtCore',
     'artisanlib.scale',
     'statemachine',
     'dataclasses',
@@ -54,6 +55,7 @@ for module_name in modules_to_isolate:
 mock_modules = {
     'PyQt6.QtCore': Mock(),
     'PyQt5.QtCore': Mock(),
+    'qtpy.QtCore': Mock(),
     'artisanlib.scale': Mock(),
     'statemachine': Mock(),
     'dataclasses': Mock(),
@@ -204,6 +206,11 @@ sys.modules['PyQt5.QtCore'].QObject = MockQObject # type: ignore[attr-defined]
 sys.modules['PyQt5.QtCore'].QTimer = MockQTimer # type: ignore[attr-defined]
 sys.modules['PyQt5.QtCore'].QSemaphore = Mock(return_value=mock_qsemaphore) # type: ignore[attr-defined]
 sys.modules['PyQt5.QtCore'].pyqtSlot = mock_pyqt_slot # type: ignore[attr-defined]
+
+sys.modules['qtpy.QtCore'].QObject = MockQObject # type: ignore[attr-defined]
+sys.modules['qtpy.QtCore'].QTimer = MockQTimer # type: ignore[attr-defined]
+sys.modules['qtpy.QtCore'].QSemaphore = Mock(return_value=mock_qsemaphore) # type: ignore[attr-defined]
+sys.modules['qtpy.QtCore'].Slot = mock_pyqt_slot # type: ignore[attr-defined]
 
 
 # Mock statemachine components

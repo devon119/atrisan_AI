@@ -118,7 +118,10 @@ def _import_pid_with_mocks() -> Any:
     """Import PID module with mocks that override any existing Qt modules."""
     # Store original modules if they exist
     original_modules = {}
-    qt_module_names = ['PyQt6', 'PyQt6.QtCore', 'PyQt6.QtWidgets', 'PyQt6.QtGui', 'PyQt6.sip']
+    qt_module_names = [
+        'PyQt6', 'PyQt6.QtCore', 'PyQt6.QtWidgets', 'PyQt6.QtGui', 'PyQt6.sip',
+        'qtpy', 'qtpy.QtCore', 'qtpy.QtWidgets', 'qtpy.QtGui',
+    ]
 
     for module_name in qt_module_names:
         if module_name in sys.modules:
@@ -132,10 +135,15 @@ def _import_pid_with_mocks() -> Any:
             'PyQt6.QtWidgets': Mock(),
             'PyQt6.QtGui': Mock(),
             'PyQt6.sip': Mock(),
+            'qtpy': Mock(),
+            'qtpy.QtCore': Mock(),
+            'qtpy.QtWidgets': Mock(),
+            'qtpy.QtGui': Mock(),
         }
 
         # Configure Qt mocks with proper classes
         mock_modules['PyQt6.QtCore'].QSemaphore = MockQSemaphore
+        mock_modules['qtpy.QtCore'].QSemaphore = MockQSemaphore
 
         # Force override any existing Qt modules
         for module_name, mock_module in mock_modules.items():

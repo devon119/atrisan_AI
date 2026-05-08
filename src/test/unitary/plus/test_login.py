@@ -228,6 +228,32 @@ with patch('PyQt6.QtWidgets.QApplication', MockQApplication), patch(
 ), patch(
     'PyQt6.QtGui.QAction', MockQAction
 ), patch(
+    'qtpy.QtWidgets.QApplication', MockQApplication
+), patch(
+    'qtpy.QtWidgets.QLabel', MockQLabel
+), patch(
+    'qtpy.QtWidgets.QLineEdit', MockQLineEdit
+), patch(
+    'qtpy.QtWidgets.QCheckBox', MockQCheckBox
+), patch(
+    'qtpy.QtWidgets.QGroupBox', Mock
+), patch(
+    'qtpy.QtWidgets.QVBoxLayout', MockQLayout
+), patch(
+    'qtpy.QtWidgets.QHBoxLayout', MockQLayout
+), patch(
+    'qtpy.QtWidgets.QDialogButtonBox', MockQDialogButtonBox
+), patch(
+    'qtpy.QtWidgets.QWidget', Mock
+), patch(
+    'qtpy.QtCore.Qt', MockQt
+), patch(
+    'qtpy.QtCore.Slot', side_effect=lambda *_args, **_kwargs: lambda f: f
+), patch(
+    'qtpy.QtGui.QKeySequence', MockQKeySequence
+), patch(
+    'qtpy.QtGui.QAction', MockQAction
+), patch(
     'artisanlib.dialogs.ArtisanDialog', MockArtisanDialog
 ), patch(
     'plus.config.register_url', 'https://artisan.plus/register'
