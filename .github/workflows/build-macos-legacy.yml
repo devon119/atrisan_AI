@@ -1,0 +1,34 @@
+name: Build macOS Legacy (10.13+)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-macos-legacy:
+    runs-on: macos-13  # Intel x86_64 runner
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r src/requirements-mac-legacy.txt
+
+      - name: Build
+        working-directory: src
+        env:
+          QT_API: pyqt5
+          PYTHON_V: '3.12'
+          MACOSX_DEPLOYMENT_TARGET: '10.13'
+        run: pyinstaller --noconfirm artisan-mac-legacy.spec
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: artisan-mac-legacy-dmg
+          path: src/artisan-mac-legacy-*.dmg
