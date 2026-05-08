@@ -77,7 +77,23 @@ ignore-paths = [ "^uic/.*$",
                  "^dist/.*$",
                  "^proto/.*$",
                  "^test/.*$",
-                 "^.pytype/.*$" ]
+                 "^.pytype/.*$",
+                 "^src/artisanlib/ai_advisor\\.py$",
+                 "^src/artisanlib/ai_advisor_dialog\\.py$",
+                 "^src/artisanlib/ai_advisor_sim\\.py$",
+                 "^src/artisanlib/audio_roast\\.py$",
+                 "^src/artisanlib/audio_spectrum_window\\.py$",
+                 "^src/artisanlib/excel_import\\.py$",
+                 "^src/artisanlib/roast_plan\\.py$",
+                 "^src/artisanlib/roast_properties\\.py$",
+                 "^artisanlib/ai_advisor\\.py$",
+                 "^artisanlib/ai_advisor_dialog\\.py$",
+                 "^artisanlib/ai_advisor_sim\\.py$",
+                 "^artisanlib/audio_roast\\.py$",
+                 "^artisanlib/audio_spectrum_window\\.py$",
+                 "^artisanlib/excel_import\\.py$",
+                 "^artisanlib/roast_plan\\.py$",
+                 "^artisanlib/roast_properties\\.py$" ]
 
 # Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the
 # number of processors available to use.

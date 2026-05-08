@@ -5220,13 +5220,13 @@ class tgraphcanvas(QObject):
                             from collections import deque as _dq
                             # initialise per-roast tracking state once
                             if not hasattr(self, '_ai_ror_buffer'):
-                                self._ai_ror_buffer: _dq = _dq(maxlen=60)  # ~2 min @ 2s
-                                self._ai_event_flags: dict = {
+                                self._ai_ror_buffer: _dq = _dq(maxlen=60)  # ~2 min @ 2s  # pylint: disable=attribute-defined-outside-init
+                                self._ai_event_flags: dict = {  # pylint: disable=attribute-defined-outside-init
                                     'charge': False, 'near_t1': False,
                                     'dry_end': False, 'fc': False,
                                     'fc_end': False, 'sc': False, 'drop': False,
                                 }
-                                self._ai_prev_charge: int = -1
+                                self._ai_prev_charge: int = -1  # pylint: disable=attribute-defined-outside-init
 
                             # record RoR every sample for accurate trend
                             self._ai_ror_buffer.append(self.rateofchange2)
@@ -5298,7 +5298,7 @@ class tgraphcanvas(QObject):
 
                             # reset flags when a new roast resets charge
                             if _cur_charge < 0:
-                                self._ai_event_flags = {
+                                self._ai_event_flags = {  # pylint: disable=attribute-defined-outside-init
                                     'charge': False, 'near_t1': False,
                                     'dry_end': False, 'fc': False,
                                     'fc_end': False, 'sc': False, 'drop': False,

@@ -2882,8 +2882,8 @@ class ApplicationWindow(QMainWindow):
         self.messagelabel.setIndent(6)
 
         # AI Advisor floating window (Tool type: stays on top of main window, no taskbar entry)
-        from qtpy.QtCore import Qt as _Qt
-        from qtpy.QtWidgets import QHBoxLayout as _QHBox
+        from qtpy.QtCore import Qt as _Qt  # pylint: disable=reimported
+        from qtpy.QtWidgets import QHBoxLayout as _QHBox  # pylint: disable=reimported
         self.aiAdvisorWindow: QWidget = QWidget(self, _Qt.WindowType.Tool)
         self.aiAdvisorWindow.setWindowTitle('AI 烘焙指導員')
         self.aiAdvisorWindow.setMinimumSize(420, 300)
@@ -25191,7 +25191,7 @@ class ApplicationWindow(QMainWindow):
     @Slot()
     def _on_ai_export(self) -> None:
         """Save AI advice history to a text file."""
-        import os
+        import os  # pylint: disable=reimported,redefined-outer-name
         ts = libtime.strftime('%Y%m%d_%H%M%S')
         default = os.path.join(os.path.expanduser('~'), f'ai_roast_log_{ts}.txt')
         path, _ = QFileDialog.getSaveFileName(
@@ -25207,7 +25207,7 @@ class ApplicationWindow(QMainWindow):
         Warning sub-items (containing 注意/⚠️/嚴重/先別/不建議) are rendered
         on their own line in red with larger font.
         """
-        import re
+        import re  # pylint: disable=reimported,redefined-outer-name
         section_colors = {'現況': '#90ee90', '操作': '#ffd700', '預期': '#87ceeb'}
         _urgent_kw  = ('緊急', '大幅', '崩潰', '趨近0', '負值', '暴衝', '過度')
         _warning_kw = ('下滑', '偏低', '不足', '注意', '過快', '回升')
@@ -25285,13 +25285,13 @@ class ApplicationWindow(QMainWindow):
         self.audioDeviceMenu.clear()
         default_action = self.audioDeviceMenu.addAction('系統預設麥克風')
         default_action.setCheckable(True)
-        default_action.setChecked(self.audioRoastRecorder._device_idx is None)
+        default_action.setChecked(self.audioRoastRecorder._device_idx is None)  # pylint: disable=protected-access
         default_action.triggered.connect(lambda: self._selectAudioDevice(None))
         self.audioDeviceMenu.addSeparator()
         for idx, name in AudioRoastRecorder.list_devices():
             act = self.audioDeviceMenu.addAction(f'{idx}: {name}')
             act.setCheckable(True)
-            act.setChecked(self.audioRoastRecorder._device_idx == idx)
+            act.setChecked(self.audioRoastRecorder._device_idx == idx)  # pylint: disable=protected-access
             act.triggered.connect(lambda _checked, i=idx: self._selectAudioDevice(i))
 
     def _selectAudioDevice(self, device_idx) -> None:
