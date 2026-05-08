@@ -53,11 +53,11 @@ if TYPE_CHECKING:
 
 from artisanlib.util import cmd2str, RoRfromCtoFstrict, fromCtoFstrict, fromFtoCstrict, hex2int, str2cmd
 
-from PyQt6.QtCore import Qt, QDateTime, QSemaphore, pyqtSlot
-from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import (QApplication, QCheckBox, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout,
+from qtpy.QtCore import Qt, QDateTime, QSemaphore, pyqtSlot
+from qtpy.QtGui import QIntValidator
+from qtpy.QtWidgets import (QApplication, QCheckBox, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout,
                              QLabel, QLineEdit,QPushButton, QWidget)
-from PyQt6 import sip
+from qtpy import sip
 
 from Phidget22.DeviceID import DeviceID # type: ignore[import-untyped]
 from Phidget22.Devices.TemperatureSensor import TemperatureSensor as PhidgetTemperatureSensor # type: ignore[import-untyped]

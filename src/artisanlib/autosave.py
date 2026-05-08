@@ -18,17 +18,17 @@
 from typing import override, cast, TYPE_CHECKING
 from artisanlib.dialogs import ArtisanDialog
 
-from PyQt6.QtCore import Qt, pyqtSlot, QSettings
-from PyQt6.QtWidgets import (QApplication, QMessageBox, QLabel, QPushButton, QDialogButtonBox, QFrame,
+from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtWidgets import (QApplication, QMessageBox, QLabel, QPushButton, QDialogButtonBox, QFrame,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QLineEdit, QSpacerItem)
-from PyQt6.QtGui import QStandardItemModel
+from qtpy.QtGui import QStandardItemModel
 
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
-    from PyQt6.QtGui import QStandardItem, QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtGui import QStandardItem, QCloseEvent # pylint: disable=unused-import
 
 class autosaveDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:

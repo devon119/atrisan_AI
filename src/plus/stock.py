@@ -21,8 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtCore import QSemaphore, QObject, QThread, pyqtSlot, pyqtSignal
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import QSemaphore, QObject, QThread, pyqtSlot, pyqtSignal
+from qtpy.QtWidgets import QApplication
 
 import copy
 import json

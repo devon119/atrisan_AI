@@ -22,16 +22,16 @@ from typing import override, TYPE_CHECKING
 from artisanlib.util import deltaLabelUTF8, stringfromseconds, stringtoseconds
 from artisanlib.dialogs import ArtisanDialog
 
-from PyQt6.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-from PyQt6.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QFrame,
+from qtpy.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings
+from qtpy.QtGui import QIntValidator, QRegularExpressionValidator
+from qtpy.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QFrame,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QGroupBox, QLineEdit, QLayout,
     QSpinBox) # @UnusedImport @Reimport  @UnresolvedImport
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QPushButton, QWidget # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QPushButton, QWidget # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 class WindowsDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:

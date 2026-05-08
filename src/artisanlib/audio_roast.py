@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-from PyQt6.QtCore import QObject, pyqtSignal
+from qtpy.QtCore import QObject, pyqtSignal
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow

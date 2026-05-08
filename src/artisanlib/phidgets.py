@@ -25,7 +25,7 @@ from typing import Final, TYPE_CHECKING
 if TYPE_CHECKING:
     from Phidget22.Phidget import Phidget # type: ignore[import-untyped] # pylint: disable=unused-import
 
-from PyQt6.QtCore import QSemaphore
+from qtpy.QtCore import QSemaphore
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)

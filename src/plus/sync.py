@@ -21,8 +21,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtCore import QSemaphore, QTimer, pyqtSlot
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import QSemaphore, QTimer, pyqtSlot
+from qtpy.QtWidgets import QApplication
 
 from pathlib import Path
 from artisanlib.util import getDirectory, weight_units, convertWeight, float2float

@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication
 
 QApplication.translate('Countries', 'Afghanistan')
 QApplication.translate('Countries', 'Aland Islands')

@@ -19,15 +19,15 @@ from typing import override, cast, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 from artisanlib.util import serialize
 from artisanlib.dialogs import ArtisanDialog
 
-from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QApplication, QLabel, QTableWidget, QPushButton,
+from qtpy.QtCore import Qt, pyqtSlot
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import (QApplication, QLabel, QTableWidget, QPushButton,
     QComboBox, QHBoxLayout, QVBoxLayout, QTableWidgetItem, QDialogButtonBox,
     QDoubleSpinBox, QGroupBox, QLineEdit, QSpinBox, QHeaderView)
 

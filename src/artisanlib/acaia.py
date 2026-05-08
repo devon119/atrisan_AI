@@ -24,7 +24,7 @@ from typing import override, Final, TYPE_CHECKING
 if TYPE_CHECKING:
     from bleak.backends.characteristic import BleakGATTCharacteristic  # pylint: disable=unused-import
 
-from PyQt6.QtCore import pyqtSignal, pyqtSlot
+from qtpy.QtCore import pyqtSignal, pyqtSlot
 
 from artisanlib.ble_port import ClientBLE
 from artisanlib.async_comm import AsyncIterable, IteratorReader

@@ -24,11 +24,11 @@ from typing import override, Any, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
-from PyQt6.QtCore import (Qt, pyqtSlot, QSettings)
-from PyQt6.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QVBoxLayout, QLabel,
+from qtpy.QtCore import (Qt, pyqtSlot, QSettings)
+from qtpy.QtWidgets import (QApplication, QCheckBox, QHBoxLayout, QVBoxLayout, QLabel,
                              QLineEdit,QPushButton, QComboBox, QDialogButtonBox, QHeaderView,
                              QTableWidget, QDoubleSpinBox, QGroupBox)
 

@@ -20,15 +20,15 @@ from typing import override, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # noqa: F401 # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 from artisanlib import __version__
 
 from artisanlib.dialogs import ArtisanDialog
 
-from PyQt6.QtCore import pyqtSlot
-from PyQt6.QtWidgets import (QApplication, QLabel, QCheckBox, QTextEdit, QVBoxLayout)
+from qtpy.QtCore import pyqtSlot
+from qtpy.QtWidgets import (QApplication, QLabel, QCheckBox, QTextEdit, QVBoxLayout)
 
 
 ##########################################################################

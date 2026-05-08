@@ -20,15 +20,15 @@ from typing import override, cast, Literal, TYPE_CHECKING
 from artisanlib.util import stringfromseconds, stringtoseconds
 from artisanlib.dialogs import ArtisanDialog
 
-from PyQt6.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-from PyQt6.QtWidgets import (QApplication, QLabel,
+from qtpy.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings
+from qtpy.QtGui import QIntValidator, QRegularExpressionValidator
+from qtpy.QtWidgets import (QApplication, QLabel,
         QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QDialogButtonBox, QGridLayout,
         QGroupBox, QLineEdit, QMessageBox, QLayout)
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget, QPushButton # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget, QPushButton # pylint: disable=unused-import
 
 #########################################################################
 #############  DESIGNER CONFIG DIALOG ###################################

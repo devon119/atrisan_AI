@@ -11,8 +11,8 @@ import math
 import urllib.request
 from typing import TYPE_CHECKING, Any, Optional
 
-from PyQt6.QtCore import QSettings, QThread, Qt, pyqtSignal, pyqtSlot
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import QSettings, QThread, Qt, pyqtSignal, pyqtSlot
+from qtpy.QtWidgets import (
     QComboBox, QDialog, QDoubleSpinBox, QFrame, QGridLayout, QGroupBox,
     QHBoxLayout, QLabel, QPushButton, QScrollArea, QSizePolicy,
     QSpinBox, QTabWidget, QVBoxLayout, QWidget,
@@ -1394,7 +1394,7 @@ class RoastPlanDlg(ArtisanDialog):
         return time_labels, bt_row, fire_row, damper_row
 
     def _export_csv(self) -> None:
-        from PyQt6.QtWidgets import QFileDialog
+        from qtpy.QtWidgets import QFileDialog
         filename, _ = QFileDialog.getSaveFileName(self, '匯出 CSV', '烘豆計畫.csv', '*.csv')
         if not filename:
             return
@@ -1428,12 +1428,12 @@ class RoastPlanDlg(ArtisanDialog):
     # ── XLSX 匯出 ─────────────────────────────────────────────────────────────
 
     def _export_xlsx(self) -> None:
-        from PyQt6.QtWidgets import QFileDialog
+        from qtpy.QtWidgets import QFileDialog
         try:
             import openpyxl
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         except ImportError:
-            from PyQt6.QtWidgets import QMessageBox
+            from qtpy.QtWidgets import QMessageBox
             QMessageBox.warning(self, '缺少套件', 'openpyxl 未安裝，請先安裝。')
             return
 
@@ -1541,5 +1541,5 @@ class RoastPlanDlg(ArtisanDialog):
 
         wb.save(filename)
 
-        from PyQt6.QtWidgets import QMessageBox
+        from qtpy.QtWidgets import QMessageBox
         QMessageBox.information(self, '匯出完成', f'已儲存：{filename}')

@@ -50,8 +50,8 @@ application_organization_domain: Final[str] = 'artisan-scope.org'
 application_desktop_file_name: Final[str] = 'org.artisan_scope.artisan'
 
 
-from PyQt6.QtCore import QStandardPaths, QCoreApplication, QTime, QDate, QDateTime
-from PyQt6.QtGui import QColor
+from qtpy.QtCore import QStandardPaths, QCoreApplication, QTime, QDate, QDateTime
+from qtpy.QtGui import QColor
 
 
 deltaLabelPrefix:Final[str] = '<html>&Delta;&thinsp;</html>' # prefix constant for labels to compose DeltaET/BT by prepending this prefix to ET/BT labels

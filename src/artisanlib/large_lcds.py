@@ -20,15 +20,15 @@ from artisanlib.dialogs import ArtisanDialog
 from artisanlib.widgets import MyQLabel, MyQLCDNumber, ClickableLCDFrame
 from artisanlib.util import rgba_colorname2argb_colorname
 
-from PyQt6.QtCore import (Qt, QSettings, pyqtSlot, QPoint)
-from PyQt6.QtWidgets import (QApplication, QFrame, QWidget, QLCDNumber, QHBoxLayout, QVBoxLayout)
+from qtpy.QtCore import (Qt, QSettings, pyqtSlot, QPoint)
+from qtpy.QtWidgets import (QApplication, QFrame, QWidget, QLCDNumber, QHBoxLayout, QVBoxLayout)
 
 from typing import override, Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QLayout # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent, QResizeEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QLayout # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent, QResizeEvent # pylint: disable=unused-import
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)

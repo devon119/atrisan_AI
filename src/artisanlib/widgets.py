@@ -22,16 +22,16 @@ from typing import override, Any, TYPE_CHECKING
 from artisanlib.util import stringtoseconds, createGradient
 
 if TYPE_CHECKING:
-    from PyQt6.QtCore import QCoreApplication, QObject # pylint: disable=unused-import
-    from PyQt6.QtGui import QWheelEvent, QMouseEvent, QFocusEvent, QResizeEvent, QKeyEvent # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget, QTimeEdit, QCheckBox, QComboBox # pylint: disable=unused-import
+    from qtpy.QtCore import QCoreApplication, QObject # pylint: disable=unused-import
+    from qtpy.QtGui import QWheelEvent, QMouseEvent, QFocusEvent, QResizeEvent, QKeyEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget, QTimeEdit, QCheckBox, QComboBox # pylint: disable=unused-import
 
-from PyQt6.QtCore import (Qt, pyqtSignal, pyqtSlot, QLine, QEvent,
+from qtpy.QtCore import (Qt, pyqtSignal, pyqtSlot, QLine, QEvent,
     QByteArray, QPropertyAnimation, QEasingCurve, QLocale)
-from PyQt6.QtCore import pyqtProperty # type:ignore[attr-defined]
-from PyQt6.QtWidgets import (QApplication, QSplitter, QSplitterHandle, QLabel, QComboBox, QLineEdit, QTextEdit, QDoubleSpinBox, QPushButton,
+from qtpy.QtCore import pyqtProperty # type:ignore[attr-defined]
+from qtpy.QtWidgets import (QApplication, QSplitter, QSplitterHandle, QLabel, QComboBox, QLineEdit, QTextEdit, QDoubleSpinBox, QPushButton,
     QTableWidget, QTableWidgetItem, QSizePolicy, QLCDNumber, QGroupBox, QFrame, QSlider, QStyle, QStyleOptionSlider)
-from PyQt6.QtGui import QPen, QPainter, QFontMetrics, QColor, QCursor, QEnterEvent, QPaintEvent
+from qtpy.QtGui import QPen, QPainter, QFontMetrics, QColor, QCursor, QEnterEvent, QPaintEvent
 
 
 @contextmanager

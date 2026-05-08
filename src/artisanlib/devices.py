@@ -27,7 +27,7 @@ from typing import override, Final, cast, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QAbstractItemView # pylint: disable=unused-import
+    from qtpy.QtWidgets import QAbstractItemView # pylint: disable=unused-import
     from artisanlib.scale import ScaleSpecs
 
 from artisanlib.util import (deltaLabelUTF8, setDeviceDebugLogLevel, argb_colorname2rgba_colorname, rgba_colorname2argb_colorname,
@@ -39,9 +39,9 @@ from artisanlib.scale import SUPPORTED_SCALES
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-from PyQt6.QtCore import (Qt, pyqtSlot, QSettings, QTimer, QRegularExpression, QSignalBlocker)
-from PyQt6.QtGui import (QStandardItemModel, QStandardItem, QColor, QIntValidator, QRegularExpressionValidator, QPixmap, QIcon)
-from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+from qtpy.QtCore import (Qt, pyqtSlot, QSettings, QTimer, QRegularExpression, QSignalBlocker)
+from qtpy.QtGui import (QStandardItemModel, QStandardItem, QColor, QIntValidator, QRegularExpressionValidator, QPixmap, QIcon)
+from qtpy.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QSpinBox, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,
                              QGroupBox, QRadioButton, QButtonGroup, QInputDialog, QToolButton,
                              QTableWidget, QMessageBox, QHeaderView, QTableWidgetItem, QSizePolicy)

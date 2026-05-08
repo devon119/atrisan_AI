@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
     from websockets.asyncio.client import ClientConnection # pylint: disable=unused-import
 
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication
 
 from artisanlib import __version__
 

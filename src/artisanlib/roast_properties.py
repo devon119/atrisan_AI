@@ -27,9 +27,9 @@ if TYPE_CHECKING:
     from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
     from artisanlib.atypes import RecentRoast, BTU
     from plus.stock import Blend # noqa: F401  # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QLayout, QAbstractItemView, QCompleter # pylint: disable=unused-import
-    from PyQt6.QtGui import QClipboard, QCloseEvent, QKeyEvent, QMouseEvent # pylint: disable=unused-import
-    from PyQt6.QtCore import QObject, QMetaObject # pylint: disable=unused-import
+    from qtpy.QtWidgets import QLayout, QAbstractItemView, QCompleter # pylint: disable=unused-import
+    from qtpy.QtGui import QClipboard, QCloseEvent, QKeyEvent, QMouseEvent # pylint: disable=unused-import
+    from qtpy.QtCore import QObject, QMetaObject # pylint: disable=unused-import
 
 from artisanlib.main import UI_MODE
 
@@ -55,9 +55,9 @@ from uic import MeasureDialog # pyright: ignore[attr-defined] # pylint: disable=
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 
-from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot, QRegularExpression, QSettings, QTimer, QEvent, QLocale, QSignalBlocker
-from PyQt6.QtGui import QColor, QIntValidator, QRegularExpressionValidator, QKeySequence, QPalette
-from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QComboBox, QDialogButtonBox, QGridLayout,
+from qtpy.QtCore import Qt, pyqtSignal, pyqtSlot, QRegularExpression, QSettings, QTimer, QEvent, QLocale, QSignalBlocker
+from qtpy.QtGui import QColor, QIntValidator, QRegularExpressionValidator, QKeySequence, QPalette
+from qtpy.QtWidgets import (QApplication, QWidget, QCheckBox, QComboBox, QDialogButtonBox, QGridLayout,
                              QHBoxLayout, QVBoxLayout, QHeaderView, QLabel, QLineEdit, QTextEdit, QListView,
                              QPushButton, QSpinBox, QTableWidget, QTableWidgetItem, QTabWidget, QSizePolicy,
                              QGroupBox, QToolButton, QFrame)
@@ -1693,7 +1693,7 @@ class editGraphDlg(ArtisanResizeablDialog):
         self.volume_percent()
 
         if start_recording_on_exit:
-            from PyQt6.QtWidgets import QMessageBox
+            from qtpy.QtWidgets import QMessageBox
             string = QApplication.translate('Message', 'artisan.plus needs to know the beans you are roasting')
             mbox = QMessageBox(self.aw)
             mbox.setText(string)

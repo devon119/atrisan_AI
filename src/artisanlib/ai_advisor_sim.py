@@ -9,12 +9,12 @@ import random
 from collections import deque
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import QTimer, pyqtSlot, Qt
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import QTimer, pyqtSlot, Qt
+from qtpy.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QComboBox, QGroupBox, QWidget, QSlider,
 )
-from PyQt6.QtGui import QFont
+from qtpy.QtGui import QFont
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -187,7 +187,7 @@ class AIAdvisorSimDialog(ArtisanDialog):
             lambda v: self._on_airflow_changed(v))
 
         # bean load row
-        from PyQt6.QtWidgets import QSpinBox as _QSpin
+        from qtpy.QtWidgets import QSpinBox as _QSpin
         ctrl_grid.addWidget(QLabel('⚖️ 豆量'), 2, 0)
         self._bean_spin = _QSpin()
         self._bean_spin.setRange(100, 500)

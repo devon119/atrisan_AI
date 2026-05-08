@@ -7,8 +7,8 @@ from qrcode.image.base import BaseImage
 
 from typing import override, Any
 
-from PyQt6.QtGui import QImage, QPixmap,QPainter
-from PyQt6.QtCore import Qt
+from qtpy.QtGui import QImage, QPixmap,QPainter
+from qtpy.QtCore import Qt
 
 ##########################################################################
 #####################     QR Image   #####################################

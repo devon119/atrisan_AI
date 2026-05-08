@@ -1,0 +1,303 @@
+### -*- mode: python ; coding: utf-8 -*-
+# ABOUT
+# artisan-mac-legacy.spec - PyInstaller spec for macOS 10.13+ (High Sierra) legacy builds
+# Uses PyQt5 + Qt 5.15 via qtpy compatibility layer.
+# Architecture: x86_64 (Intel); macOS deployment target: 10.13
+#
+# Usage:
+#   QT_API=pyqt5 pyinstaller artisan-mac-legacy.spec
+
+import os
+import pathlib
+import subprocess
+import plistlib
+from PyInstaller.utils.hooks import get_package_paths
+
+import sys
+sys.path.insert(1, SPECPATH)
+import artisanlib
+
+onefile = False
+block_cipher = None
+
+VERSION = artisanlib.__version__
+LICENSE = 'GNU General Public License (GPL)'
+
+try:
+    PYTHON_V = os.environ['PYTHON_V']
+except Exception:
+    PYTHON_V = '3.12'
+python_version = f'python{PYTHON_V}'
+
+# Qt5 path (set QT_PATH to your Qt5 installation, e.g. ~/Qt/5.15.2/clang_64)
+try:
+    QTDIR = os.environ['QT_PATH'] + r'/'
+except Exception:
+    from os.path import expanduser
+    HOME = expanduser('~')
+    QTDIR = HOME + r'/Qt/5.15.2/clang_64/'
+
+SUPPORTED_LANGUAGES = ['ar', 'cs', 'da', 'de','el','en','es','fa','fi','fr','gd', 'he','hu','id','it','ja','ko','lv', 'nl','no','pl','pt_BR','pt','sk', 'sv','th','tr','uk','vi','zh_CN','zh_TW']
+
+DATA_FILES = [
+        (r'Assets.car', '.'),
+        (r'artisanProfile.icns', '.'),
+        (r'artisanAlarms.icns', '.'),
+        (r'artisanPalettes.icns', '.'),
+        (r'artisanSettings.icns', '.'),
+        (r'artisanTheme.icns', '.'),
+        (r'artisanWheel.icns', '.'),
+        (r'includes/alarmclock.eot', '.'),
+        (r'includes/alarmclock.svg', '.'),
+        (r'includes/alarmclock.ttf', '.'),
+        (r'includes/alarmclock.woff', '.'),
+        (r'includes/roboto-300.woff2', '.'),
+        (r'includes/roboto-600.woff2', '.'),
+        (r'includes/roboto-regular.woff2', '.'),
+        (r'includes/artisan.tpl', '.'),
+        (r'includes/scale_widget.tpl', '.'),
+        (r'includes/fitty_patched.js', '.'),
+        (r'includes/bigtext.js', '.'),
+        (r'includes/fitty_patched.js', '.'),
+        (r'includes/jquery-1.11.1.min.js', '.'),
+        (r'includes/android-chrome-192x192.png', '.'),
+        (r'includes/android-chrome-512x512.png', '.'),
+        (r'includes/apple-touch-icon.png', '.'),
+        (r'includes/browserconfig.xml', '.'),
+        (r'includes/favicon-16x16.png', '.'),
+        (r'includes/favicon-32x32.png', '.'),
+        (r'includes/favicon-96x96.png', '.'),
+        (r'includes/favicon.ico', '.'),
+        (r'includes/favicon.svg', '.'),
+        (r'includes/mstile-70x70.png', '.'),
+        (r'includes/mstile-144x144.png', '.'),
+        (r'includes/mstile-150x150.png', '.'),
+        (r'includes/mstile-310x310.png', '.'),
+        (r'includes/safari-pinned-tab.svg', '.'),
+        (r'includes/site.webmanifest', '.'),
+        (r'includes/sorttable.js', '.'),
+        (r'includes/report-template.htm', '.'),
+        (r'includes/roast-template.htm', '.'),
+        (r'includes/ranking-template.htm', '.'),
+        (r'includes/Humor-Sans.ttf', '.'),
+        (r'includes/WenQuanYiZenHei-01.ttf', '.'),
+        (r'includes/WenQuanYiZenHeiMonoMedium.ttf', '.'),
+        (r'includes/SourceHanSansCN-Regular.otf', '.'),
+        (r'includes/SourceHanSansHK-Regular.otf', '.'),
+        (r'includes/SourceHanSansJP-Regular.otf', '.'),
+        (r'includes/SourceHanSansKR-Regular.otf', '.'),
+        (r'includes/SourceHanSansTW-Regular.otf', '.'),
+        (r'includes/dijkstra.ttf', '.'),
+        (r'includes/ComicNeue-Regular.ttf', '.'),
+        (r'includes/xkcd-script.ttf', '.'),
+        (r'includes/Machines', './Machines'),
+        (r'includes/Themes', './Themes'),
+        (r'includes/Icons', './Icons'),
+        (r'includes/logging.yaml', '.')
+]
+
+# add Artisan translations to DATA_FILES
+DATA_FILES.extend(
+    [(f'translations/{file}', './translations') for root,dirs,files in os.walk('translations') for file in files if (file.split('.')[1]) == 'qm'])
+
+# add snap7 libs
+BINARIES = [(os.path.join(get_package_paths('snap7')[1], 'lib/libsnap7.dylib'), 'snap7/lib')]
+# add yocto libs
+yocto_lib_path = os.path.join(get_package_paths('yoctopuce')[1], 'cdll')
+BINARIES.extend([(os.path.join(yocto_lib_path, fn), 'yoctopuce/cdll') for fn in os.listdir(yocto_lib_path) if fn.endswith('.dylib')])
+# add phidgets libs
+BINARIES.extend([(os.path.join(get_package_paths('Phidget22')[1], '.libs/libphidget22.dylib'), 'Phidget22/.libs')])
+
+a = Analysis(['artisan.py'],
+             binaries=BINARIES,
+             datas=DATA_FILES,
+             hiddenimports=['babel.numbers'],
+             hooksconfig={
+                'matplotlib': {
+                'backends': ['Qt5Agg', 'svg', 'pdf']
+                },
+             },
+             hookspath=[],
+             runtime_hooks=['./pyinstaller_hooks/rthooks/pyi_rth_mplconfig.py'],
+             additional_hooks_dir=[],
+             excludes=['tkinter', 'mypy', 'pkg_resources'],
+             win_no_prefer_redirects=False,
+             win_private_assemblies=False,
+             cipher=block_cipher,
+             optimize=2,
+             noarchive=False)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+minimumSystemVersion = '10.13'
+
+exe = EXE(pyz,
+            a.scripts,
+            a.binaries if onefile else [],
+            a.zipfiles if onefile else [],
+            a.datas if onefile else [],
+            options=[],
+            exclude_binaries=not onefile,
+            name='Artisan',
+            debug=False,
+            bootloader_ignore_signals=False,
+            strip=True,
+            upx=False,
+            upx_exclude=[],
+            runtime_tmpdir=None,
+            console=False,
+            disable_windowed_traceback=False,
+            argv_emulation=False,
+            target_arch='x86_64',
+            codesign_identity=None,
+            entitlements_file=None
+            )
+
+plist = {}
+with open('Info.plist', 'rb') as infile:
+    plist = plistlib.load(infile)
+    plist.update({ 'CFBundleDisplayName': 'Artisan',
+                    'CFBundleGetInfoString': 'Artisan, Roast Logger',
+                    'CFBundleIdentifier': 'org.artisan-scope.artisan',
+                    'CFBundleShortVersionString': VERSION,
+                    'CFBundleVersion': 'Artisan ' + VERSION,
+                    'LSMinimumSystemVersion': minimumSystemVersion,
+                    'LSMultipleInstancesProhibited': False,
+                    'LSArchitecturePriority': ['x86_64'],
+                    'NSHumanReadableCopyright': LICENSE,
+                    'NSHighResolutionCapable': True,
+                })
+
+bundle_obj = exe
+
+if not onefile:
+    coll = COLLECT(
+            exe,
+            a.binaries,
+            a.zipfiles,
+            a.datas,
+            strip=True,
+            upx=False,
+            upx_exclude=[],
+            name='Test',
+        )
+    bundle_obj = coll
+
+app = BUNDLE(bundle_obj,
+          name='Artisan.app',
+          icon='artisan.icns',
+          bundle_identifier='org.artisan-scope.artisan',
+          info_plist=plist)
+
+#------
+
+subprocess.check_call(r'mv dist/Artisan.app/Contents/Resources/translations dist/Artisan.app/Contents/', shell=True)
+subprocess.check_call(r'rm -rf dist/Test/_internal/babel/*', shell=True)
+subprocess.check_call(r'rm -rf dist/Test', shell=True)
+subprocess.check_call(r'cp README.txt dist', shell=True)
+subprocess.check_call(r'cp ../LICENSE dist/LICENSE.txt', shell=True)
+subprocess.check_call(r'mkdir -p dist/Wheels', shell=True)
+subprocess.check_call(r'mkdir -p dist/Wheels/Cupping', shell=True)
+subprocess.check_call(r'mkdir -p dist/Wheels/Other', shell=True)
+subprocess.check_call(r'mkdir -p dist/Wheels/Roasting', shell=True)
+subprocess.check_call(r'cp Wheels/Cupping/* dist/Wheels/Cupping', shell=True)
+subprocess.check_call(r'cp Wheels/Other/* dist/Wheels/Other', shell=True)
+subprocess.check_call(r'cp Wheels/Roasting/* dist/Wheels/Roasting', shell=True)
+try:
+    subprocess.check_call('rm -rf dist/Artisan.app/Contents/Resources/matplotlib/mpl-data/sample_data', shell=True)
+except Exception:
+    pass
+
+os.chdir('./dist')
+
+# add localization stubs
+for lang in SUPPORTED_LANGUAGES:
+    loc_dir = r'Artisan.app/Contents/Resources/' + lang + r'.lproj'
+    subprocess.check_call(r'mkdir ' + loc_dir, shell=True)
+    subprocess.check_call(r'touch ' + loc_dir + r'/Localizable.string', shell=True)
+
+#######
+## remove unused Qt frameworks (PyQt5 layout)
+
+print('*** Removing unused Qt5 frameworks ***')
+
+Qt_modules = [
+    'QtCore',
+    'QtGui',
+    'QtWidgets',
+    'QtSvg',
+    'QtPrintSupport',
+    'QtNetwork',
+    'QtDBus',
+    'QtWebEngineCore',
+    'QtWebEngineWidgets',
+    'QtQuick',
+    'QtQuickWidgets',
+    'QtQml',
+    'QtQmlModels',
+    'QtWebChannel',
+    'QtPositioning',
+    'QtOpenGL'
+]
+Qt_frameworks = [module + '.framework' for module in Qt_modules]
+
+qt_plugin_files = [
+    'libqsvgicon.dylib',
+    'libqjpeg.dylib',
+    'libqsvg.dylib',
+    'libqcocoa.dylib',
+    'libcocoaprintersupport.dylib',
+    'libqmacstyle.dylib'
+]
+
+# Remove unused Qt frameworks (PyQt5 stores them under PyQt5/Qt5/lib)
+for qt_lib_dir in ['PyQt5/Qt5/lib', 'PyQt5/Qt/lib']:
+    lib_path = f'./Artisan.app/Contents/Frameworks/{qt_lib_dir}'
+    if os.path.isdir(lib_path):
+        for subdir, dirs, _files in os.walk(lib_path):
+            for di in dirs:
+                if di.startswith('Qt') and di.endswith('.framework') and di not in Qt_frameworks:
+                    file_path = os.path.join(subdir, di)
+                    print(f'rm -rf {file_path}')
+                    subprocess.check_call(f'rm -rf {file_path}', shell=True)
+            break  # only top level
+
+print('*** Removing unused files ***')
+for root, dirs, files in os.walk('.'):
+    for file in files:
+        if 'debug' in file:
+            os.remove(os.path.join(root, file))
+        elif file.startswith('test_'):
+            os.remove(os.path.join(root, file))
+        elif file.endswith('.h') and file != 'pyconfig.h':
+            os.remove(os.path.join(root, file))
+        elif file.endswith('.in'):
+            os.remove(os.path.join(root, file))
+        elif file.endswith('.cpp'):
+            os.remove(os.path.join(root, file))
+        elif file.endswith('.cc'):
+            os.remove(os.path.join(root, file))
+
+print('*** Removing unused language support from babel ***')
+for root, _, files in os.walk(f'./Artisan.app/Contents/Resources/babel/locale-data'):
+    for file in files:
+        if (file.endswith('.dat') and
+            file != 'root.dat' and not (file.startswith('zh') and file.endswith('.dat')) and
+            (('_' not in file and file.split('.')[0] not in SUPPORTED_LANGUAGES) or
+                ('_' in file and file.split('.')[0] not in SUPPORTED_LANGUAGES))):
+            os.remove(os.path.join(root, file))
+
+print('*** Removing broken symbolic links ***')
+for subdir, _dirs, files in os.walk('.', followlinks=False):
+    for file in files:
+        file_path = pathlib.Path(os.path.join(subdir, file))
+        if file_path.is_symlink() and not file_path.exists():
+            print(f'unlink dangling symlink at {file_path}')
+            subprocess.check_call(f'unlink {file_path}', shell=True)
+
+####
+
+dist_name = r'artisan-mac-legacy-' + VERSION + r'.dmg'
+os.chdir('..')
+os.system(r'rm ' + dist_name)
+os.system(r'hdiutil create ' + dist_name + r' -volname "Artisan" -fs HFS+ -srcfolder "dist"')

@@ -23,7 +23,7 @@
 
 """This module connects to the artisan.plus inventory management service."""
 
-from PyQt6.QtCore import QSemaphore
+from qtpy.QtCore import QSemaphore
 
 from pathlib import Path
 from artisanlib.util import getDirectory

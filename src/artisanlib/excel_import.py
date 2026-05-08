@@ -3,12 +3,12 @@
 # Excel Roasting Plan Importer
 # Auto-detects the plan table and loads BT curve as background profile.
 
-from PyQt6.QtWidgets import (
+from qtpy.QtWidgets import (
     QApplication, QDialogButtonBox, QVBoxLayout, QHBoxLayout,
     QFormLayout, QLabel, QComboBox, QGroupBox, QPushButton,
     QFileDialog, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
 )
-from PyQt6.QtCore import Qt
+from qtpy.QtCore import Qt
 from artisanlib.dialogs import ArtisanDialog
 
 import logging

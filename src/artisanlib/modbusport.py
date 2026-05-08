@@ -32,8 +32,8 @@ if TYPE_CHECKING:
     from pymodbus.client import ModbusBaseClient # pylint: disable=unused-import
     from pymodbus.pdu.pdu import ModbusPDU # pylint: disable=unused-import
 
-from PyQt6.QtCore import QSemaphore
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import QSemaphore
+from qtpy.QtWidgets import QApplication
 
 from artisanlib.util import debugLogLevelActive, max_blocks, min_blocks
 from artisanlib.async_comm import AsyncLoopThread

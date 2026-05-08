@@ -33,9 +33,9 @@ from artisanlib.suppress_errors import suppress_stdout_stderr
 from artisanlib.util import toGrey, toDim, stringfromseconds, float2float
 
 
-from PyQt6.QtCore import Qt, QSettings, QObject
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import Qt, QSettings, QObject
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import QApplication
 
 
 with suppress_stdout_stderr():

@@ -33,7 +33,7 @@ from scipy.signal import iirfilter  # type # ignore[import-untyped]
 from artisanlib.filters import LiveSosFilter
 from artisanlib.suppress_errors import suppress_stdout_stderr
 
-from PyQt6.QtCore import QSemaphore
+from qtpy.QtCore import QSemaphore
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)

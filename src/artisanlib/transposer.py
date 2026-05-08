@@ -26,17 +26,17 @@ from typing import override, Final, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # noqa: F401 # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
     import numpy.typing as npt  # pylint: disable=unused-import
 
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.util import stringfromseconds, stringtoseconds, float2float
 
 
-from PyQt6.QtCore import Qt, pyqtSlot, QSettings, QRegularExpression, QDateTime
-from PyQt6.QtGui import QRegularExpressionValidator
-from PyQt6.QtWidgets import (QApplication, QHeaderView, QAbstractItemView, QWidget, QLabel, QLineEdit, QComboBox, QDialogButtonBox,
+from qtpy.QtCore import Qt, pyqtSlot, QSettings, QRegularExpression, QDateTime
+from qtpy.QtGui import QRegularExpressionValidator
+from qtpy.QtWidgets import (QApplication, QHeaderView, QAbstractItemView, QWidget, QLabel, QLineEdit, QComboBox, QDialogButtonBox,
             QTableWidget, QTableWidgetItem, QGroupBox, QLayout, QHBoxLayout, QVBoxLayout, QFrame)
 
 

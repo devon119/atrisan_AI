@@ -21,10 +21,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtWidgets import (QApplication, QComboBox, QLineEdit, QDialogButtonBox,
+from qtpy.QtWidgets import (QApplication, QComboBox, QLineEdit, QDialogButtonBox,
     QToolButton, QTableWidget, QStyle, QHeaderView)
-from PyQt6.QtCore import Qt, pyqtSlot, QSize, QSettings
-from PyQt6.QtGui import QKeySequence, QAction, QIcon, QStandardItemModel
+from qtpy.QtCore import Qt, pyqtSlot, QSize, QSettings
+from qtpy.QtGui import QKeySequence, QAction, QIcon, QStandardItemModel
 
 import logging
 from artisanlib.util import comma2dot, float2floatWeightVolume
@@ -36,8 +36,8 @@ from typing import override, Final, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent, QKeyEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # noqa: F401 # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent, QKeyEvent # pylint: disable=unused-import
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 

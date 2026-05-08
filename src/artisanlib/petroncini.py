@@ -12,7 +12,7 @@ from collections.abc import Callable
 from typing import Final
 
 
-from PyQt6.QtCore import QDateTime, QDate, QTime, Qt
+from qtpy.QtCore import QDateTime, QDate, QTime, Qt
 
 
 from artisanlib.util import replace_duplicates, encodeLocal, encodeLocalStrict

@@ -19,13 +19,13 @@ import asyncio
 import logging
 import numpy as np
 
-from PyQt6.QtCore import QRegularExpression
+from qtpy.QtCore import QRegularExpression
 
 from collections.abc import Callable
 from typing import override, Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PyQt6.QtCore import QRegularExpressionMatch # pylint: disable=unused-import
+    from qtpy.QtCore import QRegularExpressionMatch # pylint: disable=unused-import
     from artisanlib.atypes import SerialSettings # pylint: disable=unused-import
     import numpy.typing as npt # pylint: disable=unused-import
     from bleak.backends.characteristic import BleakGATTCharacteristic  # pylint: disable=unused-import

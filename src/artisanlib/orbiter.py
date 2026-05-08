@@ -23,8 +23,8 @@ import time as libtime
 
 from pathlib import Path
 from collections.abc import Callable
-from PyQt6.QtCore import Qt, QDateTime, QDate, QTime
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import Qt, QDateTime, QDate, QTime
+from qtpy.QtWidgets import QApplication
 from typing import override, Final, TypedDict, IO, TYPE_CHECKING
 
 if TYPE_CHECKING:

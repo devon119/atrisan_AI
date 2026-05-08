@@ -22,10 +22,10 @@ from typing import override, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
 
-from PyQt6.QtCore import Qt, pyqtSlot, QSettings
-from PyQt6.QtWidgets import (QApplication, QLabel, QHBoxLayout, QVBoxLayout, QCheckBox,
+from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtWidgets import (QApplication, QLabel, QHBoxLayout, QVBoxLayout, QCheckBox,
                              QDialogButtonBox, QGridLayout, QLineEdit, QSpinBox, QLayout)
 
 class batchDlg(ArtisanDialog):

@@ -21,10 +21,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtWidgets import (QApplication, QCheckBox, QGroupBox, QHBoxLayout,
+from qtpy.QtWidgets import (QApplication, QCheckBox, QGroupBox, QHBoxLayout,
     QVBoxLayout, QLabel, QLineEdit, QDialogButtonBox, QWidget)
-from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtGui import QKeySequence, QAction
+from qtpy.QtCore import Qt, pyqtSlot
+from qtpy.QtGui import QKeySequence, QAction
 
 import logging
 from artisanlib.dialogs import ArtisanDialog

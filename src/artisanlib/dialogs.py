@@ -19,10 +19,10 @@ import platform
 import logging
 import re
 
-from PyQt6.QtCore import Qt, QEvent, QSettings, pyqtSlot, pyqtSignal, QRegularExpression
-from PyQt6.QtWidgets import (QApplication, QWidget, QDialog, QMessageBox, QDialogButtonBox, QTextEdit,
+from qtpy.QtCore import Qt, QEvent, QSettings, pyqtSlot, pyqtSignal, QRegularExpression
+from qtpy.QtWidgets import (QApplication, QWidget, QDialog, QMessageBox, QDialogButtonBox, QTextEdit,
             QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QLayout, QTableWidget, QHeaderView, QPushButton, QSpinBox, QCheckBox)
-from PyQt6.QtGui import QKeySequence, QAction, QIntValidator, QTextCharFormat, QTextCursor, QColor
+from qtpy.QtGui import QKeySequence, QAction, QIntValidator, QTextCharFormat, QTextCursor, QColor
 
 from artisanlib.widgets import MyQComboBox, ClickableQLineEdit
 from artisanlib.util import comma2dot, float2float, float2floatWeightVolume, convertWeight, weight_units
@@ -31,8 +31,8 @@ from collections.abc import Callable
 from typing import override, Final, cast, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent, QKeyEvent, QShowEvent  # pylint: disable=unused-import
-    from PyQt6.QtCore import QTimerEvent, QObject # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent, QKeyEvent, QShowEvent  # pylint: disable=unused-import
+    from qtpy.QtCore import QTimerEvent, QObject # pylint: disable=unused-import
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 

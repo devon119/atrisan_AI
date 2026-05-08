@@ -20,16 +20,16 @@ from typing import override, TYPE_CHECKING
 from artisanlib.util import fromCtoF, fromFtoC, stringfromseconds, stringtoseconds, comma2dot, weight_units, convertWeight, convertVolume
 from artisanlib.dialogs import ArtisanDialog
 
-from PyQt6.QtCore import pyqtSlot, QSettings, QRegularExpression
-from PyQt6.QtGui import QRegularExpressionValidator
-from PyQt6.QtWidgets import (QApplication, QLabel, QGridLayout, QGroupBox, QLineEdit,
+from qtpy.QtCore import pyqtSlot, QSettings, QRegularExpression
+from qtpy.QtGui import QRegularExpressionValidator
+from qtpy.QtWidgets import (QApplication, QLabel, QGridLayout, QGroupBox, QLineEdit,
     QComboBox, QHBoxLayout, QVBoxLayout)
 
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 class calculatorDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:

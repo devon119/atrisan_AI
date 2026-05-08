@@ -36,9 +36,9 @@ from platform import python_version
 from uuid import UUID
 from packaging.version import Version
 
-from PyQt6.QtCore import (Qt, QMimeData, QSettings, pyqtSlot, pyqtSignal, QPoint, QPointF, QLocale, QDate, QDateTime, QSemaphore, QTimer)
-from PyQt6.QtGui import (QDrag, QPixmap, QPainter, QTextLayout, QTextLine, QColor, QFontMetrics, QCursor, QAction, QIcon)
-from PyQt6.QtWidgets import (QDialogButtonBox, QMessageBox, QStackedWidget, QApplication, QWidget, QVBoxLayout, QHBoxLayout, QFrame, QTabWidget,
+from qtpy.QtCore import (Qt, QMimeData, QSettings, pyqtSlot, pyqtSignal, QPoint, QPointF, QLocale, QDate, QDateTime, QSemaphore, QTimer)
+from qtpy.QtGui import (QDrag, QPixmap, QPainter, QTextLayout, QTextLine, QColor, QFontMetrics, QCursor, QAction, QIcon)
+from qtpy.QtWidgets import (QDialogButtonBox, QMessageBox, QStackedWidget, QApplication, QWidget, QVBoxLayout, QHBoxLayout, QFrame, QTabWidget,
         QCheckBox, QGroupBox, QScrollArea, QLabel, QSizePolicy,
         QGraphicsDropShadowEffect, QPlainTextEdit, QLineEdit, QMenu, QStatusBar, QToolButton)
 
@@ -50,10 +50,10 @@ from typing import override, Final, Any, TypedDict, cast, TextIO, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.atypes import ProfileData # noqa: F401 # pylint: disable=unused-import
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtCore import QObject, QEvent, QRect, QMargins # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtGui import (QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent, QCloseEvent,  # noqa: F401 # pylint: disable=unused-import
+    from qtpy.QtCore import QObject, QEvent, QRect, QMargins # noqa: F401 # pylint: disable=unused-import
+    from qtpy.QtGui import (QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent, QCloseEvent,  # noqa: F401 # pylint: disable=unused-import
         QResizeEvent, QPaintEvent, QEnterEvent, QMouseEvent, QTextDocument, QKeyEvent) # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QLayout, QLayoutItem, QBoxLayout # noqa: F401 # pylint: disable=unused-import
+    from qtpy.QtWidgets import QLayout, QLayoutItem, QBoxLayout # noqa: F401 # pylint: disable=unused-import
     from plus.weight import WeightItem
 
 

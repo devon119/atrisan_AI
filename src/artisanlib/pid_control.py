@@ -36,8 +36,8 @@ if TYPE_CHECKING:
 
 from artisanlib.util import fromCtoFstrict, fromFtoCstrict, hex2int, str2cmd, stringfromseconds, cmd2str, float2float
 
-from PyQt6.QtCore import pyqtSlot
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import pyqtSlot
+from qtpy.QtWidgets import QApplication
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 

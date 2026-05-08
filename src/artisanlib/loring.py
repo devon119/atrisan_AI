@@ -9,7 +9,7 @@ import logging
 from collections.abc import Callable
 from typing import Final
 
-from PyQt6.QtCore import QDateTime, Qt
+from qtpy.QtCore import QDateTime, Qt
 
 from artisanlib.util import replace_duplicates, fromFtoCstrict, RoRfromFtoCstrict, encodeLocal, encodeLocalStrict
 from artisanlib.atypes import ProfileData

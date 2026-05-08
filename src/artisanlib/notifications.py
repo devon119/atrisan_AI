@@ -15,9 +15,9 @@
 # AUTHOR
 # Marko Luther, 2023
 
-from PyQt6.QtWidgets import QSystemTrayIcon, QApplication, QMenu
-from PyQt6.QtGui import QIcon, QDesktopServices, QAction
-from PyQt6.QtCore import QTimer, pyqtSlot, QUrl, QObject, QDateTime, QLocale
+from qtpy.QtWidgets import QSystemTrayIcon, QApplication, QMenu
+from qtpy.QtGui import QIcon, QDesktopServices, QAction
+from qtpy.QtCore import QTimer, pyqtSlot, QUrl, QObject, QDateTime, QLocale
 
 import os
 import sys

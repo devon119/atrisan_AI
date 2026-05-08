@@ -13,7 +13,7 @@ from collections.abc import Callable, Generator
 from typing import override, Final, Any
 
 
-from PyQt6.QtCore import QDateTime, Qt, QMutex, QWaitCondition, QUrl
+from qtpy.QtCore import QDateTime, Qt, QMutex, QWaitCondition, QUrl
 
 from artisanlib.util import encodeLocal, encodeLocalStrict
 from artisanlib.atypes import ProfileData

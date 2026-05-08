@@ -22,16 +22,16 @@ from typing import override, Final, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 from artisanlib.util import stringfromseconds, stringtoseconds, comma2dot, toInt, toFloat, float2float
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.widgets import MyQComboBox, MyQDoubleSpinBox
 
-from PyQt6.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings, QTimer
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-from PyQt6.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton,
+from qtpy.QtCore import Qt, pyqtSlot, QRegularExpression, QSettings, QTimer
+from qtpy.QtGui import QIntValidator, QRegularExpressionValidator
+from qtpy.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout, QGroupBox, QLineEdit,
     QMessageBox, QRadioButton, QSpinBox, QStatusBar, QTabWidget, QDoubleSpinBox,
     QTimeEdit, QLayout, QSizePolicy, QHeaderView, QButtonGroup, QFrame)

@@ -13,9 +13,9 @@ from collections.abc import Callable
 from typing import Final, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PyQt6.QtCore import QUrl # pylint: disable=unused-import
+    from qtpy.QtCore import QUrl # pylint: disable=unused-import
 
-from PyQt6.QtCore import QDateTime, Qt
+from qtpy.QtCore import QDateTime, Qt
 
 
 from artisanlib.util import encodeLocal, stringtoseconds

@@ -7,8 +7,8 @@
 from collections import deque
 from typing import TYPE_CHECKING, Optional
 
-from PyQt6.QtCore import pyqtSlot, Qt
-from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget
+from qtpy.QtCore import pyqtSlot, Qt
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg

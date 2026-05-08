@@ -21,14 +21,14 @@ from babel.units import get_unit_name
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.widgets import MyQDoubleSpinBox
 
-from PyQt6.QtCore import Qt, pyqtSlot, QSettings
-from PyQt6.QtWidgets import (QMessageBox, QApplication, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout,
+from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtWidgets import (QMessageBox, QApplication, QHBoxLayout, QVBoxLayout, QCheckBox, QGridLayout,
                              QDialogButtonBox, QLayout)
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget, QPushButton # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget, QPushButton # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 class SamplingDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:

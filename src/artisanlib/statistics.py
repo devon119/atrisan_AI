@@ -23,14 +23,14 @@ from artisanlib.util import deltaLabelUTF8
 from artisanlib.widgets import MyContentLimitedQComboBox, MyQTableWidget
 import logging
 
-from PyQt6.QtCore import Qt, pyqtSlot, QSettings, QTimer
-from PyQt6.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
+from qtpy.QtCore import Qt, pyqtSlot, QSettings, QTimer
+from qtpy.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QGroupBox,
     QSpinBox, QWidget, QTabWidget, QTableWidget, QPushButton, QHeaderView, QLineEdit)
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 

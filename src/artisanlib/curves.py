@@ -29,7 +29,7 @@ from typing import override, Final, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
 
 from artisanlib.util import (deltaLabelBigPrefix, deltaLabelPrefix, deltaLabelUTF8,
                              stringtoseconds, stringfromseconds, toFloat, float2float)
@@ -38,9 +38,9 @@ from artisanlib.widgets import MyQDoubleSpinBox
 from help import symbolic_help # pyright:ignore [attr-defined] # pylint: disable=no-name-in-module
 from artisanlib.canvas import Interp1dKind
 
-from PyQt6.QtCore import (Qt, pyqtSlot, QSettings, QRegularExpression, QTimer)
-from PyQt6.QtGui import (QColor, QIntValidator, QRegularExpressionValidator, QPixmap)
-from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+from qtpy.QtCore import (Qt, pyqtSlot, QSettings, QRegularExpression, QTimer)
+from qtpy.QtGui import (QColor, QIntValidator, QRegularExpressionValidator, QPixmap)
+from qtpy.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QSpinBox, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,
                              QGroupBox, QLayout, QMessageBox, QRadioButton, QStyleFactory, QHeaderView,
                              QTableWidget, QTableWidgetItem, QFrame, QButtonGroup)

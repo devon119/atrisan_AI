@@ -2,15 +2,15 @@
 # ABOUT
 # AI Advisor Configuration Dialog
 
-from PyQt6.QtWidgets import (
+from qtpy.QtWidgets import (
     QApplication, QDialogButtonBox, QVBoxLayout, QHBoxLayout,
     QFormLayout, QLabel, QLineEdit, QComboBox, QSpinBox,
     QCheckBox, QGroupBox, QPushButton, QWidget, QTextEdit,
     QSlider, QRadioButton, QButtonGroup
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtCore import pyqtSlot, pyqtSignal, QUrl
-from PyQt6.QtGui import QDesktopServices
+from qtpy.QtCore import Qt
+from qtpy.QtCore import pyqtSlot, pyqtSignal, QUrl
+from qtpy.QtGui import QDesktopServices
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.ai_advisor import AIProvider
 

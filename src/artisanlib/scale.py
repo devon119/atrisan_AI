@@ -23,7 +23,7 @@ from enum import IntEnum, unique
 from collections.abc import Callable
 from typing import Final
 
-from PyQt6.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QTimer
+from qtpy.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QTimer
 
 from artisanlib.util import toFloat
 

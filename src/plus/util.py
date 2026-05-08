@@ -21,9 +21,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6.QtCore import QSize, pyqtSlot
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QApplication, QStyle
+from qtpy.QtCore import QSize, pyqtSlot
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QApplication, QStyle
 
 
 from artisanlib.util import decodeLocal, getResourcePath, float2float
@@ -38,7 +38,7 @@ from typing import Final, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from artisanlib.atypes import ProfileData, ComputedProfileInformation # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QMessageBox # pylint: disable=unused-import
+    from qtpy.QtWidgets import QMessageBox # pylint: disable=unused-import
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)
 

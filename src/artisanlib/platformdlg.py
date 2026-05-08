@@ -24,12 +24,12 @@ from artisanlib import __revision__
 
 from artisanlib.dialogs import ArtisanDialog
 
-from PyQt6.QtWidgets import QApplication, QVBoxLayout, QTextEdit
+from qtpy.QtWidgets import QApplication, QVBoxLayout, QTextEdit
 
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
 
 class platformDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:

@@ -21,7 +21,7 @@ from bleak import BleakScanner, BleakClient
 from bleak.exc import BleakError, BleakCharacteristicNotFoundError, BleakBluetoothNotAvailableError
 
 
-from PyQt6.QtCore import QObject
+from qtpy.QtCore import QObject
 
 from artisanlib.async_comm import AsyncLoopThread
 

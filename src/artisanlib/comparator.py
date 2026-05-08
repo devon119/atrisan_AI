@@ -31,9 +31,9 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
     from matplotlib.backend_bases import PickEvent # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
     from matplotlib.legend import Legend # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QLayoutItem, QLayout, QScrollBar # pylint: disable=unused-import
-    from PyQt6.QtGui import QStandardItem, QKeyEvent, QDropEvent, QDragEnterEvent, QCloseEvent # pylint: disable=unused-import
-    from PyQt6.QtCore import QMimeData # pylint: disable=unused-import
+    from qtpy.QtWidgets import QLayoutItem, QLayout, QScrollBar # pylint: disable=unused-import
+    from qtpy.QtGui import QStandardItem, QKeyEvent, QDropEvent, QDragEnterEvent, QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtCore import QMimeData # pylint: disable=unused-import
 
 from artisanlib.util import (deltaLabelUTF8, decodeLocal, decodeLocalStrict, stringfromseconds, fromFtoCstrict,
         fromCtoFstrict, fill_gaps, float2float, deserialize, float2str)
@@ -45,10 +45,10 @@ from artisanlib.qcheckcombobox import CheckComboBox
 with suppress_stdout_stderr():
     from matplotlib import colormaps # pyrefly:ignore[missing-module-attribute]
 
-from PyQt6.QtCore import (Qt, pyqtSignal, pyqtSlot, QSettings, QFile, QTextStream, QUrl,
+from qtpy.QtCore import (Qt, pyqtSignal, pyqtSlot, QSettings, QFile, QTextStream, QUrl,
     QFileInfo, QDate, QTime, QDateTime)
-from PyQt6.QtGui import (QColor, QDesktopServices, QStandardItemModel)
-from PyQt6.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton,
+from qtpy.QtGui import (QColor, QDesktopServices, QStandardItemModel)
+from qtpy.QtWidgets import (QApplication, QWidget, QLabel, QTableWidget, QPushButton,
     QComboBox, QSizePolicy, QHBoxLayout, QVBoxLayout, QHeaderView, QTableWidgetItem, QCheckBox)
 
 

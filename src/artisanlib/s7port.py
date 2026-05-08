@@ -30,8 +30,8 @@ from snap7.util.setters import set_bool, set_int, set_real
 
 from artisanlib.util import isOpen, max_blocks, min_blocks
 
-from PyQt6.QtCore import QSemaphore
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import QSemaphore
+from qtpy.QtWidgets import QApplication
 
 
 _log: Final[logging.Logger] = logging.getLogger(__name__)

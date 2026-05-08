@@ -58,7 +58,7 @@ if TYPE_CHECKING:
     from matplotlib.font_manager import FontProperties # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
     from matplotlib.ticker import Locator # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
     import numpy.typing as npt # pylint: disable=unused-import
-    from PyQt6.QtGui import QResizeEvent # pylint: disable=unused-import
+    from qtpy.QtGui import QResizeEvent # pylint: disable=unused-import
 
 from artisanlib.util import (to_ascii, uchr, fill_gaps, deltaLabelPrefix, deltaLabelUTF8, deltaLabelMathPrefix, stringfromseconds,
         fromFtoC, fromFtoCstrict, fromCtoF, fromCtoFstrict, RoRfromFtoC, RoRfromFtoCstrict, RoRfromCtoF, RoRfromCtoFstrict, toInt, toString,
@@ -76,17 +76,17 @@ from plus.util import roastLink
 from plus.queue import addRoast, sendLockSchedule
 from plus.sync import clearSyncRecordHash
 
-from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox,
+from qtpy.QtWidgets import (QApplication, QWidget, QMessageBox,
                          QGraphicsEffect,
                          QSizePolicy,
                          QMenu)
-from PyQt6.QtGui import (QAction, QImage,
+from qtpy.QtGui import (QAction, QImage,
                             QColor, QDesktopServices,
                             QCursor)
-from PyQt6.QtCore import (QLocale, pyqtSignal, pyqtSlot,
+from qtpy.QtCore import (QLocale, pyqtSignal, pyqtSlot,
                           QTimer, QSettings,
                           QUrl, QDir, Qt, QDateTime, QThread, QSemaphore, QObject)
-from PyQt6 import sip
+from qtpy import sip
 
 
 from matplotlib.figure import Figure # type:ignore[untyped-import,unused-ignore]

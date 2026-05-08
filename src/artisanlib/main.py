@@ -104,33 +104,33 @@ except Exception: # pylint: disable=broad-except
 
 
 
-from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox, QLabel, QMainWindow, QFileDialog, QGraphicsDropShadowEffect,
+from qtpy.QtWidgets import (QApplication, QWidget, QMessageBox, QLabel, QMainWindow, QFileDialog, QGraphicsDropShadowEffect,
                          QInputDialog, QGroupBox, QLineEdit, QTextEdit,
                          QSizePolicy, QVBoxLayout, QHBoxLayout, QPushButton,
                          QLCDNumber, QSpinBox, QComboBox,
                          QSlider,
                          QColorDialog, QFrame, QScrollArea, QProgressDialog,
                          QStyleFactory, QMenuBar, QMenu, QLayout, QDockWidget)
-from PyQt6.QtGui import (QScreen, QPageLayout, QAction, QImageReader, QWindow,
+from qtpy.QtGui import (QScreen, QPageLayout, QAction, QImageReader, QWindow,
                             QKeySequence, QShortcut,
                             QPixmap,QColor,QDesktopServices,QIcon,
                             QRegularExpressionValidator, QDoubleValidator, QPainter, QCursor)
-from PyQt6.QtPrintSupport import (QPrinter,QPrintDialog)
-from PyQt6.QtCore import (QStandardPaths, QLibraryInfo, QTranslator, QLocale, QFileInfo, PYQT_VERSION_STR, pyqtSignal, pyqtSlot, QtMsgType,
+from qtpy.QtPrintSupport import (QPrinter,QPrintDialog)
+from qtpy.QtCore import (QStandardPaths, QLibraryInfo, QTranslator, QLocale, QFileInfo, PYQT_VERSION_STR, pyqtSignal, pyqtSlot, QtMsgType,
                           qVersion, QVersionNumber, QTime, QTimer, QFile, QIODevice, QTextStream, QSettings,
                           QRegularExpression, QDate, QUrl, QUrlQuery, QDir, Qt, QPoint, QEvent, QDateTime, QThread, qInstallMessageHandler)
-from PyQt6.QtNetwork import QLocalSocket
+from qtpy.QtNetwork import QLocalSocket
 
 QtWebEngineSupport:bool = False # set to True if the QtWebEngine was successfully imported
 #QtWebEngineWidgets must be imported before a QCoreApplication instance is created
 try:
-    from PyQt6.QtWebEngineWidgets import QWebEngineView
-    from PyQt6.QtWebEngineCore import QWebEngineProfile
+    from qtpy.QtWebEngineWidgets import QWebEngineView
+    from qtpy.QtWebEngineCore import QWebEngineProfile
     QtWebEngineSupport = True
 except ImportError:
     # on the RPi platform there is no native package PyQt-WebEngine nor PyQt6-WebEngine
     pass
-from PyQt6 import sip
+from qtpy import sip
 
 
 from artisanlib.suppress_errors import suppress_stdout_stderr
@@ -186,10 +186,10 @@ if TYPE_CHECKING:
     from matplotlib.text import Annotation # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
     from openpyxl.worksheet.worksheet import Worksheet # pylint: disable=unused-import
     import numpy.typing as npt # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QTableWidgetItem, QTableWidget, QScrollBar # pylint: disable=unused-import
-    from PyQt6.QtGui import QStyleHints, QClipboard, QKeyEvent, QMouseEvent, QDropEvent, QDragEnterEvent, QCloseEvent, QResizeEvent, QValidator # pylint: disable=unused-import
-    from PyQt6.QtCore import QFile, QObject, QPermission, QMessageLogContext  # noqa: F401 # pylint: disable=unused-import,reimported # QFile is reimported for mypy!?
-    from PyQt6.QtWebEngineCore import QWebEnginePage  # noqa: F401 # pylint: disable=unused-import
+    from qtpy.QtWidgets import QTableWidgetItem, QTableWidget, QScrollBar # pylint: disable=unused-import
+    from qtpy.QtGui import QStyleHints, QClipboard, QKeyEvent, QMouseEvent, QDropEvent, QDragEnterEvent, QCloseEvent, QResizeEvent, QValidator # pylint: disable=unused-import
+    from qtpy.QtCore import QFile, QObject, QPermission, QMessageLogContext  # noqa: F401 # pylint: disable=unused-import,reimported # QFile is reimported for mypy!?
+    from qtpy.QtWebEngineCore import QWebEnginePage  # noqa: F401 # pylint: disable=unused-import
     from matplotlib.backend_bases import Event as MplEvent, MouseEvent # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
     from matplotlib.artist import Artist # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
     from matplotlib.lines import Line2D # type:ignore[untyped-import,unused-ignore] # pylint: disable=unused-import
@@ -534,7 +534,7 @@ class Artisan(QtSingleApplication):
     # Currently this API is only supported on macOS. On all other platforms this returns always True
     def getBluetoothPermission(self, request:bool = False) -> bool|None:
         if sys.platform.startswith('darwin') and QVersionNumber.fromString(qVersion())[0] > QVersionNumber(6,5,0):
-            from PyQt6.QtCore import QBluetoothPermission # pylint: disable=no-name-in-module
+            from qtpy.QtCore import QBluetoothPermission # pylint: disable=no-name-in-module
             try:
                 def permissionUpdated(permission:'QPermission') -> None:
                     if permission.status() == Qt.PermissionStatus.Granted: # type:ignore[union-attr,unused-ignore]
@@ -2882,8 +2882,8 @@ class ApplicationWindow(QMainWindow):
         self.messagelabel.setIndent(6)
 
         # AI Advisor floating window (Tool type: stays on top of main window, no taskbar entry)
-        from PyQt6.QtCore import Qt as _Qt
-        from PyQt6.QtWidgets import QHBoxLayout as _QHBox
+        from qtpy.QtCore import Qt as _Qt
+        from qtpy.QtWidgets import QHBoxLayout as _QHBox
         self.aiAdvisorWindow: QWidget = QWidget(self, _Qt.WindowType.Tool)
         self.aiAdvisorWindow.setWindowTitle('AI 烘焙指導員')
         self.aiAdvisorWindow.setMinimumSize(420, 300)
@@ -23794,8 +23794,8 @@ class ApplicationWindow(QMainWindow):
                     self.html_loader.setZoomFactor(1)
             if self.pdf_page_layout is None:
                 # lazy imports
-                from PyQt6.QtCore import QMarginsF
-                from PyQt6.QtGui import QPageSize
+                from qtpy.QtCore import QMarginsF
+                from qtpy.QtGui import QPageSize
                 if QPrinter().pageLayout().pageSize().id() == QPageSize.PageSizeId.Letter: # ty:ignore[no-matching-overload]
                     # Letter
                     ps = QPageSize(QPageSize.PageSizeId.Letter)
@@ -28261,7 +28261,7 @@ def excepthook(excType:type, excValue:BaseException, tracebackobj:'TracebackType
             errorbox.about(aw, detailedmsg, f'{notice}{versionInfo}{msg}')
 
             # using a (native) QErrorMessage dialog which does not allow styled text like bold/links
-#            from PyQt6.QtWidgets import QErrorMessage
+#            from qtpy.QtWidgets import QErrorMessage
 #            em = QErrorMessage(aw)
 #            em.showMessage(f'{notice}{versionInfo}{msg}')
 

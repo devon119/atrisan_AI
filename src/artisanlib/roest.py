@@ -14,10 +14,10 @@ from typing import TypedDict, Final, NotRequired, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
 
-from PyQt6.QtWidgets import (QApplication, QGroupBox, QHBoxLayout,
+from qtpy.QtWidgets import (QApplication, QGroupBox, QHBoxLayout,
     QVBoxLayout, QLabel, QLineEdit, QToolButton, QDialogButtonBox, QComboBox)
-from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtGui import QKeySequence, QAction, QIcon
+from qtpy.QtCore import Qt, pyqtSlot
+from qtpy.QtGui import QKeySequence, QAction, QIcon
 
 from artisanlib.util import encodeLocalStrict, getResourcePath
 from artisanlib.atypes import ProfileData

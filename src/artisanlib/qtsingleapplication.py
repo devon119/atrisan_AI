@@ -15,9 +15,9 @@ from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # pylint: disable=unused-import
 
-from PyQt6.QtCore import pyqtSignal, QTextStream, Qt, pyqtSlot
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtNetwork import QLocalSocket, QLocalServer
+from qtpy.QtCore import pyqtSignal, QTextStream, Qt, pyqtSlot
+from qtpy.QtWidgets import QApplication
+from qtpy.QtNetwork import QLocalSocket, QLocalServer
 
 
 class QtSingleApplication(QApplication):

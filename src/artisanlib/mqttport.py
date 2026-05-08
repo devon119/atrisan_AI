@@ -22,7 +22,7 @@ import logging
 import paho.mqtt.client as mqtt
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
 from paho.mqtt.enums import CallbackAPIVersion, MQTTProtocolVersion
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication
 from typing import Any, Final, TYPE_CHECKING
 
 if TYPE_CHECKING:

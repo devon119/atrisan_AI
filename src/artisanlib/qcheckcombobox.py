@@ -16,14 +16,14 @@ import sys
 from typing import override, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPaintEvent, QKeyEvent # pylint: disable=unused-import
-    from PyQt6.QtCore import QModelIndex, QPointF, QObject # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QStyleOption # pylint: disable=unused-import
+    from qtpy.QtGui import QPainter, QWheelEvent, QMouseEvent, QPaintEvent, QKeyEvent # pylint: disable=unused-import
+    from qtpy.QtCore import QModelIndex, QPointF, QObject # pylint: disable=unused-import
+    from qtpy.QtWidgets import QStyleOption # pylint: disable=unused-import
 
-from PyQt6.QtCore import Qt, QEvent, QTimer, pyqtSignal, QSize
-from PyQt6.QtGui import ( QStandardItemModel,
+from qtpy.QtCore import Qt, QEvent, QTimer, pyqtSignal, QSize
+from qtpy.QtGui import ( QStandardItemModel,
     QPalette, QFontMetrics, QBrush, QColor, QPixmap, QIcon)
-from PyQt6.QtWidgets import (
+from qtpy.QtWidgets import (
     QComboBox, QAbstractItemDelegate, QStyledItemDelegate,
     QApplication, QStyle, QStyleOptionComboBox,
     QStyleOptionMenuItem, QStyleOptionViewItem, QStylePainter, QWidget)

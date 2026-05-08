@@ -22,8 +22,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt6.QtCore import QCoreApplication, QObject, QThread, pyqtSlot, pyqtSignal, QSemaphore
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtCore import QCoreApplication, QObject, QThread, pyqtSlot, pyqtSignal, QSemaphore
+from qtpy.QtWidgets import QApplication
 
 from artisanlib.util import getDirectory
 from plus import config, util, roast, connection, sync, controller

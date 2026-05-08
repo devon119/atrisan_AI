@@ -19,15 +19,15 @@ from typing import TYPE_CHECKING
 from artisanlib.dialogs import ArtisanDialog
 from artisanlib.main import UI_MODE
 
-from PyQt6.QtCore import Qt, pyqtSlot, QSettings
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
+from qtpy.QtCore import Qt, pyqtSlot, QSettings
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import (QApplication, QLabel, QDialogButtonBox, QGridLayout,
     QComboBox, QHBoxLayout, QVBoxLayout, QCheckBox, QLayout, QSpinBox, QPushButton,
     QFrame)
 
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
 
 class phasesGraphDlg(ArtisanDialog):
     def __init__(self, parent:'QWidget', aw:'ApplicationWindow') -> None:

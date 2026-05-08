@@ -24,17 +24,17 @@ from typing import override, Final, cast, TYPE_CHECKING
 if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QWidget # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent, QKeyEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QWidget # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent, QKeyEvent # pylint: disable=unused-import
 
 from artisanlib.util import toFloat, uchr, comma2dot, float2float, toInt
 from artisanlib.dialogs import ArtisanDialog, ArtisanResizeablDialog, PortComboBox
 from artisanlib.comm import serialport
 
 
-from PyQt6.QtCore import (Qt, pyqtSlot, QSettings)
-from PyQt6.QtGui import QIntValidator, QStandardItemModel
-from PyQt6.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+from qtpy.QtCore import (Qt, pyqtSlot, QSettings)
+from qtpy.QtGui import QIntValidator, QStandardItemModel
+from qtpy.QtWidgets import (QApplication, QWidget, QCheckBox, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
                              QPushButton, QTabWidget, QComboBox, QDialogButtonBox, QGridLayout,QSizePolicy,
                              QGroupBox, QTableWidget, QTableWidgetItem, QDialog, QTextEdit, QDoubleSpinBox,
                              QHeaderView, QScrollArea, QFrame)

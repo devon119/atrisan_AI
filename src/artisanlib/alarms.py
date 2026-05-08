@@ -25,9 +25,9 @@ if TYPE_CHECKING:
     from artisanlib.main import ApplicationWindow # noqa: F401 # pylint: disable=unused-import
     from artisanlib.dialogs import HelpDlg # noqa: F401 # pylint: disable=unused-import
     from artisanlib.atypes import ProfileData, AlarmSet # pylint: disable=unused-import
-    from PyQt6.QtGui import QCloseEvent # pylint: disable=unused-import
-    from PyQt6.QtWidgets import QStyleOptionViewItem  # pylint: disable=unused-import
-    from PyQt6.QtCore import QModelIndex # pylint: disable=unused-import
+    from qtpy.QtGui import QCloseEvent # pylint: disable=unused-import
+    from qtpy.QtWidgets import QStyleOptionViewItem  # pylint: disable=unused-import
+    from qtpy.QtCore import QModelIndex # pylint: disable=unused-import
 
 from artisanlib.main import UI_MODE
 from artisanlib.util import deltaLabelUTF8, comma2dot, float2float, deserialize
@@ -36,9 +36,9 @@ from artisanlib.widgets import (MyQComboBox, MyTableWidgetItemNumber, MyTableWid
                                 MyTableWidgetItemQComboBox, MyTableWidgetItemQLineEdit, MyTableWidgetItemQTime)
 
 
-from PyQt6.QtCore import (Qt, pyqtSlot, QSettings, QTimer)
-from PyQt6.QtGui import QColor, QIntValidator
-from PyQt6.QtWidgets import (QApplication, QWidget, QLabel, QLineEdit, QComboBox, QDialogButtonBox,
+from qtpy.QtCore import (Qt, pyqtSlot, QSettings, QTimer)
+from qtpy.QtGui import QColor, QIntValidator
+from qtpy.QtWidgets import (QApplication, QWidget, QLabel, QLineEdit, QComboBox, QDialogButtonBox,
             QTableWidget, QHBoxLayout, QVBoxLayout, QCheckBox, QPushButton, QSizePolicy, QSpinBox,
             QTableWidgetSelectionRange, QTimeEdit, QTabWidget, QGridLayout, QGroupBox, QHeaderView, QStyledItemDelegate, QAbstractSpinBox)
 

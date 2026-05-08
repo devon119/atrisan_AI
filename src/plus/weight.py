@@ -23,7 +23,7 @@
 
 import logging
 
-from PyQt6.QtCore import QObject, QTimer, QSemaphore, pyqtSlot
+from qtpy.QtCore import QObject, QTimer, QSemaphore, pyqtSlot
 
 from dataclasses import dataclass
 from enum import IntEnum, unique
