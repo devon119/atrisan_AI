@@ -339,6 +339,10 @@ mock_modules['matplotlib.backends.qt_compat'].QtCore = mock_modules['PyQt6.QtCor
 mock_modules['matplotlib.backends.qt_compat'].QtGui = mock_modules['PyQt6.QtGui']
 mock_modules['matplotlib.backends.qt_compat'].__version__ = '3.8.0'
 
+# Python 3.14 pkgutil.resolve_name requires the submodule to be already imported
+# before patch() can resolve it via getattr(artisanlib, 'qtsingleapplication')
+import artisanlib.qtsingleapplication  # noqa: E402
+
 # Apply mocks and import modules with proper isolation
 with patch.dict('sys.modules', mock_modules, clear=False), patch(
     'artisanlib.qtsingleapplication.QtSingleApplication', MockQtSingleApplication
