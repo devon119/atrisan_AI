@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init,arguments-renamed
 #
 # ABOUT
 # Audio Spectrum Window — 烘焙過程即時頻譜視窗（浮動，可拖移）

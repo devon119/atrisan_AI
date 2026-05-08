@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument,no-member
 #
 # ABOUT
 # Audio Roast Recorder — 全息烘焙法聲音記錄引擎

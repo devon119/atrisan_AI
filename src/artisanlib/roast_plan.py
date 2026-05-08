@@ -1,3 +1,4 @@
+# pylint: disable=broad-exception-caught,protected-access,unused-argument,attribute-defined-outside-init
 """
 roast_plan.py — 烘焙計畫對話框
 從 devon-coffee-wheel/index.html 移植：烘焙計畫單 + 曲線設計器

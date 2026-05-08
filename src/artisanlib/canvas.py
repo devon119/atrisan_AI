@@ -14958,7 +14958,7 @@ class tgraphcanvas(QObject):
         if self.flagstart:
             # start audio recording on CHARGE and record the event
             try:
-                import os
+                import os  # pylint: disable=reimported,redefined-outer-name
                 from artisanlib.audio_roast import default_session_dir
                 base = os.path.join(os.path.expanduser('~'), 'Documents', 'ArtisanAudio')
                 title = self.title if self.title else ''

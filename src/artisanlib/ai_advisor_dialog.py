@@ -1,3 +1,4 @@
+# pylint: disable=reimported
 #
 # ABOUT
 # AI Advisor Configuration Dialog

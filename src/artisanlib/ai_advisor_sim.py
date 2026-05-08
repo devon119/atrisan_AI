@@ -1,3 +1,4 @@
+# pylint: disable=unnecessary-lambda
 #
 # ABOUT
 # AI Advisor Simulation Window

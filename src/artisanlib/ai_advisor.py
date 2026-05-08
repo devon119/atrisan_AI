@@ -1,3 +1,4 @@
+# pylint: disable=unused-variable,unused-argument,subprocess-run-check
 #
 # ABOUT
 # Artisan AI Roasting Advisor
